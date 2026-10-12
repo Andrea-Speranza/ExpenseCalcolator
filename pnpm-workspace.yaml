@@ -3,3 +3,7 @@ packages:
   - packages/*
   - packages/adapters/*
   - apps/*
+
+# Pacchetti autorizzati a eseguire script durante l'installazione (pnpm li blocca per sicurezza).
+onlyBuiltDependencies:
+  - esbuild

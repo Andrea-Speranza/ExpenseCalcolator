@@ -11,7 +11,7 @@ import tseslint from 'typescript-eslint';
 // TypeScript sono limitate ai file di codice, perché non si applicano a JSON e Markdown.
 const CODE_FILES = ['**/*.{js,mjs,cjs,ts,mts,cts}'];
 const JS_FILES = ['**/*.{js,mjs,cjs}'];
-const TEST_FILES = ['packages/**/test/**/*.ts'];
+const TEST_FILES = ['{packages,apps}/**/test/**/*.ts'];
 // JSON con commenti: i tsconfig e le impostazioni di VS Code.
 const JSONC_FILES = ['**/tsconfig*.json', '.vscode/*.json'];
 

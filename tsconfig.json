@@ -1,9 +1,10 @@
 {
-  // Test e file di configurazione: girano in Node, quindi qui (e solo qui) servono i tipi di Node.
+  // Test e file di configurazione: girano in Node 22, quindi qui servono i tipi di Node ed ES2023.
   // Il codice sorgente di ogni pacchetto si controlla con il tsconfig.json del pacchetto stesso.
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "lib": ["ES2023"],
     "types": ["node"]
   },
-  "include": ["*.config.ts", "packages/*/test", "packages/adapters/*/test"]
+  "include": ["*.config.ts", "packages/*/test", "packages/adapters/*/test", "apps/*/test"]
 }

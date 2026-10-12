@@ -11,6 +11,7 @@ export type {
   InvalidExpense,
   InvalidSettlement,
   LedgerError,
+  PercentagesMismatch,
   SettlementError,
   TooManyDecimals,
   TotalMismatch,

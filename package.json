@@ -16,7 +16,8 @@
     "deps": "depcruise packages apps --config .dependency-cruiser.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
-    "coverage": "vitest run --coverage"
+    "coverage": "vitest run --coverage",
+    "cli": "pnpm --silent --filter @expense/cli build && node apps/cli/dist/spese.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

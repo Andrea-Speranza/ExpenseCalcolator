@@ -1,0 +1,72 @@
+{
+  "members": [
+    { "id": "m_anna", "name": "Anna" },
+    { "id": "m_luca", "name": "Luca" },
+    { "id": "m_marco", "name": "Marco" },
+    { "id": "m_sara", "name": "Sara" }
+  ],
+  "expenses": [
+    {
+      "id": "e_benzina",
+      "description": "Benzina, divisa in parti uguali",
+      "total": { "minor": 6000, "currency": "EUR" },
+      "paidBy": [{ "memberId": "m_luca", "amount": { "minor": 6000, "currency": "EUR" } }],
+      "split": { "method": "equal", "memberIds": ["m_anna", "m_luca", "m_marco", "m_sara"] }
+    },
+    {
+      "id": "e_cena",
+      "description": "Cena al rifugio: pagano Anna e Sara, Marco conta doppio",
+      "total": { "minor": 15000, "currency": "EUR" },
+      "paidBy": [
+        { "memberId": "m_anna", "amount": { "minor": 12000, "currency": "EUR" } },
+        { "memberId": "m_sara", "amount": { "minor": 3000, "currency": "EUR" } }
+      ],
+      "split": {
+        "method": "shares",
+        "weights": [
+          { "memberId": "m_anna", "weight": 1 },
+          { "memberId": "m_luca", "weight": 1 },
+          { "memberId": "m_marco", "weight": 2 },
+          { "memberId": "m_sara", "weight": 1 }
+        ]
+      }
+    },
+    {
+      "id": "e_spesa",
+      "description": "Supermercato: ognuno ha preso cose diverse, Marco non c'era",
+      "total": { "minor": 4500, "currency": "EUR" },
+      "paidBy": [{ "memberId": "m_anna", "amount": { "minor": 4500, "currency": "EUR" } }],
+      "split": {
+        "method": "exact",
+        "amounts": [
+          { "memberId": "m_anna", "amount": { "minor": 2000, "currency": "EUR" } },
+          { "memberId": "m_luca", "amount": { "minor": 1500, "currency": "EUR" } },
+          { "memberId": "m_sara", "amount": { "minor": 1000, "currency": "EUR" } }
+        ]
+      }
+    },
+    {
+      "id": "e_funivia",
+      "description": "Funivia in Svizzera, pagata in franchi",
+      "total": { "minor": 9000, "currency": "CHF" },
+      "paidBy": [{ "memberId": "m_marco", "amount": { "minor": 9000, "currency": "CHF" } }],
+      "split": {
+        "method": "percentage",
+        "percentages": [
+          { "memberId": "m_anna", "basisPoints": 2500 },
+          { "memberId": "m_luca", "basisPoints": 2500 },
+          { "memberId": "m_marco", "basisPoints": 2500 },
+          { "memberId": "m_sara", "basisPoints": 2500 }
+        ]
+      }
+    }
+  ],
+  "settlements": [
+    {
+      "id": "s_marco_anna",
+      "from": "m_marco",
+      "to": "m_anna",
+      "amount": { "minor": 5000, "currency": "EUR" }
+    }
+  ]
+}

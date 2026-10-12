@@ -141,8 +141,8 @@ describe('splitExpense: errori', () => {
     expect(unwrapError(splitExpense(expense(equal, { paidBy: [eur('m_a', 8000)] })))).toEqual({
       code: 'TotalMismatch',
       field: 'paidBy',
-      expected: 9000,
-      actual: 8000,
+      expected: { minor: 9000, currency: 'EUR' },
+      actual: { minor: 8000, currency: 'EUR' },
     });
   });
 
@@ -151,8 +151,8 @@ describe('splitExpense: errori', () => {
     expect(unwrapError(splitExpense(expense(split)))).toEqual({
       code: 'TotalMismatch',
       field: 'amounts',
-      expected: 9000,
-      actual: 8000,
+      expected: { minor: 9000, currency: 'EUR' },
+      actual: { minor: 8000, currency: 'EUR' },
     });
   });
 
@@ -165,8 +165,7 @@ describe('splitExpense: errori', () => {
       ],
     };
     expect(unwrapError(splitExpense(expense(split)))).toEqual({
-      code: 'TotalMismatch',
-      field: 'percentages',
+      code: 'PercentagesMismatch',
       expected: 10_000,
       actual: 9000,
     });

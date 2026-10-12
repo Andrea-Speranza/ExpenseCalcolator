@@ -91,12 +91,7 @@ function owedShares({
       if (!shares.ok) return shares;
       const sum = split.percentages.reduce((acc, { basisPoints }) => acc + basisPoints, 0);
       if (sum !== FULL_PERCENTAGE) {
-        return err({
-          code: 'TotalMismatch',
-          field: 'percentages',
-          expected: FULL_PERCENTAGE,
-          actual: sum,
-        });
+        return err({ code: 'PercentagesMismatch', expected: FULL_PERCENTAGE, actual: sum });
       }
       return shares;
     }
@@ -155,7 +150,12 @@ function checkAmounts(
   }
 
   if (sum !== BigInt(total.minor)) {
-    return err({ code: 'TotalMismatch', field, expected: total.minor, actual: Number(sum) });
+    return err({
+      code: 'TotalMismatch',
+      field,
+      expected: total,
+      actual: { minor: Number(sum), currency: total.currency },
+    });
   }
   return ok(entries);
 }

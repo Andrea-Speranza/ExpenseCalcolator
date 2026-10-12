@@ -3,11 +3,10 @@ import { join } from 'node:path';
 import {
   CurrencyCodeSchema,
   ExpenseIdSchema,
-  MemberAmountSchema,
+  LedgerSchema,
+  type MemberAmount,
   MemberIdSchema,
   MoneySchema,
-  SettlementIdSchema,
-  SplitSchema,
 } from '@expense/schema';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
@@ -34,24 +33,7 @@ const TransferSchema = z.strictObject({
 const TestVectorSchema = z.strictObject({
   name: z.string().min(1),
   description: z.string().min(1),
-  input: z.strictObject({
-    expenses: z.array(
-      z.strictObject({
-        id: ExpenseIdSchema,
-        total: MoneySchema,
-        paidBy: z.array(MemberAmountSchema),
-        split: SplitSchema,
-      }),
-    ),
-    settlements: z.array(
-      z.strictObject({
-        id: SettlementIdSchema,
-        from: MemberIdSchema,
-        to: MemberIdSchema,
-        amount: MoneySchema,
-      }),
-    ),
-  }),
+  input: LedgerSchema,
   expected: z.strictObject({
     owed: z.record(ExpenseIdSchema, MinorByMember),
     balances: z.record(CurrencyCodeSchema, MinorByMember),
@@ -60,7 +42,7 @@ const TestVectorSchema = z.strictObject({
   }),
 });
 
-const byMember = (amounts: readonly z.infer<typeof MemberAmountSchema>[]) =>
+const byMember = (amounts: readonly MemberAmount[]) =>
   Object.fromEntries(amounts.map(({ memberId, amount }) => [memberId, amount.minor]));
 
 const files = readdirSync(VECTORS_DIR)

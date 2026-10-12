@@ -1,0 +1,9 @@
+{
+  // La CLI gira in Node 22: può usare le sue API e ES2023 (serve per formattare importi da stringa con Intl).
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["node"]
+  },
+  "include": ["src"]
+}

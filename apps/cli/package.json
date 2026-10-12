@@ -1,0 +1,20 @@
+{
+  "name": "@expense/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "spese": "./dist/spese.mjs"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@expense/engine": "workspace:*",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

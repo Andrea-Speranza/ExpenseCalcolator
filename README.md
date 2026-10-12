@@ -19,6 +19,7 @@ pnpm check            # formattazione, lint, tipi, confini tra pacchetti e test 
 pnpm test:watch       # test in modalità watch
 pnpm coverage         # test con copertura
 pnpm format           # formatta tutti i file
+pnpm cli saldi apps/cli/examples/weekend.json   # prova la riga di comando (vedi apps/cli/README.md)
 ```
 
 I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm typecheck`, `pnpm deps`, `pnpm test`.
@@ -35,6 +36,7 @@ I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm 
 | [packages/engine](packages/engine/)     | API pubblica usata dalla UI                                      |
 | [packages/adapters](packages/adapters/) | Storage locale e provider cloud                                  |
 | [packages/ui](packages/ui/)             | Interfaccia (SPA)                                                |
+| [apps/cli](apps/cli/)                   | Riga di comando: saldi e trasferimenti da un file JSON           |
 | [apps/web](apps/web/)                   | Shell web (PWA)                                                  |
 | [apps/native](apps/native/)             | Shell nativa (Tauri 2: Windows, Android)                         |
 

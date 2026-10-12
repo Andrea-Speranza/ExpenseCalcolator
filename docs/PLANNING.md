@@ -439,6 +439,31 @@ ospita la cartella. Chi non usa l'app resta un membro gestito dagli altri.
   - (c) ripiegare sulla cartella locale sincronizzata.
 - Limiti di frequenza dell'API: si mitigano raggruppando gli eventi in segmenti e, più avanti, con gli snapshot.
 
+**Costi e vincoli (verificati il 2026-10-12)**
+
+- **Drive API:** l'uso standard è gratuito. Dal 1° maggio 2026 i nuovi progetti hanno queste quote:
+  - 1.000.000 di unità al minuto per progetto;
+  - 325.000 di unità al minuto per utente;
+  - una soglia giornaliera di 400.000.000 di unità per progetto.
+
+  Ogni operazione consuma unità: un elenco ne costa 100, un download 200. Google ha annunciato che più
+  avanti nel 2026, con almeno 90 giorni di preavviso, l'uso oltre la soglia verrà addebitato sul conto
+  Google Cloud. Le tariffe non sono ancora pubbliche.
+
+  La soglia vale per l'intero progetto, cioè per tutti gli utenti dell'app insieme. Una sync consuma circa
+  1.000 unità (qualche elenco e qualche download). Con una ventina di sync al giorno per utente, la soglia si
+  raggiunge solo oltre i diecimila utenti attivi al giorno.
+
+- **Modalità "testing" della schermata di consenso OAuth:**
+  - al massimo 100 utenti di test, indicati per email;
+  - i token di accesso scadono dopo 7 giorni, quindi bisogna rifare il login ogni settimana.
+- **Pubblicazione in produzione:**
+  - con il solo scope `drive.file` (non sensibile), di norma non serve la verifica di Google; servono però
+    una pagina di privacy policy e un dominio verificato (da confermare nello spike S1);
+  - lo scope `drive` completo invece è "restricted": richiede una verifica di sicurezza annuale (CASA)
+    presso un laboratorio esterno, dalle poche centinaia alle migliaia di dollari l'anno. È un motivo in
+    più per far funzionare `drive.file` (spike S1).
+
 ### 8.9 Sicurezza e privacy
 
 - Chi ha accesso alla cartella può leggere e scrivere: il modello di fiducia è quello di un gruppo di amici.
@@ -561,6 +586,7 @@ ExpenseCalcolator/
 │  │  └─ remote-gdrive/          # RemoteStore su Google Drive API
 │  └─ ui/                        # SPA condivisa da tutte le shell
 └─ apps/
+   ├─ cli/                       # riga di comando: saldi e trasferimenti da un file JSON
    ├─ web/                       # shell PWA (manifest, service worker, deploy statico)
    └─ native/                    # shell Tauri 2 (Windows, Android; poi macOS/Linux/iOS)
 ```
@@ -609,7 +635,8 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 - [x] Trasferimenti suggeriti, semplificati e per coppia.
 - [x] Errori di dominio tipizzati (es. somma degli importi ≠ totale, nessun partecipante).
 - [x] Test unitari, test property-based e primi test vector in `spec/test-vectors`.
-- [ ] _(Opzionale)_ Mini CLI Node che usa il core, per dimostrare che funziona senza UI.
+- [x] CLI Node (`apps/cli`) che calcola saldi e trasferimenti da un file JSON. Passa dall'engine
+      (`calculateLedger`) e dimostra che la logica funziona senza UI.
 - [ ] In parallelo: spike S1 su Google Drive (§13.2), poi decisione D4.
 
 **Fatto quando:**
@@ -625,6 +652,8 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 - [ ] Busta degli eventi: id, tipo, versione, HLC, deviceId, autore.
 - [ ] HLC e ordinamento deterministico.
 - [ ] Proiezione eventi → stato, con le regole di conflitto di §8.4.
+- [x] Prima query senza stato dell'engine: `calculateLedger`, che valida un registro esterno e lo calcola
+      (usata dalla CLI).
 - [ ] Facade `engine`: comandi, query, `subscribe`, risultati come `Result`.
 - [ ] Porte `LocalStore`, `RemoteStore`, `Clock`, `IdGenerator`, con implementazioni in memoria per i test.
 - [ ] Adapter `local-indexeddb`.
@@ -727,16 +756,18 @@ senza alcun server nostro.
 
 ### 13.1 Rischi
 
-| ID  | Rischio                                                                                                     | Probabilità | Impatto | Mitigazione                                                                     |
-| --- | ----------------------------------------------------------------------------------------------------------- | ----------- | ------- | ------------------------------------------------------------------------------- |
-| R1  | Con lo scope `drive.file` un membro non riesce a leggere i file creati dagli altri nella cartella condivisa | Media       | Alto    | Spike S1; alternative in §8.8                                                   |
-| R2  | Login Google su Android con Tauri complicato                                                                | Media       | Medio   | Spike S2; ripiego su Capacitor, che ha plugin maturi                            |
-| R3  | Lentezza o limiti dell'API con molti file piccoli                                                           | Media       | Medio   | Eventi raggruppati in segmenti, letture incrementali, snapshot                  |
-| R4  | Membri con versioni diverse dell'app                                                                        | Alta        | Medio   | `formatVersion`, upcaster, sola lettura (§6.3)                                  |
-| R5  | Conflitti risolti in modo poco intuitivo per l'utente                                                       | Bassa       | Medio   | Regole semplici, storico visibile, avviso nella UI                              |
-| R6  | Orologi dei dispositivi non allineati                                                                       | Media       | Basso   | HLC: l'ordine non dipende solo dall'ora di sistema                              |
-| R7  | Il browser cancella i dati locali (versione web)                                                            | Bassa       | Medio   | Storage persistente e copia nel cloud                                           |
-| R8  | Differenze tra WebView, soprattutto su Android vecchi                                                       | Bassa       | Basso   | `minSdk` adeguato, WebView aggiornata dal Play Store, test su dispositivo reale |
+| ID  | Rischio                                                                                                     | Probabilità | Impatto | Mitigazione                                                                                                   |
+| --- | ----------------------------------------------------------------------------------------------------------- | ----------- | ------- | ------------------------------------------------------------------------------------------------------------- |
+| R1  | Con lo scope `drive.file` un membro non riesce a leggere i file creati dagli altri nella cartella condivisa | Media       | Alto    | Spike S1; alternative in §8.8                                                                                 |
+| R2  | Login Google su Android con Tauri complicato                                                                | Media       | Medio   | Spike S2; ripiego su Capacitor, che ha plugin maturi                                                          |
+| R3  | Lentezza o limiti dell'API con molti file piccoli                                                           | Media       | Medio   | Eventi raggruppati in segmenti, letture incrementali, snapshot                                                |
+| R4  | Membri con versioni diverse dell'app                                                                        | Alta        | Medio   | `formatVersion`, upcaster, sola lettura (§6.3)                                                                |
+| R5  | Conflitti risolti in modo poco intuitivo per l'utente                                                       | Bassa       | Medio   | Regole semplici, storico visibile, avviso nella UI                                                            |
+| R6  | Orologi dei dispositivi non allineati                                                                       | Media       | Basso   | HLC: l'ordine non dipende solo dall'ora di sistema                                                            |
+| R7  | Il browser cancella i dati locali (versione web)                                                            | Bassa       | Medio   | Storage persistente e copia nel cloud                                                                         |
+| R8  | Differenze tra WebView, soprattutto su Android vecchi                                                       | Bassa       | Basso   | `minSdk` adeguato, WebView aggiornata dal Play Store, test su dispositivo reale                               |
+| R9  | Costi della Drive API se l'app avesse moltissimi utenti (nuovo modello di Google del 2026, §8.8)            | Bassa       | Medio   | Segmenti e snapshot per ridurre le chiamate; provider alternativi (cartella sincronizzata, OneDrive, Dropbox) |
+| R10 | Senza la verifica di Google, login da rifare ogni 7 giorni e massimo 100 utenti                             | Alta        | Basso   | Accettabile per uso personale; per un'app pubblica basta lo scope `drive.file`, che non richiede la verifica  |
 
 ### 13.2 Spike (prototipi usa-e-getta con tempo limitato)
 

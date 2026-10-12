@@ -1,4 +1,4 @@
-import type { CurrencyCode, MemberId } from '@expense/schema';
+import type { CurrencyCode, MemberId, Money } from '@expense/schema';
 
 // Errori di dominio del core. Contengono solo dati: il testo da mostrare all'utente lo sceglie la UI
 // in base al `code`, nella lingua dell'utente.
@@ -54,13 +54,17 @@ export interface InvalidExpense {
   readonly memberId?: MemberId;
 }
 
-/**
- * Una somma non torna: quanto hanno pagato i pagatori o gli importi esatti (in unità minori) rispetto al
- * totale della spesa, oppure le percentuali (in punti base) rispetto a 10000.
- */
+/** I pagatori o gli importi esatti non sommano al totale della spesa. */
 export interface TotalMismatch {
   readonly code: 'TotalMismatch';
-  readonly field: 'paidBy' | 'amounts' | 'percentages';
+  readonly field: 'paidBy' | 'amounts';
+  readonly expected: Money;
+  readonly actual: Money;
+}
+
+/** Le percentuali di una divisione non sommano al 100% (10000 punti base). */
+export interface PercentagesMismatch {
+  readonly code: 'PercentagesMismatch';
   readonly expected: number;
   readonly actual: number;
 }
@@ -78,7 +82,12 @@ export interface UnbalancedBalances {
 }
 
 export type ExpenseError =
-  InvalidExpense | TotalMismatch | CurrencyMismatch | InvalidAllocation | AmountOutOfRange;
+  | InvalidExpense
+  | TotalMismatch
+  | PercentagesMismatch
+  | CurrencyMismatch
+  | InvalidAllocation
+  | AmountOutOfRange;
 
 export type SettlementError = InvalidSettlement | AmountOutOfRange;
 
