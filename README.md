@@ -1,0 +1,41 @@
+# ExpenseCalcolator
+
+Gestione delle spese di gruppo, stile Splitwise. L'app è:
+
+- **local-first:** i dati vivono sul dispositivo e l'app funziona offline;
+- **multipiattaforma:** web, Windows, Android;
+- **senza backend:** la condivisione passa dallo storage cloud degli utenti (es. Google Drive).
+
+> **Stato:** Fase 0 (setup) completata, prossima la Fase 1 (logica di calcolo).
+> Tutto parte da [docs/PLANNING.md](docs/PLANNING.md).
+
+## Sviluppo
+
+Prerequisiti: Node.js ≥ 22.13 e pnpm 10. La versione di pnpm è fissata nel campo `packageManager`.
+
+```sh
+pnpm install          # installa le dipendenze di tutto il workspace
+pnpm check            # formattazione, lint, tipi, confini tra pacchetti e test (lo stesso comando della CI)
+pnpm test:watch       # test in modalità watch
+pnpm coverage         # test con copertura
+pnpm format           # formatta tutti i file
+```
+
+I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm typecheck`, `pnpm deps`, `pnpm test`.
+
+## Struttura
+
+| Cartella                                | Contenuto                                                        |
+| --------------------------------------- | ---------------------------------------------------------------- |
+| [docs/](docs/)                          | Pianificazione e decisioni architetturali (ADR)                  |
+| [spec/](spec/)                          | Contratti indipendenti dal linguaggio: JSON Schema e test vector |
+| [packages/schema](packages/schema/)     | Modelli dati ed eventi condivisi                                 |
+| [packages/core](packages/core/)         | Logica di calcolo pura                                           |
+| [packages/sync](packages/sync/)         | Log di eventi, orologio logico, merge                            |
+| [packages/engine](packages/engine/)     | API pubblica usata dalla UI                                      |
+| [packages/adapters](packages/adapters/) | Storage locale e provider cloud                                  |
+| [packages/ui](packages/ui/)             | Interfaccia (SPA)                                                |
+| [apps/web](apps/web/)                   | Shell web (PWA)                                                  |
+| [apps/native](apps/native/)             | Shell nativa (Tauri 2: Windows, Android)                         |
+
+Regola d'oro: le dipendenze vanno solo verso il basso, `ui → engine → core/sync → schema`.

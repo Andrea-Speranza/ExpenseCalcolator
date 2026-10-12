@@ -1,0 +1,2 @@
+# Fine riga LF ovunque, anche su Windows: evita diff fasulli e conflitti con Prettier.
+* text=auto eol=lf

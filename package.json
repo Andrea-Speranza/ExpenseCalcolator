@@ -1,0 +1,33 @@
+{
+  "name": "expense-calcolator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm deps && pnpm test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint .",
+    "typecheck": "pnpm -r typecheck && tsc -p tsconfig.json",
+    "deps": "depcruise packages apps --config .dependency-cruiser.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.0.4",
+    "dependency-cruiser": "^18.6.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vitest": "^5.0.4"
+  }
+}

@@ -1,0 +1,3 @@
+pnpm-lock.yaml
+# Generati da packages/schema: si rigenerano, non si formattano a mano.
+spec/schemas/

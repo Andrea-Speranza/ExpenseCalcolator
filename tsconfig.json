@@ -1,0 +1,9 @@
+{
+  // Test e file di configurazione: girano in Node, quindi qui (e solo qui) servono i tipi di Node.
+  // Il codice sorgente di ogni pacchetto si controlla con il tsconfig.json del pacchetto stesso.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["*.config.ts", "packages/*/test", "packages/adapters/*/test"]
+}

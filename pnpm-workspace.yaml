@@ -1,0 +1,5 @@
+# Le cartelle senza package.json (es. adapter e app non ancora iniziati) vengono ignorate.
+packages:
+  - packages/*
+  - packages/adapters/*
+  - apps/*

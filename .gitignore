@@ -1,0 +1,26 @@
+# Dipendenze
+node_modules/
+
+# Output di build e test
+dist/
+coverage/
+*.tsbuildinfo
+
+# Log
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Ambiente locale
+.env
+.env.*
+!.env.example
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Editor (si condividono solo le estensioni consigliate)
+.vscode/*
+!.vscode/extensions.json
+.idea/

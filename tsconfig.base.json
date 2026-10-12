@@ -1,0 +1,28 @@
+{
+  // Configurazione comune a tutti i pacchetti.
+  // Di default niente tipi DOM né Node (lib ES2022, types vuoto): il codice condiviso deve girare
+  // identico su browser, WebView e Node (PLANNING §4.2). Solo ui e le app aggiungono il DOM.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": [],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "erasableSyntaxOnly": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}
