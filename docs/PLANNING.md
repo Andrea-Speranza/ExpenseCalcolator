@@ -398,6 +398,10 @@ attese crescenti; nel frattempo l'app resta utilizzabile.
 
 ### 8.6 Provider (adapter `RemoteStore`)
 
+> Il confronto completo delle alternative (file condiviso, cartella sincronizzata, peer-to-peer, Dropbox,
+> Google Drive, OneDrive) è in [CONDIVISIONE.md](CONDIVISIONE.md). La raccomandazione lì proposta (D12)
+> potrebbe cambiare l'ordine qui sotto.
+
 In ordine di implementazione:
 
 1. **Cartella locale sincronizzata (desktop).** L'app scrive in una cartella del disco che è già sincronizzata
@@ -736,19 +740,20 @@ senza alcun server nostro.
 
 ## 12. Decisioni aperte
 
-| ID  | Decisione                                                               | Stato      | Scelta o raccomandazione                                                                           | Quando  |
-| --- | ----------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------- | ------- |
-| D1  | Linguaggio del core e dell'intera app                                   | **Decisa** | TypeScript ([ADR 0001](adr/0001-linguaggio-typescript.md))                                         | —       |
-| D2  | Framework UI                                                            | **Decisa** | React + Vite ([ADR 0002](adr/0002-framework-ui-react.md))                                          | —       |
-| D3  | Shell per Android                                                       | Aperta     | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                  | Dopo S2 |
-| D4  | Primo provider cloud e relativo scope OAuth                             | Aperta     | Google Drive; scope scelto in base a S1                                                            | Dopo S1 |
-| D5  | Libreria per schema e validazione                                       | **Decisa** | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                             | —       |
-| D6  | Regole di conflitto                                                     | Aperta     | Last-writer-wins per spesa; l'eliminazione vince sulla modifica concorrente                        | Fase 2  |
-| D7  | Pubblicare la versione web? Dove?                                       | Aperta     | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                  | Fase 3  |
-| D8  | Libreria di componenti UI                                               | Aperta     | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio | Fase 3  |
-| D9  | Gestione delle valute                                                   | **Decisa** | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                   | —       |
-| D10 | Dettagli della conversione (direzione del tasso, arrotondamento, fonte) | Aperta     | Vedi "Da decidere" in [ADR 0004](adr/0004-valute.md)                                               | Fase 7b |
-| D11 | Modalità d'uso (locale, personale, condivisa) e profilo utente          | **Decisa** | Un solo meccanismo; cambia solo dove è pubblicato il log ([ADR 0005](adr/0005-modalita-uso.md))    | —       |
+| ID  | Decisione                                                               | Stato      | Scelta o raccomandazione                                                                                                                        | Quando             |
+| --- | ----------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| D1  | Linguaggio del core e dell'intera app                                   | **Decisa** | TypeScript ([ADR 0001](adr/0001-linguaggio-typescript.md))                                                                                      | —                  |
+| D2  | Framework UI                                                            | **Decisa** | React + Vite ([ADR 0002](adr/0002-framework-ui-react.md))                                                                                       | —                  |
+| D3  | Shell per Android                                                       | Aperta     | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                                                               | Dopo S2            |
+| D4  | Primo provider cloud e relativo scope OAuth                             | Aperta     | Google Drive; scope scelto in base a S1                                                                                                         | Dopo S1            |
+| D5  | Libreria per schema e validazione                                       | **Decisa** | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                                                                          | —                  |
+| D6  | Regole di conflitto                                                     | Aperta     | Last-writer-wins per spesa; l'eliminazione vince sulla modifica concorrente                                                                     | Fase 2             |
+| D7  | Pubblicare la versione web? Dove?                                       | Aperta     | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                                                               | Fase 3             |
+| D8  | Libreria di componenti UI                                               | Aperta     | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio                                              | Fase 3             |
+| D9  | Gestione delle valute                                                   | **Decisa** | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                                                                | —                  |
+| D10 | Dettagli della conversione (direzione del tasso, arrotondamento, fonte) | Aperta     | Vedi "Da decidere" in [ADR 0004](adr/0004-valute.md)                                                                                            | Fase 7b            |
+| D11 | Modalità d'uso (locale, personale, condivisa) e profilo utente          | **Decisa** | Un solo meccanismo; cambia solo dove è pubblicato il log ([ADR 0005](adr/0005-modalita-uso.md))                                                 | —                  |
+| D12 | Canali di condivisione e loro ordine                                    | Aperta     | Prima file condiviso e cartella sincronizzata (nessun account), poi peer-to-peer, infine un provider cloud ([CONDIVISIONE.md](CONDIVISIONE.md)) | Prima della Fase 5 |
 
 ---
 
