@@ -2,6 +2,7 @@
 
 - **Stato:** accettata
 - **Data:** 2026-10-12
+- **Integrata da:** [ADR 0005](0005-modalita-uso.md), per la valuta proposta dalla UI (punto 7)
 
 ## Contesto
 

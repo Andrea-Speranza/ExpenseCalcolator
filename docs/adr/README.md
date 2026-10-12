@@ -36,5 +36,6 @@ Le opzioni scartate e il motivo.
 | [0002](0002-framework-ui-react.md)     | Framework UI: React + Vite                         | Accettata |
 | [0003](0003-schema-validazione-zod.md) | Schema e validazione: Zod 4                        | Accettata |
 | [0004](0004-valute.md)                 | Valute: esplicite da subito, conversione rimandata | Accettata |
+| [0005](0005-modalita-uso.md)           | Tre modalità d'uso: locale, personale, condivisa   | Accettata |
 
 Le altre decisioni da registrare sono quelle aperte in [PLANNING.md §12](../PLANNING.md#12-decisioni-aperte).

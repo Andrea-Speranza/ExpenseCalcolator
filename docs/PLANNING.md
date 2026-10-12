@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.5 (D1, D2, D5 e D9 decise; setup della Fase 0 completato) · **Ultimo aggiornamento:** 2026-10-12
+> **Stato:** v0.6 (D1, D2, D5, D9 e D11 decise; setup della Fase 0 completato) · **Ultimo aggiornamento:** 2026-10-12
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **[DA CONFERMARE — Dn]** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -44,6 +44,11 @@ e **senza un backend o un database da ospitare**.
 - **Saldi:** saldo netto per membro e trasferimenti suggeriti, con o senza semplificazione dei debiti.
 - **Attività:** storico delle modifiche (chi ha fatto cosa e quando).
 - **Offline:** l'app funziona completamente senza connessione e sincronizza quando la connessione torna.
+- **Tre modalità d'uso** ([ADR 0005](adr/0005-modalita-uso.md)). Un gruppo può passare da una all'altra senza conversioni:
+  - **locale:** un dispositivo e nessun account;
+  - **personale:** i propri dati e le impostazioni seguono l'utente sui suoi dispositivi;
+  - **condivisa:** più persone sullo stesso gruppo.
+- **Impostazioni personali:** valuta predefinita, lingua, nome visualizzato.
 
 ### 1.3 Requisiti non funzionali
 
@@ -188,13 +193,14 @@ Dato che sono messaggi JSON, lo stesso contratto funziona senza modifiche all'en
 
 ### 5.3 Catalogo MVP
 
-| Area             | Comandi                                                                               | Query                                                       |
-| ---------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Gruppi           | `CreateGroup`, `RenameGroup`, `ArchiveGroup`                                          | `ListGroups`, `GetGroup`                                    |
-| Membri           | `AddMember`, `RenameMember`, `ArchiveMember`, `ClaimMember` ("io sono questo membro") | `ListMembers`                                               |
-| Spese            | `AddExpense`, `UpdateExpense`, `DeleteExpense`                                        | `ListExpenses` (con filtri), `GetExpense`                   |
-| Rimborsi e saldi | `RecordSettlement`, `DeleteSettlement`                                                | `GetBalances`, `GetSuggestedTransfers` (semplificati sì/no) |
-| Condivisione     | `JoinGroup`, `SyncNow`                                                                | `GetActivity`, `GetSyncStatus`                              |
+| Area             | Comandi                                                                                     | Query                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Gruppi           | `CreateGroup`, `RenameGroup`, `ArchiveGroup`                                                | `ListGroups`, `GetGroup`                                    |
+| Membri           | `AddMember`, `RenameMember`, `ArchiveMember`, `ClaimMember` ("io sono questo membro")       | `ListMembers`                                               |
+| Spese            | `AddExpense`, `UpdateExpense`, `DeleteExpense`                                              | `ListExpenses` (con filtri), `GetExpense`                   |
+| Rimborsi e saldi | `RecordSettlement`, `DeleteSettlement`                                                      | `GetBalances`, `GetSuggestedTransfers` (semplificati sì/no) |
+| Condivisione     | `JoinGroup`, `SyncNow`                                                                      | `GetActivity`, `GetSyncStatus`                              |
+| Profilo          | `UpdateSettings`, `PublishGroup` (locale → personale), `ShareGroup` (personale → condivisa) | `GetSettings`                                               |
 
 ### 5.4 Porte (ciò che l'engine chiede alla piattaforma)
 
@@ -248,13 +254,14 @@ I file sul Drive vengono scritti da dispositivi con versioni diverse dell'app, q
 
 ### 6.4 Modello concettuale (MVP)
 
-| Entità       | Campi principali                                                                                                                        |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `Group`      | id, nome, valuta base, data di creazione, archiviato                                                                                    |
-| `Member`     | id, nome visualizzato, archiviato. È una persona nel gruppo, non un account.                                                            |
-| `Expense`    | id, descrizione, data, totale (`Money`), pagatori `[{memberId, importo}]`, divisione (modalità + parametri), categoria e note opzionali |
-| `Settlement` | id, da, a, importo, data                                                                                                                |
-| Busta evento | id, groupId, tipo, versione `v`, payload, timestamp HLC, deviceId, membro autore                                                        |
+| Entità       | Campi principali                                                                                                                                                                                          |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Group`      | id, nome, valuta base, data di creazione, archiviato                                                                                                                                                      |
+| `Member`     | id, nome visualizzato, archiviato. È una persona nel gruppo, non un account.                                                                                                                              |
+| `Expense`    | id, descrizione, data, totale (`Money`), pagatori `[{memberId, importo}]`, divisione (modalità + parametri), categoria e note opzionali                                                                   |
+| `Settlement` | id, da, a, importo, data                                                                                                                                                                                  |
+| `Profile`    | Impostazioni (valuta predefinita, lingua, nome), gruppi con modalità e riferimento alla cartella, membro "io" per ogni gruppo. È personale e non si condivide mai ([ADR 0005](adr/0005-modalita-uso.md)). |
+| Busta evento | id, groupId, tipo, versione `v`, payload, timestamp HLC, deviceId, membro autore                                                                                                                          |
 
 Ogni importo (`Money`) porta con sé la propria valuta: totale, quote dei pagatori, importi esatti e rimborsi.
 Il gruppo ha una valuta di riferimento ([ADR 0004](adr/0004-valute.md)).
@@ -340,18 +347,24 @@ Requisiti per la UI:
 ### 8.2 Struttura della cartella di un gruppo
 
 ```
-<cartella dell'app sul Drive>/
-└─ <nome-gruppo>__<groupId>/
-   ├─ group.json                 # manifest: groupId, formatVersion, data di creazione
-   ├─ events/
-   │  ├─ <deviceId-A>/
-   │  │  ├─ 000001.json          # segmento: un blocco di eventi, mai modificato
-   │  │  └─ 000002.json
-   │  └─ <deviceId-B>/
-   │     └─ 000001.json
-   ├─ snapshots/                 # (Fase 7) compattazione del log
-   └─ attachments/               # (Fase 7) foto degli scontrini
+ExpenseCalcolator/               # cartella creata dall'app nel Drive dell'utente
+├─ profile/                      # privata: impostazioni ed elenco dei gruppi (ADR 0005)
+│  └─ events/<deviceId>/…
+└─ groups/
+   └─ <nome-gruppo>__<groupId>/  # se il gruppo è condiviso, si condivide questa cartella
+      ├─ group.json              # manifest: groupId, formatVersion, data di creazione
+      ├─ events/
+      │  ├─ <deviceId-A>/
+      │  │  ├─ 000001.json       # segmento: un blocco di eventi, mai modificato
+      │  │  └─ 000002.json
+      │  └─ <deviceId-B>/
+      │     └─ 000001.json
+      ├─ snapshots/              # (Fase 7) compattazione del log
+      └─ attachments/            # (Fase 7) foto degli scontrini
 ```
+
+I gruppi creati da altre persone non stanno qui: si trovano tra i file "condivisi con me" e il profilo ne
+conserva il riferimento.
 
 ### 8.3 Quattro regole che eliminano i conflitti sui file
 
@@ -401,7 +414,9 @@ ospita la cartella. Chi non usa l'app resta un membro gestito dagli altri.
 
 ### 8.7 Flussi: creare un gruppo e unirsi
 
-- **Creazione:** l'app crea la cartella sul Drive del creatore e ci scrive `group.json` e i primi eventi.
+- **Creazione:** un gruppo nasce sempre in locale. Con "salva nel cloud" l'app crea la cartella sul Drive del
+  creatore e ci carica gli eventi già presenti; con "condividi" il gruppo diventa condiviso
+  ([ADR 0005](adr/0005-modalita-uso.md)).
 - **Invito:** il creatore condivide la cartella con gli altri, dalla UI di Drive o dall'app tramite API. Poi
   manda un link d'invito o un QR che contiene il riferimento alla cartella.
 - **Adesione:**
@@ -549,13 +564,13 @@ ExpenseCalcolator/
 
 ### 11.1 Milestone
 
-| Milestone                | Risultato                                    | Fasi |
-| ------------------------ | -------------------------------------------- | ---- |
-| **M1** Core verificato   | Calcolo completo e testato, senza UI         | 0–1  |
-| **M2** App locale        | App usabile su un solo dispositivo (web/PWA) | 2–3  |
-| **M3** App installabili  | Windows e Android                            | 4    |
-| **M4** Multi-dispositivo | Sync tramite cartella sincronizzata          | 5    |
-| **M5** Gruppi condivisi  | Google Drive, inviti, adesione               | 6    |
+| Milestone                | Risultato                                                             | Fasi |
+| ------------------------ | --------------------------------------------------------------------- | ---- |
+| **M1** Core verificato   | Calcolo completo e testato, senza UI                                  | 0–1  |
+| **M2** App locale        | Modalità locale: app usabile su un solo dispositivo (web/PWA)         | 2–3  |
+| **M3** App installabili  | Windows e Android                                                     | 4    |
+| **M4** Multi-dispositivo | Modalità personale: dati e profilo sincronizzati tramite una cartella | 5    |
+| **M5** Gruppi condivisi  | Modalità condivisa: Google Drive, inviti, adesione                    | 6    |
 
 Il modello a eventi viene progettato già in Fase 2, anche se la sync remota arriva in Fase 5. In questo modo
 l'app diventa usabile presto senza dover rifare il modello dati dopo.
@@ -606,6 +621,7 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 - [ ] Facade `engine`: comandi, query, `subscribe`, risultati come `Result`.
 - [ ] Porte `LocalStore`, `RemoteStore`, `Clock`, `IdGenerator`, con implementazioni in memoria per i test.
 - [ ] Adapter `local-indexeddb`.
+- [ ] Profilo locale: impostazioni (valuta predefinita, lingua, nome) ed elenco dei gruppi ([ADR 0005](adr/0005-modalita-uso.md)).
 
 **Fatto quando:** un test end-to-end senza UI fa questo percorso e ottiene gli stessi saldi:
 
@@ -623,7 +639,7 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
   - membri;
   - registra rimborso;
   - attività;
-  - impostazioni.
+  - impostazioni (valuta predefinita, lingua, nome).
 - [ ] Testi in italiano, importi e date formattati con `Intl`.
 - [ ] Valuta: le spese usano solo quella del gruppo, ma i saldi si mostrano già per valuta ([ADR 0004](adr/0004-valute.md)).
 - [ ] PWA: manifest, service worker, funzionamento offline, richiesta di storage persistente.
@@ -650,6 +666,7 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 - [ ] Adapter `remote-folder`: Tauri fs su desktop, File System Access API sul web con Chromium.
 - [ ] Test di simulazione con più dispositivi e test di contratto per `RemoteStore`.
 - [ ] Esportazione e importazione del gruppo come file (ripiego universale).
+- [ ] Sync del profilo e passaggio di un gruppo da locale a personale ("salva nel cloud").
 
 **Fatto quando:** due PC che condividono la stessa cartella sincronizzata (es. con Google Drive per desktop)
 arrivano agli stessi saldi dopo modifiche offline fatte in contemporanea.
@@ -660,6 +677,7 @@ arrivano agli stessi saldi dopo modifiche offline fatte in contemporanea.
 - [ ] Login OAuth (PKCE) su web e Android.
 - [ ] Adapter `remote-gdrive` (`list`/`read`/`create`), con gestione dei limiti di frequenza e dei tentativi.
 - [ ] Flussi: crea gruppo condiviso, invita (link o QR), unisciti, "chi sei?".
+- [ ] Passaggio di un gruppo da personale a condiviso ("condividi") e ritorno ("smetti di condividere").
 - [ ] Esperienza utente per conflitti e attività (es. "modificato da Sara mentre lo modificavi anche tu").
 
 **Fatto quando:** tre persone su tre dispositivi diversi (web, Windows, Android) gestiscono lo stesso gruppo
@@ -694,6 +712,7 @@ senza alcun server nostro.
 | D8  | Libreria di componenti UI                                               | Aperta     | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio | Fase 3  |
 | D9  | Gestione delle valute                                                   | **Decisa** | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                   | —       |
 | D10 | Dettagli della conversione (direzione del tasso, arrotondamento, fonte) | Aperta     | Vedi "Da decidere" in [ADR 0004](adr/0004-valute.md)                                               | Fase 7b |
+| D11 | Modalità d'uso (locale, personale, condivisa) e profilo utente          | **Decisa** | Un solo meccanismo; cambia solo dove è pubblicato il log ([ADR 0005](adr/0005-modalita-uso.md))    | —       |
 
 ---
 
