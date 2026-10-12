@@ -6,7 +6,7 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 - **multipiattaforma:** web, Windows, Android;
 - **senza backend:** la condivisione passa dallo storage cloud degli utenti (es. Google Drive).
 
-> **Stato:** Fase 0 (setup) completata, prossima la Fase 1 (logica di calcolo).
+> **Stato:** Fase 1 (logica di calcolo) in corso.
 > Tutto parte da [docs/PLANNING.md](docs/PLANNING.md).
 
 ## Sviluppo

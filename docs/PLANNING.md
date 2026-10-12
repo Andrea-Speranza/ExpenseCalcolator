@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.6 (D1, D2, D5, D9 e D11 decise; setup della Fase 0 completato) · **Ultimo aggiornamento:** 2026-10-12
+> **Stato:** v0.6 (D1, D2, D5, D9 e D11 decise; Fase 0 completata, Fase 1 in corso) · **Ultimo aggiornamento:** 2026-10-12
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **[DA CONFERMARE — Dn]** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -593,9 +593,9 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 
 ### 11.3 Fase 1 — Core di calcolo (`packages/core`)
 
-- [ ] Tipo `Money` (importo e valuta) con le sue operazioni. Comprende la tabella delle valute ISO 4217 e
+- [x] Tipo `Money` (importo e valuta) con le sue operazioni. Comprende la tabella delle valute ISO 4217 e
       l'errore `CurrencyMismatch` ([ADR 0004](adr/0004-valute.md)). La formattazione per l'utente sta nella UI.
-- [ ] Algoritmo di ripartizione con il resto maggiore (§9.3).
+- [x] Algoritmo di ripartizione con il resto maggiore (§9.3).
 - [ ] Modalità di divisione: parti uguali, importi esatti, percentuali, quote.
 - [ ] Più pagatori per spesa.
 - [ ] Calcolo dei saldi per valuta, comprese spese e rimborsi.
