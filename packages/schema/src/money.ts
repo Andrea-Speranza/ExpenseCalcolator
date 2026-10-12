@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { MemberIdSchema } from './ids';
 
 /**
  * Codice valuta ISO 4217: tre lettere maiuscole (es. "EUR").
@@ -19,3 +20,12 @@ export const MoneySchema = z
   })
   .readonly();
 export type Money = z.infer<typeof MoneySchema>;
+
+/** Importo riferito a un membro: quanto ha pagato, quanto deve, quanto gli spetta. */
+export const MemberAmountSchema = z
+  .object({
+    memberId: MemberIdSchema,
+    amount: MoneySchema,
+  })
+  .readonly();
+export type MemberAmount = z.infer<typeof MemberAmountSchema>;

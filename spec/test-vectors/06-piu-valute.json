@@ -1,0 +1,41 @@
+{
+  "name": "Saldi separati per valuta",
+  "description": "Una spesa in euro e una in dollari: saldi e trasferimenti restano separati per valuta, senza conversioni (ADR 0004).",
+  "input": {
+    "expenses": [
+      {
+        "id": "e_1",
+        "total": { "minor": 9000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_a", "amount": { "minor": 9000, "currency": "EUR" } }],
+        "split": { "method": "equal", "memberIds": ["m_a", "m_b", "m_c"] }
+      },
+      {
+        "id": "e_2",
+        "total": { "minor": 4000, "currency": "USD" },
+        "paidBy": [{ "memberId": "m_b", "amount": { "minor": 4000, "currency": "USD" } }],
+        "split": { "method": "equal", "memberIds": ["m_a", "m_b"] }
+      }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "owed": {
+      "e_1": { "m_a": 3000, "m_b": 3000, "m_c": 3000 },
+      "e_2": { "m_a": 2000, "m_b": 2000 }
+    },
+    "balances": {
+      "EUR": { "m_a": 6000, "m_b": -3000, "m_c": -3000 },
+      "USD": { "m_a": -2000, "m_b": 2000 }
+    },
+    "simplifiedTransfers": [
+      { "from": "m_b", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } },
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } },
+      { "from": "m_a", "to": "m_b", "amount": { "minor": 2000, "currency": "USD" } }
+    ],
+    "pairwiseTransfers": [
+      { "from": "m_b", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } },
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } },
+      { "from": "m_a", "to": "m_b", "amount": { "minor": 2000, "currency": "USD" } }
+    ]
+  }
+}

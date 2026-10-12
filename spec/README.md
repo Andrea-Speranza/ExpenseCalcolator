@@ -6,36 +6,58 @@ in qualsiasi linguaggio.
 - **[schemas/](schemas/)**: JSON Schema di entità, eventi e file del gruppo. Sono **generati** da
   `packages/schema` e non vanno modificati a mano. Servono per generare modelli in altri linguaggi
   (es. con quicktype) e per documentare il formato dei file sul Drive.
-- **[test-vectors/](test-vectors/)**: casi "input → output atteso" per la logica di calcolo. Li usa la suite di
-  test di `packages/core`.
+- **[test-vectors/](test-vectors/)**: casi "input → output atteso" per la logica di calcolo, calcolati a mano.
+  Li esegue la suite di test di `packages/core` (`test/vectors.test.ts`); un'altra implementazione del core
+  è corretta se li supera tutti.
 
-Formato proposto per un test vector (da definire in Fase 1):
+## Formato dei test vector
+
+Ogni file `.json` contiene un caso. Gli importi sono sempre interi in unità minori, con la loro valuta.
 
 ```json
 {
-  "name": "tre amici, 10 € in parti uguali con resto",
+  "name": "Parti uguali, un solo pagatore",
+  "description": "Anna paga 90 € per tre: ognuno deve 30 €.",
   "input": {
-    "members": ["m_a", "m_b", "m_c"],
     "expenses": [
       {
         "id": "e_1",
-        "amount": { "minor": 1000, "currency": "EUR" },
-        "paidBy": [{ "memberId": "m_a", "minor": 1000 }],
+        "total": { "minor": 9000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_a", "amount": { "minor": 9000, "currency": "EUR" } }],
         "split": { "method": "equal", "memberIds": ["m_a", "m_b", "m_c"] }
       }
     ],
     "settlements": []
   },
   "expected": {
-    "shares": { "e_1": { "m_a": 334, "m_b": 333, "m_c": 333 } },
-    "balances": { "EUR": { "m_a": 666, "m_b": -333, "m_c": -333 } },
-    "transfers": [
-      { "from": "m_b", "to": "m_a", "minor": 333, "currency": "EUR" },
-      { "from": "m_c", "to": "m_a", "minor": 333, "currency": "EUR" }
+    "owed": { "e_1": { "m_a": 3000, "m_b": 3000, "m_c": 3000 } },
+    "balances": { "EUR": { "m_a": 6000, "m_b": -3000, "m_c": -3000 } },
+    "simplifiedTransfers": [
+      { "from": "m_b", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } },
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } }
+    ],
+    "pairwiseTransfers": [
+      { "from": "m_b", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } },
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } }
     ]
   }
 }
 ```
 
-Nota: a chi va il centesimo avanzato dipende dalla regola di rotazione di
-[PLANNING §9.3](../docs/PLANNING.md#93-arrotondamento-deterministico). L'esempio sopra è solo illustrativo.
+| Campo                          | Contenuto                                                                                                                                |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `input.expenses`               | Spese: totale, chi ha pagato (`paidBy`) e divisione (`split`, modalità di [PLANNING §9.2](../docs/PLANNING.md#92-modalità-di-divisione)) |
+| `input.settlements`            | Rimborsi: `from` dà a `to` l'importo `amount`                                                                                            |
+| `expected.owed`                | Per ogni spesa, quanto deve ciascun partecipante                                                                                         |
+| `expected.balances`            | Per ogni valuta, il saldo di ogni membro che compare nel registro, anche se è zero. Positivo: deve ricevere; negativo: deve dare         |
+| `expected.simplifiedTransfers` | Trasferimenti semplificati, nell'ordine esatto previsto ([PLANNING §9.5](../docs/PLANNING.md#95-trasferimenti-suggeriti))                |
+| `expected.pairwiseTransfers`   | Trasferimenti per coppia, ordinati per valuta, chi paga e chi riceve                                                                     |
+
+## Regole da conoscere per riprodurre i risultati
+
+- **Resto maggiore e rotazione:** il centesimo avanzato va a chi ha il resto più alto; a parità, si parte dal
+  partecipante in posizione `FNV-1a(id della spesa) mod n`. FNV-1a è l'hash standard a 32 bit, calcolato sui
+  byte UTF-8 dell'id (gli id sono ASCII). Esempi: `"e_1"` → `0x3c072b94` (mod 3 = 0), `"e_3"` → `0x3e072eba`
+  (mod 3 = 1). Vedi [PLANNING §9.3](../docs/PLANNING.md#93-arrotondamento-deterministico).
+- **Spareggi tra membri:** a parità di importo precede il membro con l'id minore, confrontando i caratteri
+  per codice e non secondo la lingua.

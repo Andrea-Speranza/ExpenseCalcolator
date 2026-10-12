@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "@expense/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "zod": "^4.6.6"
   }
 }

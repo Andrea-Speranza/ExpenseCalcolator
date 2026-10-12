@@ -1,0 +1,65 @@
+{
+  "name": "Importi esatti, percentuali e quote",
+  "description": "Tre spese con tre modalità diverse. I trasferimenti semplificati sono due; quelli per coppia sono tre, perché ognuno paga solo chi ha pagato per lui.",
+  "input": {
+    "expenses": [
+      {
+        "id": "e_1",
+        "total": { "minor": 10000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_a", "amount": { "minor": 10000, "currency": "EUR" } }],
+        "split": {
+          "method": "exact",
+          "amounts": [
+            { "memberId": "m_a", "amount": { "minor": 5000, "currency": "EUR" } },
+            { "memberId": "m_b", "amount": { "minor": 2500, "currency": "EUR" } },
+            { "memberId": "m_c", "amount": { "minor": 2500, "currency": "EUR" } }
+          ]
+        }
+      },
+      {
+        "id": "e_2",
+        "total": { "minor": 20000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_b", "amount": { "minor": 20000, "currency": "EUR" } }],
+        "split": {
+          "method": "percentage",
+          "percentages": [
+            { "memberId": "m_a", "basisPoints": 5000 },
+            { "memberId": "m_b", "basisPoints": 3000 },
+            { "memberId": "m_c", "basisPoints": 2000 }
+          ]
+        }
+      },
+      {
+        "id": "e_3",
+        "total": { "minor": 9000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_c", "amount": { "minor": 9000, "currency": "EUR" } }],
+        "split": {
+          "method": "shares",
+          "weights": [
+            { "memberId": "m_a", "weight": 2 },
+            { "memberId": "m_b", "weight": 1 },
+            { "memberId": "m_c", "weight": 0 }
+          ]
+        }
+      }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "owed": {
+      "e_1": { "m_a": 5000, "m_b": 2500, "m_c": 2500 },
+      "e_2": { "m_a": 10000, "m_b": 6000, "m_c": 4000 },
+      "e_3": { "m_a": 6000, "m_b": 3000, "m_c": 0 }
+    },
+    "balances": { "EUR": { "m_a": -11000, "m_b": 8500, "m_c": 2500 } },
+    "simplifiedTransfers": [
+      { "from": "m_a", "to": "m_b", "amount": { "minor": 8500, "currency": "EUR" } },
+      { "from": "m_a", "to": "m_c", "amount": { "minor": 2500, "currency": "EUR" } }
+    ],
+    "pairwiseTransfers": [
+      { "from": "m_a", "to": "m_b", "amount": { "minor": 7500, "currency": "EUR" } },
+      { "from": "m_a", "to": "m_c", "amount": { "minor": 3500, "currency": "EUR" } },
+      { "from": "m_c", "to": "m_b", "amount": { "minor": 1000, "currency": "EUR" } }
+    ]
+  }
+}

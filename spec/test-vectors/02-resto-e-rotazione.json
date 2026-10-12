@@ -1,0 +1,36 @@
+{
+  "name": "Resto e rotazione dello spareggio",
+  "description": "Due spese da 10 € divise in tre. Il centesimo avanzato va al membro in posizione FNV-1a(id) mod 3: \"e_1\" dà 0 (m_a), \"e_3\" dà 1 (m_b).",
+  "input": {
+    "expenses": [
+      {
+        "id": "e_1",
+        "total": { "minor": 1000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_a", "amount": { "minor": 1000, "currency": "EUR" } }],
+        "split": { "method": "equal", "memberIds": ["m_a", "m_b", "m_c"] }
+      },
+      {
+        "id": "e_3",
+        "total": { "minor": 1000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_b", "amount": { "minor": 1000, "currency": "EUR" } }],
+        "split": { "method": "equal", "memberIds": ["m_a", "m_b", "m_c"] }
+      }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "owed": {
+      "e_1": { "m_a": 334, "m_b": 333, "m_c": 333 },
+      "e_3": { "m_a": 333, "m_b": 334, "m_c": 333 }
+    },
+    "balances": { "EUR": { "m_a": 333, "m_b": 333, "m_c": -666 } },
+    "simplifiedTransfers": [
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 333, "currency": "EUR" } },
+      { "from": "m_c", "to": "m_b", "amount": { "minor": 333, "currency": "EUR" } }
+    ],
+    "pairwiseTransfers": [
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 333, "currency": "EUR" } },
+      { "from": "m_c", "to": "m_b", "amount": { "minor": 333, "currency": "EUR" } }
+    ]
+  }
+}

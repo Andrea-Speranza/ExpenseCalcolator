@@ -1,0 +1,27 @@
+{
+  "name": "Un rimborso salda un debito",
+  "description": "Anna paga 90 € per tre, poi Luca le restituisce 30 €: resta solo il debito di Sara.",
+  "input": {
+    "expenses": [
+      {
+        "id": "e_1",
+        "total": { "minor": 9000, "currency": "EUR" },
+        "paidBy": [{ "memberId": "m_a", "amount": { "minor": 9000, "currency": "EUR" } }],
+        "split": { "method": "equal", "memberIds": ["m_a", "m_b", "m_c"] }
+      }
+    ],
+    "settlements": [
+      { "id": "s_1", "from": "m_b", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } }
+    ]
+  },
+  "expected": {
+    "owed": { "e_1": { "m_a": 3000, "m_b": 3000, "m_c": 3000 } },
+    "balances": { "EUR": { "m_a": 3000, "m_b": 0, "m_c": -3000 } },
+    "simplifiedTransfers": [
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } }
+    ],
+    "pairwiseTransfers": [
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } }
+    ]
+  }
+}

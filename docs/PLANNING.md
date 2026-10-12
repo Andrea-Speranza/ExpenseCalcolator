@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.6 (D1, D2, D5, D9 e D11 decise; Fase 0 completata, Fase 1 in corso) · **Ultimo aggiornamento:** 2026-10-12
+> **Stato:** v0.6 (D1, D2, D5, D9 e D11 decise; Fasi 0 e 1 completate) · **Ultimo aggiornamento:** 2026-10-12
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -177,7 +177,7 @@ Ogni operazione è un oggetto JSON puro:
   "expense": {
     "description": "Cena",
     "amount": { "minor": 9000, "currency": "EUR" },
-    "paidBy": [{ "memberId": "m_anna", "minor": 9000 }],
+    "paidBy": [{ "memberId": "m_anna", "amount": { "minor": 9000, "currency": "EUR" } }],
     "split": { "method": "equal", "memberIds": ["m_anna", "m_luca", "m_sara"] }
   }
 }
@@ -470,13 +470,13 @@ ospita la cartella. Chi non usa l'app resta un membro gestito dagli altri.
 
 ### 9.2 Modalità di divisione
 
-| Modalità       | Parametri                                                          | Esempio (90 € tra A, B, C)     |
-| -------------- | ------------------------------------------------------------------ | ------------------------------ |
-| Parti uguali   | Partecipanti                                                       | 30 / 30 / 30                   |
-| Importi esatti | Importo per partecipante; la somma deve fare il totale             | 50 / 25 / 15                   |
-| Percentuali    | Punti base (10000 = 100%)                                          | 50% / 30% / 20%                |
-| Quote          | Pesi interi                                                        | 2 / 1 / 1 → 45 / 22,50 / 22,50 |
-| _Più avanti_   | Aggiustamenti (+/− sulle parti uguali), voce per voce da scontrino | —                              |
+| Modalità       | `method`     | Parametri                                                                      | Esempio (90 € tra A, B, C)     |
+| -------------- | ------------ | ------------------------------------------------------------------------------ | ------------------------------ |
+| Parti uguali   | `equal`      | `memberIds`: i partecipanti                                                    | 30 / 30 / 30                   |
+| Importi esatti | `exact`      | `amounts`: importo (con valuta) per partecipante; la somma deve fare il totale | 50 / 25 / 15                   |
+| Percentuali    | `percentage` | `percentages`: punti base per partecipante (10000 = 100%)                      | 50% / 30% / 20%                |
+| Quote          | `shares`     | `weights`: pesi interi per partecipante                                        | 2 / 1 / 1 → 45 / 22,50 / 22,50 |
+| _Più avanti_   | —            | Aggiustamenti (+/− sulle parti uguali), voce per voce da scontrino             | —                              |
 
 Il modello supporta **più pagatori per spesa** fin dall'inizio (es. A paga 60, B paga 30), anche se la prima
 UI ne gestirà uno solo.
@@ -488,7 +488,8 @@ UI ne gestirà uno solo.
 1. Ognuno riceve la parte intera (3,33 €).
 2. I centesimi avanzati (qui 1) vanno a chi ha il resto frazionario più alto.
 3. A parità di resto, decide un ordine stabile. Per non penalizzare sempre la stessa persona, l'ordine ruota
-   in base all'id della spesa.
+   in base all'id della spesa: parte dal partecipante in posizione `FNV-1a(id) mod n`, dove FNV-1a è l'hash
+   standard a 32 bit e `n` il numero di partecipanti. È facile da riprodurre in qualsiasi linguaggio.
 
 Il risultato è identico su ogni dispositivo e la somma delle parti è sempre uguale al totale.
 
@@ -505,8 +506,14 @@ Invariante: la somma dei saldi di un gruppo è sempre 0.
 - **Semplificati (predefinito):** un algoritmo greedy abbina ripetutamente il debitore più grande con il
   creditore più grande. Servono al massimo n−1 trasferimenti. Non è sempre il numero minimo assoluto (trovarlo
   è un problema NP-difficile), ma nella pratica funziona molto bene. Gli spareggi sono deterministici.
-- **Non semplificati:** debiti per ogni coppia di membri, ricavati dalle singole spese. È per chi preferisce
-  vedere "chi deve a chi" senza intermediari.
+- **Non semplificati:** ogni spesa si salda per conto suo (chi ha partecipato paga chi ha pagato), poi i
+  debiti di ogni coppia di membri si compensano. Ognuno paga solo persone con cui ha condiviso delle spese:
+  è per chi preferisce vedere "chi deve a chi" senza intermediari. Anche così i conti tornano al centesimo,
+  pure con più pagatori.
+
+L'ordine dei trasferimenti è fisso, così ogni dispositivo mostra lo stesso elenco. I semplificati seguono
+l'ordine in cui l'algoritmo li produce, valuta per valuta; quelli per coppia sono ordinati per valuta, poi per
+chi paga, poi per chi riceve.
 
 ### 9.6 Valute ([ADR 0004](adr/0004-valute.md))
 
@@ -591,17 +598,17 @@ Gli spike (§13.2) non bloccano il core, quindi stanno fuori dalla Fase 0:
 **Fatto quando:** `pnpm check` passa in locale e D1, D2 e D5 sono registrate come ADR. La CI partirà
 quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa di visibile (Fase 3).
 
-### 11.3 Fase 1 — Core di calcolo (`packages/core`)
+### 11.3 Fase 1 — Core di calcolo (`packages/core`) (completata, tranne lo spike S1)
 
 - [x] Tipo `Money` (importo e valuta) con le sue operazioni. Comprende la tabella delle valute ISO 4217 e
       l'errore `CurrencyMismatch` ([ADR 0004](adr/0004-valute.md)). La formattazione per l'utente sta nella UI.
 - [x] Algoritmo di ripartizione con il resto maggiore (§9.3).
-- [ ] Modalità di divisione: parti uguali, importi esatti, percentuali, quote.
-- [ ] Più pagatori per spesa.
-- [ ] Calcolo dei saldi per valuta, comprese spese e rimborsi.
-- [ ] Trasferimenti suggeriti, semplificati e per coppia.
-- [ ] Errori di dominio tipizzati (es. somma degli importi ≠ totale, nessun partecipante).
-- [ ] Test unitari, test property-based e primi test vector in `spec/test-vectors`.
+- [x] Modalità di divisione: parti uguali, importi esatti, percentuali, quote.
+- [x] Più pagatori per spesa.
+- [x] Calcolo dei saldi per valuta, comprese spese e rimborsi.
+- [x] Trasferimenti suggeriti, semplificati e per coppia.
+- [x] Errori di dominio tipizzati (es. somma degli importi ≠ totale, nessun partecipante).
+- [x] Test unitari, test property-based e primi test vector in `spec/test-vectors`.
 - [ ] _(Opzionale)_ Mini CLI Node che usa il core, per dimostrare che funziona senza UI.
 - [ ] In parallelo: spike S1 su Google Drive (§13.2), poi decisione D4.
 

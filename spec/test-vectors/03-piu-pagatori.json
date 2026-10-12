@@ -1,0 +1,28 @@
+{
+  "name": "Più pagatori",
+  "description": "Anna paga 60 € e Luca 30 € per una spesa da 90 € divisa in tre: Luca è in pari, Sara deve 30 € ad Anna.",
+  "input": {
+    "expenses": [
+      {
+        "id": "e_1",
+        "total": { "minor": 9000, "currency": "EUR" },
+        "paidBy": [
+          { "memberId": "m_a", "amount": { "minor": 6000, "currency": "EUR" } },
+          { "memberId": "m_b", "amount": { "minor": 3000, "currency": "EUR" } }
+        ],
+        "split": { "method": "equal", "memberIds": ["m_a", "m_b", "m_c"] }
+      }
+    ],
+    "settlements": []
+  },
+  "expected": {
+    "owed": { "e_1": { "m_a": 3000, "m_b": 3000, "m_c": 3000 } },
+    "balances": { "EUR": { "m_a": 3000, "m_b": 0, "m_c": -3000 } },
+    "simplifiedTransfers": [
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } }
+    ],
+    "pairwiseTransfers": [
+      { "from": "m_c", "to": "m_a", "amount": { "minor": 3000, "currency": "EUR" } }
+    ]
+  }
+}
