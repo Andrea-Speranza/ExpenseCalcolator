@@ -14,14 +14,21 @@
     "isolatedModules": true,
     "erasableSyntaxOnly": true,
 
+    // Controlli allineati a @tsconfig/strictest, la configurazione base più rigorosa della community TypeScript.
     "strict": true,
-    "noUncheckedIndexedAccess": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
 
+    "esModuleInterop": true,
     "noEmit": true,
     "skipLibCheck": true
   }

@@ -51,7 +51,7 @@ Il profilo non viene mai condiviso con altre persone.
 
 ### Struttura sul Drive dell'utente
 
-```
+```text
 ExpenseCalcolator/            # cartella creata dall'app nel Drive dell'utente
 ├─ profile/                   # privata: impostazioni, elenco dei gruppi, "chi sono io"
 │  └─ events/<deviceId>/…

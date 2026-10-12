@@ -3,7 +3,7 @@
 > **Stato:** v0.6 (D1, D2, D5, D9 e D11 decise; Fase 0 completata, Fase 1 in corso) · **Ultimo aggiornamento:** 2026-10-12
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
-> Le voci marcate **[DA CONFERMARE — Dn]** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
+> Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
 > e si registrano come ADR in [`docs/adr/`](adr/).
 
 ## Indice
@@ -86,7 +86,7 @@ iOS è rimandato, non escluso: l'architettura lo supporta.
 
 ## 3. Architettura a strati
 
-```
+```text
  Shell            apps/web (PWA)          apps/native (Tauri 2: Windows, Android)
                       │                           │
                       └─────────────┬─────────────┘
@@ -303,7 +303,7 @@ Gli stessi file vengono impacchettati in ogni "shell":
 - Di conseguenza la UI non dipende mai dalla rete: la rete serve solo a sincronizzare i dati.
 - La versione web va comunque pubblicata come file statici da qualche parte, per esempio GitHub Pages o
   Cloudflare Pages: sono gratuiti e non richiedono backend né DB. Se non si vuole neanche questo, si rinuncia
-  alla versione web e si resta sulle app installabili **[DA CONFERMARE — D7]**.
+  alla versione web e si resta sulle app installabili **(DA CONFERMARE — D7)**.
 
 ### 7.3 Perché Tauri e non Electron
 
@@ -312,7 +312,7 @@ Gli stessi file vengono impacchettati in ogni "shell":
 - **Tauri 2** usa la WebView del sistema operativo: installer di pochi MB e un solo progetto per desktop e
   mobile. Il lato nativo è in Rust, ma per noi si limita a configurazione e plugin (accesso al file system, deep link).
 - **Capacitor** è più maturo su mobile e ha molti plugin, ad esempio per il login Google nativo, ma non copre
-  il desktop. La scelta per Android si fa dopo lo spike S2 **[D3]**.
+  il desktop. La scelta per Android si fa dopo lo spike S2 **(D3)**.
 
 ### 7.4 Framework UI: React + Vite — **deciso** ([ADR 0002](adr/0002-framework-ui-react.md))
 
@@ -322,7 +322,7 @@ Motivi principali:
 - offre una via di fuga verso React Native, se un giorno la WebView non bastasse su mobile.
 
 La UI legge lo stato tramite `engine.subscribe`, che in React si collega direttamente con
-`useSyncExternalStore`. La libreria di componenti si sceglie in Fase 3 **[D8]**.
+`useSyncExternalStore`. La libreria di componenti si sceglie in Fase 3 **(D8)**.
 
 Requisiti per la UI:
 
@@ -346,7 +346,7 @@ Requisiti per la UI:
 
 ### 8.2 Struttura della cartella di un gruppo
 
-```
+```text
 ExpenseCalcolator/               # cartella creata dall'app nel Drive dell'utente
 ├─ profile/                      # privata: impostazioni ed elenco dei gruppi (ADR 0005)
 │  └─ events/<deviceId>/…
@@ -377,7 +377,7 @@ conserva il riferimento.
    regole. Il criterio è un orologio logico ibrido (HLC), con spareggio su deviceId ed eventId. Così tutti
    arrivano allo stesso stato, anche se ricevono i file in ordine diverso.
 
-### 8.4 Conflitti logici (stessa spesa modificata da due persone) **[DA CONFERMARE — D6]**
+### 8.4 Conflitti logici (stessa spesa modificata da due persone) **(DA CONFERMARE — D6)**
 
 - **Modifica contro modifica:** vince quella con il timestamp HLC più alto. È un last-writer-wins a livello di
   spesa; si può raffinare a livello di singolo campo.
@@ -534,7 +534,7 @@ Nessuno dei due passi richiede di migrare i dati già salvati.
 
 Già creata nel repository: ogni cartella contiene un `README.md` con responsabilità e regole di dipendenza.
 
-```
+```text
 ExpenseCalcolator/
 ├─ README.md
 ├─ docs/
@@ -762,7 +762,19 @@ senza alcun server nostro.
   typescript-eslint non la supporta ancora: da rivalutare quando la supporterà.
 - **Vite** per la build, **Vitest** per i test, **fast-check** per i test property-based, **Playwright** per i test E2E.
 - **Zod 4** per modelli dati, validazione e generazione del JSON Schema (ADR 0003).
-- **ESLint** e **Prettier**; **dependency-cruiser** per far rispettare i confini tra pacchetti.
+- **ESLint** con il set raccomandato del plugin ufficiale di ogni linguaggio in uso:
+
+  | Linguaggio                 | Regole                                                                                                           |
+  | -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+  | JavaScript e TypeScript    | `@eslint/js` e typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, più `switch-exhaustiveness-check` |
+  | Test                       | `@vitest/eslint-plugin`                                                                                          |
+  | JSON e JSONC               | `@eslint/json`                                                                                                   |
+  | Markdown (dialetto GitHub) | `@eslint/markdown`, che verifica anche i link interni ai documenti                                               |
+
+  YAML (configurazione della CI e del workspace) è solo formattato e validato sintatticamente da Prettier.
+
+- **TypeScript** con i controlli di `@tsconfig/strictest`, la configurazione base più rigorosa della community.
+- **Prettier** per la formattazione; **dependency-cruiser** per far rispettare i confini tra pacchetti.
 - **GitHub Actions** per la CI: lint, controllo dei tipi, test, build. È già configurata e si attiva quando
   il repository viene pubblicato (Fase 3).
 
@@ -783,6 +795,7 @@ senza alcun server nostro.
 | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------ |
 | Niente API del browser o di Node in `schema`, `core`, `sync`, `engine`                                     | `tsconfig.base.json` (`lib: ES2022`, `types: []`) | TypeScript         |
 | Niente `Date.now()`, `new Date()` o `Math.random()` negli stessi pacchetti                                 | `eslint.config.js`                                | ESLint             |
+| Tipi espliciti in ingresso e in uscita per le funzioni esportate dagli stessi pacchetti                    | `eslint.config.js`                                | ESLint             |
 | Dipendenze solo verso il basso; dal core verso schema solo `import type`; niente moduli Node; niente cicli | `.dependency-cruiser.mjs`                         | dependency-cruiser |
 
 **Livelli di test:**
