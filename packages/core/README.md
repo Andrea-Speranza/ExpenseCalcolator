@@ -2,7 +2,7 @@
 
 Contiene la logica di calcolo, in forma pura e deterministica:
 
-- importi (`Money`, in unità minori intere);
+- importi (`Money`: unità minori intere più valuta) e tabella delle valute ISO 4217 ([ADR 0004](../../docs/adr/0004-valute.md));
 - ripartizione con il metodo del resto maggiore;
 - modalità di divisione: parti uguali, importi esatti, percentuali, quote;
 - saldi per membro e per valuta;

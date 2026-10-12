@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.4 (D1, D2 e D5 decise; setup della Fase 0 completato) · **Ultimo aggiornamento:** 2026-10-12
+> **Stato:** v0.5 (D1, D2, D5 e D9 decise; setup della Fase 0 completato) · **Ultimo aggiornamento:** 2026-10-12
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **[DA CONFERMARE — Dn]** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -256,6 +256,9 @@ I file sul Drive vengono scritti da dispositivi con versioni diverse dell'app, q
 | `Settlement` | id, da, a, importo, data                                                                                                                |
 | Busta evento | id, groupId, tipo, versione `v`, payload, timestamp HLC, deviceId, membro autore                                                        |
 
+Ogni importo (`Money`) porta con sé la propria valuta: totale, quote dei pagatori, importi esatti e rimborsi.
+Il gruppo ha una valuta di riferimento ([ADR 0004](adr/0004-valute.md)).
+
 Tre identità distinte:
 
 - **Membro:** la persona all'interno del gruppo.
@@ -445,7 +448,9 @@ ospita la cartella. Chi non usa l'app resta un membro gestito dagli altri.
 
 - Gli importi sono interi in unità minori (centesimi): `{ minor: 1234, currency: "EUR" }` vale 12,34 €.
   Mai numeri decimali.
-- I decimali di ogni valuta vengono dalla norma ISO 4217 (EUR 2, JPY 0, …).
+- I decimali di ogni valuta vengono dalla norma ISO 4217 (EUR 2, JPY 0, …), tramite una tabella interna al
+  core. Non si usa `Intl`, i cui dati possono cambiare tra browser e versioni ([ADR 0004](adr/0004-valute.md)).
+- Le operazioni avvengono solo tra importi della stessa valuta; altrimenti il risultato è l'errore `CurrencyMismatch`.
 - Ogni operazione controlla `Number.isSafeInteger`.
 
 ### 9.2 Modalità di divisione
@@ -488,10 +493,18 @@ Invariante: la somma dei saldi di un gruppo è sempre 0.
 - **Non semplificati:** debiti per ogni coppia di membri, ricavati dalle singole spese. È per chi preferisce
   vedere "chi deve a chi" senza intermediari.
 
-### 9.6 Multi-valuta (Fase 7)
+### 9.6 Valute ([ADR 0004](adr/0004-valute.md))
 
-I saldi si tengono per valuta. La conversione nella valuta base del gruppo è opzionale e usa un tasso
-**salvato nella spesa** al momento dell'inserimento, così il calcolo non dipende mai da servizi online.
+- **Adesso:**
+  - ogni importo ha la sua valuta;
+  - il gruppo ha una valuta di riferimento;
+  - saldi e trasferimenti si calcolano per valuta;
+  - nell'MVP la UI propone solo la valuta del gruppo, ma il modello ne supporta già più di una.
+- **Fase 7a:** più valute senza conversione. È solo lavoro di UI.
+- **Fase 7b:** conversione nella valuta del gruppo. Il tasso viene **salvato nella spesa** al momento
+  dell'inserimento, così il calcolo non dipende mai da servizi online e dà lo stesso risultato su ogni dispositivo.
+
+Nessuno dei due passi richiede di migrare i dati già salvati.
 
 ### 9.7 Invarianti (verificati con test property-based)
 
@@ -565,11 +578,12 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 
 ### 11.3 Fase 1 — Core di calcolo (`packages/core`)
 
-- [ ] Tipo `Money` con le sue operazioni. La formattazione per l'utente sta nella UI.
+- [ ] Tipo `Money` (importo e valuta) con le sue operazioni. Comprende la tabella delle valute ISO 4217 e
+      l'errore `CurrencyMismatch` ([ADR 0004](adr/0004-valute.md)). La formattazione per l'utente sta nella UI.
 - [ ] Algoritmo di ripartizione con il resto maggiore (§9.3).
 - [ ] Modalità di divisione: parti uguali, importi esatti, percentuali, quote.
 - [ ] Più pagatori per spesa.
-- [ ] Calcolo dei saldi, comprese spese e rimborsi.
+- [ ] Calcolo dei saldi per valuta, comprese spese e rimborsi.
 - [ ] Trasferimenti suggeriti, semplificati e per coppia.
 - [ ] Errori di dominio tipizzati (es. somma degli importi ≠ totale, nessun partecipante).
 - [ ] Test unitari, test property-based e primi test vector in `spec/test-vectors`.
@@ -611,6 +625,7 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
   - attività;
   - impostazioni.
 - [ ] Testi in italiano, importi e date formattati con `Intl`.
+- [ ] Valuta: le spese usano solo quella del gruppo, ma i saldi si mostrano già per valuta ([ADR 0004](adr/0004-valute.md)).
 - [ ] PWA: manifest, service worker, funzionamento offline, richiesta di storage persistente.
 - [ ] Test E2E dei percorsi principali con Playwright.
 - [ ] Pubblicare il repository su GitHub, appena la UI mostra qualcosa di usabile, e verificare che la CI passi.
@@ -652,7 +667,8 @@ senza alcun server nostro.
 
 ### 11.9 Fase 7 — Evoluzioni (ordine da decidere)
 
-- Multi-valuta con tasso salvato nella spesa.
+- 7a — Più valute senza conversione (solo UI, [ADR 0004](adr/0004-valute.md)).
+- 7b — Conversione nella valuta del gruppo, con tasso salvato nella spesa ([ADR 0004](adr/0004-valute.md)).
 - Categorie, ricerca, filtri, statistiche.
 - Foto degli scontrini (`attachments/`).
 - Esportazione CSV e PDF.
@@ -666,16 +682,18 @@ senza alcun server nostro.
 
 ## 12. Decisioni aperte
 
-| ID  | Decisione                                   | Stato      | Scelta o raccomandazione                                                                           | Quando  |
-| --- | ------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------- | ------- |
-| D1  | Linguaggio del core e dell'intera app       | **Decisa** | TypeScript ([ADR 0001](adr/0001-linguaggio-typescript.md))                                         | —       |
-| D2  | Framework UI                                | **Decisa** | React + Vite ([ADR 0002](adr/0002-framework-ui-react.md))                                          | —       |
-| D3  | Shell per Android                           | Aperta     | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                  | Dopo S2 |
-| D4  | Primo provider cloud e relativo scope OAuth | Aperta     | Google Drive; scope scelto in base a S1                                                            | Dopo S1 |
-| D5  | Libreria per schema e validazione           | **Decisa** | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                             | —       |
-| D6  | Regole di conflitto                         | Aperta     | Last-writer-wins per spesa; l'eliminazione vince sulla modifica concorrente                        | Fase 2  |
-| D7  | Pubblicare la versione web? Dove?           | Aperta     | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                  | Fase 3  |
-| D8  | Libreria di componenti UI                   | Aperta     | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio | Fase 3  |
+| ID  | Decisione                                                               | Stato      | Scelta o raccomandazione                                                                           | Quando  |
+| --- | ----------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------------- | ------- |
+| D1  | Linguaggio del core e dell'intera app                                   | **Decisa** | TypeScript ([ADR 0001](adr/0001-linguaggio-typescript.md))                                         | —       |
+| D2  | Framework UI                                                            | **Decisa** | React + Vite ([ADR 0002](adr/0002-framework-ui-react.md))                                          | —       |
+| D3  | Shell per Android                                                       | Aperta     | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                  | Dopo S2 |
+| D4  | Primo provider cloud e relativo scope OAuth                             | Aperta     | Google Drive; scope scelto in base a S1                                                            | Dopo S1 |
+| D5  | Libreria per schema e validazione                                       | **Decisa** | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                             | —       |
+| D6  | Regole di conflitto                                                     | Aperta     | Last-writer-wins per spesa; l'eliminazione vince sulla modifica concorrente                        | Fase 2  |
+| D7  | Pubblicare la versione web? Dove?                                       | Aperta     | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                  | Fase 3  |
+| D8  | Libreria di componenti UI                                               | Aperta     | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio | Fase 3  |
+| D9  | Gestione delle valute                                                   | **Decisa** | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                   | —       |
+| D10 | Dettagli della conversione (direzione del tasso, arrotondamento, fonte) | Aperta     | Vedi "Da decidere" in [ADR 0004](adr/0004-valute.md)                                               | Fase 7b |
 
 ---
 
