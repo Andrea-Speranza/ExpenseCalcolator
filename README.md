@@ -10,6 +10,22 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 > funziona in locale nel browser (`pnpm web`). Prossima la Fase 4: app native per Windows e Android.
 > Tutto parte da [docs/PLANNING.md](docs/PLANNING.md).
 
+## Cosa si può fare oggi
+
+Su un solo dispositivo, senza account né rete, dalla web app (`pnpm web`) o dalla riga di comando
+(`pnpm cli`):
+
+- creare gruppi, aggiungere le persone e indicare chi sei;
+- registrare spese con uno o più pagatori, divise in parti uguali, per importi, percentuali o quote, con data e
+  ora facoltativa;
+- vedere saldi e trasferimenti suggeriti, registrare i rimborsi;
+- ritrovare tutto nello storico, filtrare le spese pagate da te o per te, eliminare e ripristinare;
+- vedere nell'elenco dei gruppi quali hanno conti aperti e quali sono in pari, e archiviare quelli conclusi;
+- esportare un gruppo su file e importarlo su un altro dispositivo o nella CLI (copia di sicurezza o passaggio
+  ad altri).
+
+La sincronizzazione automatica tra dispositivi e la condivisione arrivano con le Fasi 5 e 6.
+
 ## Sviluppo
 
 Prerequisiti: Node.js ≥ 22.13 e pnpm 10. La versione di pnpm è fissata nel campo `packageManager`.
@@ -39,7 +55,7 @@ I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm 
 | [packages/core](packages/core/)         | Logica di calcolo pura                                                                                  |
 | [packages/sync](packages/sync/)         | Log di eventi, orologio logico, merge                                                                   |
 | [packages/engine](packages/engine/)     | API pubblica usata dalla UI                                                                             |
-| [packages/adapters](packages/adapters/) | Porte di piattaforma: salvataggio locale (IndexedDB), orologio e id                                     |
+| [packages/adapters](packages/adapters/) | Porte di piattaforma: salvataggio locale (IndexedDB, file JSON), orologio e id                          |
 | [packages/channels](packages/channels/) | Canali di condivisione, ognuno un plugin separato: file, cartella, peer-to-peer, cloud                  |
 | [packages/ui](packages/ui/)             | Interfaccia (SPA in React con shadcn/ui), uguale in tutte le shell                                      |
 | [apps/cli](apps/cli/)                   | Riga di comando: l'app in modalità locale, senza grafica                                                |

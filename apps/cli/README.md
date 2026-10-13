@@ -26,7 +26,7 @@ un'altra: `--dati <cartella>` oppure la variabile `SPESE_DATI`.
 spese gruppo crea "Weekend in montagna" --io Anna
 spese membro aggiungi montagna Luca
 spese membro aggiungi montagna Sara
-spese spesa aggiungi montagna "Cena al rifugio" 120,50
+spese spesa aggiungi montagna "Cena al rifugio" 120,50 --ora 20:30
 spese spesa aggiungi montagna Benzina 60 --pagato Luca --tra Anna,Luca
 spese spesa aggiungi montagna Funivia 90 --valuta CHF --pagato Sara --quote Anna=1,Luca=1,Sara=1
 spese rimborso aggiungi montagna Sara Anna 20

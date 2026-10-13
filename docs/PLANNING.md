@@ -38,11 +38,14 @@ e **senza un backend o un database da ospitare**.
 
 - **Gruppi:** creare, rinominare, archiviare.
 - **Membri:** aggiungere, rinominare, archiviare. Un membro può non avere l'app (lo gestiscono gli altri).
-- **Spese:** aggiungere, modificare, eliminare. Ogni spesa ha descrizione, data (con l'ora facoltativa), importo, valuta, chi ha pagato,
-  chi partecipa e la modalità di divisione (parti uguali, importi esatti, percentuali, quote).
-- **Rimborsi:** registrare un pagamento tra due membri ("saldare").
+- **Spese:** aggiungere, modificare, eliminare e ripristinare. Ogni spesa ha descrizione, data (con l'ora
+  facoltativa), importo, valuta, chi ha pagato, chi partecipa e la modalità di divisione (parti uguali, importi
+  esatti, percentuali, quote).
+- **Rimborsi:** registrare un pagamento tra due membri ("saldare"); eliminarlo e ripristinarlo.
 - **Saldi:** saldo netto per membro e trasferimenti suggeriti, con o senza semplificazione dei debiti.
-- **Attività:** storico delle modifiche (chi ha fatto cosa e quando).
+- **Attività:** storico delle modifiche (chi ha fatto cosa e quando). Lo storico di spese e rimborsi, con giorno
+  e ora di inserimento, c'è dalla Fase 3; quello delle singole modifiche arriva con la sincronizzazione (Fase 5).
+- **Esportazione e importazione** di un gruppo come file: copia di sicurezza e passaggio manuale ad altri.
 - **Offline:** l'app funziona completamente senza connessione e sincronizza quando la connessione torna.
 - **Tre modalità d'uso** ([ADR 0005](adr/0005-modalita-uso.md)). Un gruppo può passare da una all'altra senza conversioni:
   - **locale:** un dispositivo e nessun account;
@@ -171,19 +174,21 @@ Ogni operazione è un oggetto JSON puro:
   dati arrivati dalla sync.
 
 ```jsonc
-// Esempio illustrativo di comando
+// Comando (il formato completo è in spec/schemas/command.schema.json)
 {
   "type": "AddExpense",
-  "groupId": "g_01J...",
-  "expense": {
-    "description": "Cena",
-    "amount": { "minor": 9000, "currency": "EUR" },
+  "groupId": "01K742SG00...",
+  "description": "Cena",
+  "date": "2026-10-13",
+  "time": "20:30", // facoltativa
+  "amounts": {
+    "total": { "minor": 9000, "currency": "EUR" },
     "paidBy": [{ "memberId": "m_anna", "amount": { "minor": 9000, "currency": "EUR" } }],
     "split": { "method": "equal", "memberIds": ["m_anna", "m_luca", "m_sara"] }
   }
 }
 // Risposta
-{ "ok": true, "value": { "expenseId": "e_01J..." } }
+{ "ok": true, "value": { "expenseId": "01K742SH12..." } }
 ```
 
 Dato che sono messaggi JSON, lo stesso contratto funziona senza modifiche all'engine:
@@ -192,22 +197,34 @@ Dato che sono messaggi JSON, lo stesso contratto funziona senza modifiche all'en
 - dentro un Web Worker, per non bloccare la UI, se mai servisse;
 - attraverso un bridge, ad esempio da un widget Android nativo o da una CLI Node.
 
-### 5.3 Catalogo MVP
+### 5.3 Catalogo
 
-| Area             | Comandi                                                                                     | Query                                                       |
-| ---------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| Gruppi           | `CreateGroup`, `RenameGroup`, `ArchiveGroup`                                                | `ListGroups`, `GetGroup`                                    |
-| Membri           | `AddMember`, `RenameMember`, `ArchiveMember`, `ClaimMember` ("io sono questo membro")       | `ListMembers`                                               |
-| Spese            | `AddExpense`, `UpdateExpense`, `DeleteExpense`                                              | `ListExpenses` (con filtri), `GetExpense`                   |
-| Rimborsi e saldi | `RecordSettlement`, `DeleteSettlement`                                                      | `GetBalances`, `GetSuggestedTransfers` (semplificati sì/no) |
-| Condivisione     | `JoinGroup`, `SyncNow`                                                                      | `GetActivity`, `GetSyncStatus`                              |
-| Profilo          | `UpdateSettings`, `PublishGroup` (locale → personale), `ShareGroup` (personale → condivisa) | `GetSettings`                                               |
+Realizzato nelle Fasi 2 e 3 (`packages/engine`):
+
+| Area             | Comandi                                                                                    | Query                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Gruppi           | `CreateGroup`, `UpdateGroup` (nome, archiviazione)                                         | `ListGroups` (con data di creazione), `GetGroup` (membri, spese, rimborsi) |
+| Membri           | `AddMember`, `UpdateMember` (nome, archiviazione), `ClaimMember` ("io sono questo membro") | in `GetGroup`                                                              |
+| Spese            | `AddExpense`, `UpdateExpense`, `DeleteExpense`, `RestoreExpense`                           | in `GetGroup`                                                              |
+| Rimborsi e saldi | `AddSettlement`, `UpdateSettlement`, `DeleteSettlement`, `RestoreSettlement`               | `GetBalances` (saldi e trasferimenti, semplificati e per coppia)           |
+| Profilo          | `UpdateSettings`                                                                           | `GetSettings`                                                              |
+
+Oltre ai messaggi, l'engine offre:
+
+- lo scambio di eventi per i canali (`exportEvents`, `receiveEvents`);
+- il file di scambio di un gruppo (`exportGroupFile`, `importExchangeFile` e funzioni collegate);
+- l'ora contenuta in un HLC (`timeOfHlc`), per mostrare quando è avvenuta una modifica.
+
+Filtri e ordinamenti degli elenchi li fa la UI sulle viste restituite da `GetGroup`.
+
+Previsti con la sincronizzazione (Fasi 5 e 6): `JoinGroup`, `SyncNow`, `PublishGroup` (locale → personale) e
+`ShareGroup` (personale → condivisa); query `GetActivity` (storico delle modifiche) e `GetSyncStatus`.
 
 ### 5.4 Porte (ciò che l'engine chiede alla piattaforma)
 
 | Porta         | Scopo                                                            | Adapter previsti                                                                                    |
 | ------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `LocalStore`  | Salvare e leggere eventi e stato in locale                       | IndexedDB (vale su tutte le piattaforme, §8.10); in memoria per i test                              |
+| `LocalStore`  | Salvare e leggere eventi e stato in locale                       | IndexedDB (web e app native, §8.10); file JSON (Node, CLI); in memoria per i test                   |
 | `SyncChannel` | Trasportare segmenti di eventi verso altri dispositivi e persone | Plugin in `packages/channels/` (§8.6, [ADR 0006](adr/0006-canali-plugin.md)); in memoria per i test |
 | `Clock`       | Ora corrente                                                     | Di sistema; finto per i test                                                                        |
 | `IdGenerator` | Id univoci ordinabili (ULID o UUIDv7)                            | Di sistema; deterministico per i test                                                               |
@@ -494,8 +511,9 @@ stesso provider, cioè quello che ospita la cartella. Chi non usa l'app resta un
 
 ### 8.10 Persistenza locale
 
-- IndexedDB su tutte le piattaforme: la UI gira sempre in un browser o in una WebView, quindi lo stesso adapter
-  vale ovunque.
+- IndexedDB su tutte le piattaforme con la UI: gira sempre in un browser o in una WebView, quindi lo stesso
+  adapter vale ovunque.
+- La CLI (Node) salva su un file JSON (`adapters/local-file`), con scrittura atomica.
 - Sul web si richiede lo storage persistente (`navigator.storage.persist()`) per evitare che il browser cancelli i dati.
 - In futuro, se i volumi crescessero, si può passare a SQLite tramite un plugin Tauri.
 

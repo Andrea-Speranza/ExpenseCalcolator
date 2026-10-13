@@ -15,7 +15,8 @@ const stop = engine.subscribe(() => aggiornaLaSchermata());
   trasformati in eventi con autore, orologio (HLC) e versione di partenza, salvati insieme all'orologio. Lo
   stato si aggiorna solo se il salvataggio riesce. I comandi si eseguono uno alla volta.
 - **Query** (`query`): `ListGroups`, `GetGroup`, `GetBalances`, `GetSettings`. Restituiscono viste JSON (array,
-  non Map), quindi passano anche attraverso un worker o un bridge nativo.
+  non Map), quindi passano anche attraverso un worker o un bridge nativo. Ogni elemento riporta l'HLC di
+  creazione e dell'ultima modifica; `timeOfHlc` ne ricava l'ora, per mostrarla.
 - **Notifiche** (`subscribe`): dopo ogni comando o evento ricevuto.
 - **Scambio di eventi** (`exportEvents`, `receiveEvents`): il gancio per i canali di condivisione
   ([ADR 0006](../../docs/adr/0006-canali-plugin.md)). Scarta i doppioni, conserva gli eventi di tipi
