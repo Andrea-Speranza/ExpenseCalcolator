@@ -35,6 +35,13 @@ React pesa qualche decina di KB in più rispetto a Svelte. È una differenza irr
 - La UI non ha logica di dominio: chiama i comandi e le query di `engine` e si limita a mostrare i risultati.
 - Restano da decidere in Fase 3 la libreria di componenti (D8) e il router.
 
+**Aggiornamento (2026-10-13, Fase 3):**
+
+- libreria di componenti: shadcn/ui con Tailwind CSS ([ADR 0008](0008-componenti-ui-shadcn.md));
+- router: nessuna libreria, una navigazione con l'hash dell'indirizzo scritta in `packages/ui`;
+- PWA (vite-plugin-pwa) rimandata, perché la web app per ora non si pubblica online
+  ([ADR 0009](0009-distribuzione-locale.md)).
+
 ## Alternative considerate
 
 | Framework | Perché no                                                                                                     |

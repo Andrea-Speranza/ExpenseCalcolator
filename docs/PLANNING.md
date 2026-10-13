@@ -87,7 +87,7 @@ iOS è rimandato, non escluso: l'architettura lo supporta.
 ## 3. Architettura a strati
 
 ```text
- Shell            apps/web (PWA)          apps/native (Tauri 2: Windows, Android)
+ Shell            apps/web (browser)      apps/native (Tauri 2: Windows, Android)
                       │                           │
                       └─────────────┬─────────────┘
                                     ▼
@@ -326,6 +326,10 @@ Motivi principali:
 La UI legge lo stato tramite `engine.subscribe`, che in React si collega direttamente con
 `useSyncExternalStore`. I componenti sono quelli di shadcn/ui con Tailwind CSS
 ([ADR 0008](adr/0008-componenti-ui-shadcn.md)).
+
+La navigazione non usa una libreria di routing: le pagine sono poche e gli indirizzi usano l'hash
+(`#/gruppi/…`), che funziona allo stesso modo nel browser, da file locali e nelle WebView, senza configurare
+un server ([ADR 0009](adr/0009-distribuzione-locale.md)).
 
 Requisiti per la UI:
 
@@ -659,8 +663,8 @@ Gli spike (§13.2) non bloccano il core, quindi stanno fuori dalla Fase 0:
 - [x] Definire le regole sui confini tra pacchetti (dependency-cruiser), verificate con violazioni di prova.
 - [x] Preparare la CI su GitHub Actions (`pnpm check`).
 
-**Fatto quando:** `pnpm check` passa in locale e D1, D2 e D5 sono registrate come ADR. La CI partirà
-quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa di visibile (Fase 3).
+**Fatto quando:** `pnpm check` passa in locale e D1, D2 e D5 sono registrate come ADR. La CI è partita con
+la pubblicazione del repository su GitHub, dopo la Fase 2.
 
 ### 11.3 Fase 1 — Core di calcolo (`packages/core`) (completata, tranne lo spike S1)
 
@@ -873,8 +877,8 @@ senza alcun server nostro.
 
 - **TypeScript** con i controlli di `@tsconfig/strictest`, la configurazione base più rigorosa della community.
 - **Prettier** per la formattazione; **dependency-cruiser** per far rispettare i confini tra pacchetti.
-- **GitHub Actions** per la CI: lint, controllo dei tipi, test, build. È già configurata e si attiva quando
-  il repository viene pubblicato (Fase 3).
+- **GitHub Actions** per la CI: a ogni push su `main` e a ogni pull request esegue `pnpm check`
+  (formattazione, lint, tipi, confini tra pacchetti, test con copertura).
 
 **Convenzioni del repository:**
 
@@ -925,7 +929,7 @@ senza alcun server nostro.
 | **Segmento**         | File immutabile che contiene un blocco di eventi scritti da un dispositivo.                                                                                      |
 | **HLC**              | _Hybrid Logical Clock_: orologio che combina l'ora di sistema con un contatore logico, per ordinare gli eventi in modo coerente anche con orologi non allineati. |
 | **Local-first**      | I dati vivono prima di tutto sul dispositivo; il cloud serve solo a condividerli.                                                                                |
-| **Shell**            | L'app nativa (o la PWA) che contiene e mostra la UI web.                                                                                                         |
+| **Shell**            | L'app nativa (o la web app nel browser) che contiene e mostra la UI web.                                                                                         |
 | **WebView**          | Componente del sistema operativo che mostra pagine web dentro un'app (WebView2 su Windows, System WebView su Android).                                           |
 | **PWA**              | _Progressive Web App_: sito installabile che funziona offline grazie a un Service Worker.                                                                        |
 
