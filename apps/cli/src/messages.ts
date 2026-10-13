@@ -1,35 +1,62 @@
 import type {
   CalculationError,
+  CommandError,
   ExpenseError,
   InvalidAllocation,
   InvalidExpense,
+  QueryError,
   SettlementError,
 } from '@expense/engine';
 import { formatMoney, formatPercentage } from './format';
 
 // Testi degli errori, in italiano. L'engine restituisce solo codici e dati (PLANNING §4.2): ogni
-// interfaccia sceglie come mostrarli. Nei messaggi si usano gli id, così si trova subito il punto del
-// file da correggere.
+// interfaccia sceglie come mostrarli.
 
-export function describeError(error: CalculationError): string {
+export type EngineError = CalculationError | CommandError | QueryError;
+
+const ENTITIES = {
+  group: 'Gruppo',
+  member: 'Membro',
+  expense: 'Spesa',
+  settlement: 'Rimborso',
+} as const;
+
+/**
+ * Descrive un errore dell'engine. `header` introduce gli errori di formato: per un registro letto da file
+ * si dice "Il registro non rispetta…", per un comando "I dati non rispettano…".
+ */
+export function describeError(
+  error: EngineError,
+  header = 'I dati non rispettano il formato previsto:',
+): string {
   switch (error.code) {
     case 'InvalidInput':
       return [
-        'Il registro non rispetta il formato previsto:',
+        header,
         ...error.issues.map(
-          ({ path, message }) => `  - ${path === '' ? '(intero file)' : path}: ${message}`,
+          ({ path, message }) => `  - ${path === '' ? '(tutto)' : path}: ${message}`,
         ),
       ].join('\n');
     case 'InvalidEntry':
       return error.entry === 'expense'
         ? `La spesa "${error.id}" non è valida: ${describeEntryError(error.error)}.`
         : `Il rimborso "${error.id}" non è valido: ${describeEntryError(error.error)}.`;
-    case 'AmountOutOfRange':
-      return 'Un importo supera il valore massimo gestibile.';
-    case 'CurrencyMismatch':
-      return `Valute diverse: attesa ${error.expected}, trovata ${error.actual}.`;
+    case 'NotFound':
+      return `${ENTITIES[error.entity]} non trovato: "${error.id}".`;
+    case 'NoChanges':
+      return 'Nessuna modifica indicata.';
+    case 'StorageFailed':
+      return `Salvataggio non riuscito: ${error.message}`;
     case 'UnbalancedBalances':
       return `Errore interno: i saldi in ${error.currency} non sommano a zero.`;
+    case 'InvalidExpense':
+    case 'TotalMismatch':
+    case 'PercentagesMismatch':
+    case 'CurrencyMismatch':
+    case 'InvalidAllocation':
+    case 'AmountOutOfRange':
+    case 'InvalidSettlement':
+      return `${capitalize(describeEntryError(error))}.`;
   }
 }
 
@@ -85,4 +112,8 @@ function describeAllocation(reason: InvalidAllocation['reason']): string {
     case 'invalidRotation':
       return 'errore interno nella ripartizione';
   }
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }

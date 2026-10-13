@@ -56,6 +56,12 @@ importers:
       '@expense/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@expense/local-file':
+        specifier: workspace:*
+        version: link:../../packages/adapters/local-file
+      '@expense/system':
+        specifier: workspace:*
+        version: link:../../packages/adapters/system
       zod:
         specifier: ^4.6.6
         version: 4.6.6
@@ -63,6 +69,16 @@ importers:
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
+
+  packages/adapters/local-file:
+    dependencies:
+      '@expense/engine':
+        specifier: workspace:*
+        version: link:../../engine
+    devDependencies:
+      '@expense/testing':
+        specifier: workspace:*
+        version: link:../../testing
 
   packages/adapters/local-indexeddb:
     dependencies:
@@ -76,6 +92,9 @@ importers:
       '@expense/system':
         specifier: workspace:*
         version: link:../system
+      '@expense/testing':
+        specifier: workspace:*
+        version: link:../../testing
       fake-indexeddb:
         specifier: ^6.2.5
         version: 6.2.5
@@ -123,6 +142,12 @@ importers:
       '@expense/schema':
         specifier: workspace:*
         version: link:../schema
+
+  packages/testing:
+    dependencies:
+      '@expense/engine':
+        specifier: workspace:*
+        version: link:../engine
 
 packages:
 

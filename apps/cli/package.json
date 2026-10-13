@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@expense/engine": "workspace:*",
+    "@expense/local-file": "workspace:*",
+    "@expense/system": "workspace:*",
     "zod": "^4.6.6"
   },
   "devDependencies": {

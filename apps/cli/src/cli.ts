@@ -1,145 +1,141 @@
-import { parseArgs } from 'node:util';
-import { calculateLedger, type LedgerReport } from '@expense/engine';
-import { formatBalances, formatSummary, formatTransfers, memberNames, type Names } from './format';
-import { describeError } from './messages';
+import type { Engine } from '@expense/engine';
+import { COMMANDS, type CommandSpec, NOUNS } from './commands';
+import type { CliEnvironment } from './environment';
+import { GLOBAL_OPTIONS, type OptionName, parseCommandLine, usedOptions } from './options';
+import { type CliResult, done, failure, UsageError, usageError, UserError } from './result';
 
-export interface CliResult {
-  readonly stdout: string;
-  readonly stderr: string;
-  readonly exitCode: number;
+export type { CliResult } from './result';
+
+const OPTION_HELP: Readonly<Record<OptionName, string>> = {
+  dati: '--dati <cartella>        cartella dei dati (anche con la variabile SPESE_DATI)',
+  json: '--json                   risultato in JSON, da usare in altri programmi',
+  help: '-h, --help               mostra l’aiuto',
+  io: '--io <nome>              il tuo nome: fai parte anche tu del gruppo',
+  valuta: '--valuta <codice>        valuta ISO 4217 (es. EUR, USD, CHF)',
+  pagato: '--pagato <chi>[=importo] chi ha pagato; ripetibile se hanno pagato in più',
+  tra: '--tra <a,b,…>            parti uguali tra questi membri',
+  importi: '--importi a=10,b=5,50    importo esatto per membro',
+  percentuali: '--percentuali a=50,b=50  percentuale per membro',
+  quote: '--quote a=2,b=1          quote intere per membro',
+  importo: '--importo <importo>      nuovo totale',
+  data: '--data <data>            AAAA-MM-GG o GG/MM/AAAA (predefinita: oggi)',
+  descrizione: '--descrizione <testo>    nuova descrizione',
+  categoria: '--categoria <testo>      categoria',
+  note: '--note <testo>           note',
+  'per-coppia': '--per-coppia             ognuno paga solo chi ha pagato per lui',
+  lingua: '--lingua it|en           lingua',
+  nome: '--nome <nome>            il tuo nome visualizzato',
+};
+
+const signature = ({ name, arguments: args }: CommandSpec): string =>
+  [name, ...args.map((arg) => `<${arg}>`)].join(' ');
+
+export const USAGE = [
+  'Uso: spese <comando> [argomenti] [opzioni]',
+  '',
+  'Comandi:',
+  ...COMMANDS.map((spec) => `  ${signature(spec).padEnd(42)} ${spec.summary}`),
+  '',
+  'Opzioni valide per tutti i comandi:',
+  ...GLOBAL_OPTIONS.map((name) => `  ${OPTION_HELP[name]}`),
+  '',
+  'Aiuto su un comando: spese <comando> --help (es. spese spesa aggiungi --help)',
+  '',
+].join('\n');
+
+function commandHelp(spec: CommandSpec): string {
+  return [
+    `Uso: spese ${signature(spec)}${spec.options.length > 0 ? ' [opzioni]' : ''}`,
+    '',
+    `${spec.summary.charAt(0).toUpperCase()}${spec.summary.slice(1)}.`,
+    ...(spec.options.length > 0
+      ? ['', 'Opzioni:', ...spec.options.map((name) => `  ${OPTION_HELP[name]}`)]
+      : []),
+    ...(spec.details === undefined ? [] : ['', ...spec.details]),
+    '',
+  ].join('\n');
 }
 
-/** Legge il file indicato dall'utente; lancia un'eccezione se non ci riesce. */
-export type ReadFile = (path: string) => string;
-
-const COMMANDS = ['verifica', 'saldi', 'trasferimenti'] as const;
-type Command = (typeof COMMANDS)[number];
-
-const OPTIONS = {
-  'per-coppia': { type: 'boolean' },
-  json: { type: 'boolean' },
-  help: { type: 'boolean', short: 'h' },
-} as const;
-
-export const USAGE = `Uso: spese <comando> <registro.json> [opzioni]
-
-Comandi:
-  verifica        controlla che il registro sia valido
-  saldi           saldo di ogni membro, per valuta
-  trasferimenti   pagamenti suggeriti per pareggiare i conti
-
-Opzioni:
-  --per-coppia    con "trasferimenti": ognuno paga solo chi ha pagato per lui
-  --json          risultato in JSON, da usare in altri programmi
-  -h, --help      mostra questo aiuto
-
-Formato del registro: apps/cli/README.md
-`;
+/** Il comando indicato e i suoi argomenti, oppure il messaggio di errore da mostrare. */
+function findCommand(
+  positionals: readonly string[],
+): { spec: CommandSpec; args: string[] } | string {
+  const [first, second, ...rest] = positionals;
+  if (first === undefined) return 'indica un comando';
+  const twoWords = NOUNS.has(first);
+  const name = twoWords ? `${first} ${second ?? ''}`.trim() : first;
+  const spec = COMMANDS.find((command) => command.name === name);
+  if (spec !== undefined)
+    return { spec, args: twoWords ? rest : [second, ...rest].filter((arg) => arg !== undefined) };
+  if (twoWords) {
+    const verbs = COMMANDS.filter((command) => command.name.startsWith(`${first} `)).map(
+      (command) => command.name.split(' ')[1],
+    );
+    return second === undefined
+      ? `"${first}" richiede un'azione: ${verbs.join(', ')}`
+      : `azione sconosciuta per "${first}": "${second}". Azioni: ${verbs.join(', ')}`;
+  }
+  return `comando sconosciuto: "${first}"`;
+}
 
 /**
- * Esegue la CLI senza toccare il terminale né il disco (il file si legge con `readFile`): restituisce
- * il testo da stampare e l'exit code. 0 = tutto bene, 1 = registro non leggibile o non valido,
- * 2 = comando usato in modo sbagliato.
+ * Esegue la CLI senza toccare direttamente il terminale né il disco: tutto passa dall'ambiente. Restituisce
+ * il testo da stampare e l'exit code: 0 = tutto bene, 1 = errore nei dati, 2 = comando usato in modo sbagliato.
  */
-export function run(args: readonly string[], readFile: ReadFile): CliResult {
-  const parsed = parseCommandLine(args);
-  if (typeof parsed === 'string') return usageError(parsed);
-  const { values, positionals } = parsed;
-  if (values.help === true) return { stdout: USAGE, stderr: '', exitCode: 0 };
+export async function run(args: readonly string[], env: CliEnvironment): Promise<CliResult> {
+  const line = parseCommandLine(args);
+  if (typeof line === 'string') return usageError(line, USAGE);
+  const { values, positionals } = line;
 
-  const [command, file, ...extra] = positionals;
-  if (command === undefined) return usageError('indica un comando');
-  if (!isCommand(command)) return usageError(`comando sconosciuto: "${command}"`);
-  if (file === undefined) return usageError('indica il file del registro');
-  if (extra.length > 0) return usageError(`argomenti in più: ${extra.join(' ')}`);
-  const pairwise = values['per-coppia'] === true;
-  if (pairwise && command !== 'trasferimenti') {
-    return usageError('--per-coppia si usa solo con "trasferimenti"');
+  const found = findCommand(positionals);
+  if (typeof found === 'string') {
+    if (values.help === true && positionals.length === 0) return done(USAGE);
+    return usageError(found, USAGE);
+  }
+  const { spec, args: commandArgs } = found;
+  const help = commandHelp(spec);
+  if (values.help === true) return done(help);
+
+  const invalid = usedOptions(values).filter((name) => !spec.options.includes(name));
+  if (invalid.length > 0) {
+    return usageError(
+      `${invalid.map((name) => `--${name}`).join(', ')} non vale per "${spec.name}"`,
+      help,
+    );
+  }
+  if (commandArgs.length < spec.arguments.length) {
+    return usageError(`manca <${spec.arguments.slice(commandArgs.length).join('>, <')}>`, help);
+  }
+  if (commandArgs.length > spec.arguments.length) {
+    return usageError(
+      `argomenti in più: ${commandArgs.slice(spec.arguments.length).join(' ')}`,
+      help,
+    );
   }
 
-  const loaded = loadJson(file, readFile);
-  if (!loaded.ok) return failure(loaded.message);
-  const report = calculateLedger(loaded.data);
-  if (!report.ok) return failure(describeError(report.error));
+  let opened: Promise<Engine> | undefined;
+  const engine = async () => {
+    opened ??= env.openEngine(values.dati);
+    try {
+      return await opened;
+    } catch (error) {
+      throw new UserError(
+        `Impossibile aprire i dati salvati: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  };
 
-  const json = values.json === true;
-  const output = json
-    ? `${JSON.stringify(jsonOutput(command, report.value, pairwise), null, 2)}\n`
-    : textOutput(command, report.value, memberNames(loaded.data), pairwise);
-  return { stdout: output, stderr: '', exitCode: 0 };
-}
-
-function parseCommandLine(args: readonly string[]) {
   try {
-    return parseArgs({ args: [...args], options: OPTIONS, allowPositionals: true });
+    return await spec.run({
+      args: commandArgs,
+      options: values,
+      json: values.json === true,
+      env,
+      engine,
+    });
   } catch (error) {
-    const unknownOption =
-      error instanceof Error && 'code' in error && error.code === 'ERR_PARSE_ARGS_UNKNOWN_OPTION';
-    return unknownOption ? 'opzione sconosciuta' : 'opzioni non valide';
+    if (error instanceof UserError) return failure(error.message);
+    if (error instanceof UsageError) return usageError(error.message, help);
+    throw error;
   }
-}
-
-function isCommand(value: string): value is Command {
-  return (COMMANDS as readonly string[]).includes(value);
-}
-
-function loadJson(
-  file: string,
-  readFile: ReadFile,
-):
-  { readonly ok: true; readonly data: unknown } | { readonly ok: false; readonly message: string } {
-  let text: string;
-  try {
-    text = readFile(file);
-  } catch {
-    return { ok: false, message: `Impossibile leggere il file "${file}".` };
-  }
-  try {
-    // Molti programmi Windows (es. PowerShell 5.1) salvano in UTF-8 con BOM: JSON.parse non lo accetta.
-    return { ok: true, data: JSON.parse(text.replace(/^\uFEFF/, '')) };
-  } catch {
-    return { ok: false, message: `Il file "${file}" non contiene JSON valido.` };
-  }
-}
-
-function textOutput(
-  command: Command,
-  report: LedgerReport,
-  names: Names,
-  pairwise: boolean,
-): string {
-  switch (command) {
-    case 'verifica':
-      return formatSummary(report.ledger, report.balances);
-    case 'saldi':
-      return formatBalances(report.balances, names);
-    case 'trasferimenti':
-      return pairwise
-        ? formatTransfers(report.pairwiseTransfers, names, 'per coppia')
-        : formatTransfers(report.simplifiedTransfers, names, 'semplificati');
-  }
-}
-
-function jsonOutput(command: Command, report: LedgerReport, pairwise: boolean): unknown {
-  switch (command) {
-    case 'verifica':
-      return {
-        valid: true,
-        expenses: report.ledger.expenses.length,
-        settlements: report.ledger.settlements.length,
-        currencies: report.balances.map(({ currency }) => currency),
-      };
-    case 'saldi':
-      return report.balances;
-    case 'trasferimenti':
-      return pairwise ? report.pairwiseTransfers : report.simplifiedTransfers;
-  }
-}
-
-function usageError(message: string): CliResult {
-  return { stdout: '', stderr: `Errore: ${message}.\n\n${USAGE}`, exitCode: 2 };
-}
-
-function failure(message: string): CliResult {
-  return { stdout: '', stderr: `${message}\n`, exitCode: 1 };
 }

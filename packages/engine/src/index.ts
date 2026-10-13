@@ -50,11 +50,14 @@ export type {
 export type {
   Command,
   CommandType,
+  ExpenseAmounts,
   Ledger,
   MemberAmount,
   Money,
   Query,
   QueryType,
+  SettlementTransfer,
+  Split,
   StoredEvent,
 } from '@expense/schema';
 export type { Conflict, HlcClock, Policy } from '@expense/sync';

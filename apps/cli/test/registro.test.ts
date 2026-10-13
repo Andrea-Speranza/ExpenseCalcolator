@@ -1,8 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { beforeAll, describe, expect, it } from 'vitest';
-import { z } from 'zod';
-import { type CliResult, run } from '../src/cli';
+import { describe, expect, it } from 'vitest';
+import { testCli } from './helpers';
+
+// "spese registro …": calcoli su un registro letto da file, senza toccare i dati salvati.
 
 const EXAMPLE = readFileSync(join(import.meta.dirname, '../examples/weekend.json'), 'utf8');
 
@@ -13,71 +14,38 @@ const lunch = {
   split: { method: 'equal', memberIds: ['m_a', 'm_b', 'm_c'] },
 };
 
-/** Esegue la CLI con dei file in memoria. Gli spazi non separabili di Intl diventano spazi normali. */
-function cli(args: string[], files: Record<string, string> = {}): CliResult {
-  const result = run(args, (path) => {
-    const content = files[path];
-    if (content === undefined) throw new Error(`file inesistente: ${path}`);
-    return content;
-  });
-  const normalize = (text: string) => text.replace(/[\u00a0\u202f]/g, ' ');
-  return { ...result, stdout: normalize(result.stdout), stderr: normalize(result.stderr) };
-}
-
-const ledger = (data: unknown) => ({ 'registro.json': JSON.stringify(data) });
-
-beforeAll(() => {
-  z.config(z.locales.it());
-});
-
-describe('uso della riga di comando', () => {
-  it('mostra l’aiuto', () => {
-    const result = cli(['--help']);
-    expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('Uso: spese <comando>');
-  });
-
-  it.each([
-    [[], 'indica un comando'],
-    [['salda', 'registro.json'], 'comando sconosciuto: "salda"'],
-    [['saldi'], 'indica il file del registro'],
-    [['saldi', 'a.json', 'b.json'], 'argomenti in più: b.json'],
-    [['saldi', 'registro.json', '--boh'], 'opzione sconosciuta'],
-    [['saldi', 'registro.json', '--json=si'], 'opzioni non valide'],
-    [['saldi', 'registro.json', '--per-coppia'], '--per-coppia si usa solo con "trasferimenti"'],
-  ])('%j → errore d’uso', (args, message) => {
-    const result = cli(args);
-    expect(result.exitCode).toBe(2);
-    expect(result.stderr).toContain(`Errore: ${message}.`);
-  });
-});
+/** CLI con un solo file, "registro.json", con il contenuto indicato. */
+const withLedger = (data: unknown) => testCli(new Map([['registro.json', JSON.stringify(data)]]));
 
 describe('lettura del registro', () => {
-  it('file mancante', () => {
-    expect(cli(['saldi', 'manca.json'])).toMatchObject({
+  it('file mancante', async () => {
+    const cli = await testCli();
+    expect(await cli('registro', 'saldi', 'manca.json')).toMatchObject({
       exitCode: 1,
       stderr: 'Impossibile leggere il file "manca.json".\n',
     });
   });
 
-  it('accetta file UTF-8 con BOM, come quelli salvati da PowerShell 5.1', () => {
+  it('accetta file UTF-8 con BOM, come quelli salvati da PowerShell 5.1', async () => {
     const withBom = `\uFEFF${JSON.stringify({ expenses: [], settlements: [] })}`;
-    expect(cli(['verifica', 'bom.json'], { 'bom.json': withBom }).exitCode).toBe(0);
+    const cli = await testCli(new Map([['bom.json', withBom]]));
+    expect((await cli('registro', 'verifica', 'bom.json')).exitCode).toBe(0);
   });
 
-  it('JSON non valido', () => {
-    expect(cli(['saldi', 'rotto.json'], { 'rotto.json': '{ non è json' })).toMatchObject({
+  it('JSON non valido', async () => {
+    const cli = await testCli(new Map([['rotto.json', '{ non è json']]));
+    expect(await cli('registro', 'saldi', 'rotto.json')).toMatchObject({
       exitCode: 1,
       stderr: 'Il file "rotto.json" non contiene JSON valido.\n',
     });
   });
 
-  it('formato non rispettato: indica il campo, in italiano', () => {
-    const bad = {
+  it('formato non rispettato: indica il campo, in italiano', async () => {
+    const cli = await withLedger({
       expenses: [{ ...lunch, total: { minor: 90.5, currency: 'EUR' } }],
       settlements: [],
-    };
-    const result = cli(['saldi', 'registro.json'], ledger(bad));
+    });
+    const result = await cli('registro', 'saldi', 'registro.json');
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain('Il registro non rispetta il formato previsto:');
     expect(result.stderr).toContain('expenses.0.total.minor: Input non valido');
@@ -102,44 +70,43 @@ describe('lettura del registro', () => {
       { ...lunch, split: { method: 'equal', memberIds: ['m_a', 'm_a'] } },
       'La spesa "e_1" non è valida: un membro compare due volte ("m_a").',
     ],
-  ])('spesa non valida: %s', (_case, expense, message) => {
-    const result = cli(
-      ['verifica', 'registro.json'],
-      ledger({ expenses: [expense], settlements: [] }),
-    );
-    expect(result).toMatchObject({ exitCode: 1, stderr: `${message}\n` });
+  ])('spesa non valida: %s', async (_case, expense, message) => {
+    const cli = await withLedger({ expenses: [expense], settlements: [] });
+    expect(await cli('registro', 'verifica', 'registro.json')).toMatchObject({
+      exitCode: 1,
+      stderr: `${message}\n`,
+    });
   });
 
-  it('rimborso non valido', () => {
+  it('rimborso non valido', async () => {
     const settlement = {
       id: 's_1',
       from: 'm_a',
       to: 'm_a',
       amount: { minor: 100, currency: 'EUR' },
     };
-    const result = cli(
-      ['verifica', 'registro.json'],
-      ledger({ expenses: [], settlements: [settlement] }),
-    );
-    expect(result.stderr).toBe(
+    const cli = await withLedger({ expenses: [], settlements: [settlement] });
+    expect((await cli('registro', 'verifica', 'registro.json')).stderr).toBe(
       'Il rimborso "s_1" non è valido: chi dà e chi riceve sono la stessa persona.\n',
     );
   });
 });
 
 describe('comandi sull’esempio del weekend', () => {
-  const files = { 'weekend.json': EXAMPLE };
+  const example = () => testCli(new Map([['weekend.json', EXAMPLE]]));
 
-  it('verifica', () => {
-    expect(cli(['verifica', 'weekend.json'], files)).toEqual({
+  it('verifica', async () => {
+    const cli = await example();
+    expect(await cli('registro', 'verifica', 'weekend.json')).toEqual({
       stdout: 'Registro valido: 4 spese, 1 rimborso; valute: CHF, EUR.\n',
       stderr: '',
       exitCode: 0,
     });
   });
 
-  it('saldi, con i nomi dei membri', () => {
-    expect(cli(['saldi', 'weekend.json'], files).stdout).toBe(
+  it('saldi, con i nomi dei membri', async () => {
+    const cli = await example();
+    expect((await cli('registro', 'saldi', 'weekend.json')).stdout).toBe(
       [
         'Saldi in CHF',
         '  Anna   -22,50 CHF  deve dare',
@@ -157,8 +124,9 @@ describe('comandi sull’esempio del weekend', () => {
     );
   });
 
-  it('trasferimenti semplificati', () => {
-    expect(cli(['trasferimenti', 'weekend.json'], files).stdout).toBe(
+  it('trasferimenti semplificati', async () => {
+    const cli = await example();
+    expect((await cli('registro', 'trasferimenti', 'weekend.json')).stdout).toBe(
       [
         'Trasferimenti suggeriti (semplificati):',
         '  Anna → Marco  22,50 CHF',
@@ -171,8 +139,9 @@ describe('comandi sull’esempio del weekend', () => {
     );
   });
 
-  it('trasferimenti per coppia', () => {
-    expect(cli(['trasferimenti', 'weekend.json', '--per-coppia'], files).stdout).toBe(
+  it('trasferimenti per coppia', async () => {
+    const cli = await example();
+    expect((await cli('registro', 'trasferimenti', 'weekend.json', '--per-coppia')).stdout).toBe(
       [
         'Trasferimenti suggeriti (per coppia):',
         '  Anna → Marco  22,50 CHF',
@@ -188,8 +157,11 @@ describe('comandi sull’esempio del weekend', () => {
     );
   });
 
-  it('uscita JSON per altri programmi', () => {
-    const verify: unknown = JSON.parse(cli(['verifica', 'weekend.json', '--json'], files).stdout);
+  it('uscita JSON per altri programmi', async () => {
+    const cli = await example();
+    const verify: unknown = JSON.parse(
+      (await cli('registro', 'verifica', 'weekend.json', '--json')).stdout,
+    );
     expect(verify).toEqual({
       valid: true,
       expenses: 4,
@@ -197,36 +169,38 @@ describe('comandi sull’esempio del weekend', () => {
       currencies: ['CHF', 'EUR'],
     });
     const transfers: unknown = JSON.parse(
-      cli(['trasferimenti', 'weekend.json', '--json'], files).stdout,
+      (await cli('registro', 'trasferimenti', 'weekend.json', '--json')).stdout,
     );
     expect(transfers).toHaveLength(5);
-    const balances: unknown = JSON.parse(cli(['saldi', 'weekend.json', '--json'], files).stdout);
+    const balances: unknown = JSON.parse(
+      (await cli('registro', 'saldi', 'weekend.json', '--json')).stdout,
+    );
     expect(balances).toHaveLength(2);
   });
 });
 
 describe('casi limite dell’uscita', () => {
-  it('registro vuoto', () => {
-    const empty = ledger({ expenses: [], settlements: [] });
-    expect(cli(['verifica', 'registro.json'], empty).stdout).toBe(
+  it('registro vuoto', async () => {
+    const cli = await withLedger({ expenses: [], settlements: [] });
+    expect((await cli('registro', 'verifica', 'registro.json')).stdout).toBe(
       'Registro valido: 0 spese, 0 rimborsi.\n',
     );
-    expect(cli(['saldi', 'registro.json'], empty).stdout).toBe('Nessuna spesa registrata.\n');
-    expect(cli(['trasferimenti', 'registro.json'], empty).stdout).toBe(
+    expect((await cli('registro', 'saldi', 'registro.json')).stdout).toBe(
+      'Nessuna spesa registrata.\n',
+    );
+    expect((await cli('registro', 'trasferimenti', 'registro.json')).stdout).toBe(
       'Nessun trasferimento: i conti sono già in pari.\n',
     );
   });
 
-  it('senza nomi usa gli id; valuta sconosciuta mostrata in unità minori', () => {
+  it('senza nomi usa gli id; valuta sconosciuta mostrata in unità minori', async () => {
     const odd = {
       ...lunch,
       total: { minor: 900, currency: 'XYZ' },
       paidBy: [{ memberId: 'm_a', amount: { minor: 900, currency: 'XYZ' } }],
     };
-    const output = cli(
-      ['saldi', 'registro.json'],
-      ledger({ expenses: [odd], settlements: [] }),
-    ).stdout;
+    const cli = await withLedger({ expenses: [odd], settlements: [] });
+    const output = (await cli('registro', 'saldi', 'registro.json')).stdout;
     expect(output).toContain('m_a   600 XYZ (unità minori)  deve ricevere');
     expect(output).toContain('m_b  -300 XYZ (unità minori)  deve dare');
   });

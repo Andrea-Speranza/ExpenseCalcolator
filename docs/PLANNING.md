@@ -614,14 +614,16 @@ ExpenseCalcolator/
 │  ├─ sync/                      # HLC, log eventi, merge, proiezioni (puro)
 │  ├─ engine/                    # API pubblica: comandi, query, notifiche, porte
 │  ├─ adapters/
-│  │  ├─ local-indexeddb/        # LocalStore su IndexedDB
+│  │  ├─ local-indexeddb/        # LocalStore su IndexedDB (web e app native)
+│  │  ├─ local-file/             # LocalStore su file JSON (Node, CLI)
 │  │  └─ system/                 # orologio di sistema e id ULID
+│  ├─ testing/                   # suite di contratto delle porte, usate dai test
 │  ├─ channels/                  # plugin di condivisione (ADR 0006)
 │  │  ├─ folder/                 # cartella sincronizzata
 │  │  └─ gdrive/                 # Google Drive (altri canali: file, p2p, dropbox, onedrive)
 │  └─ ui/                        # SPA condivisa da tutte le shell
 └─ apps/
-   ├─ cli/                       # riga di comando: saldi e trasferimenti da un file JSON
+   ├─ cli/                       # riga di comando: l'app in modalità locale, senza grafica
    ├─ web/                       # shell PWA (manifest, service worker, deploy statico)
    └─ native/                    # shell Tauri 2 (Windows, Android; poi macOS/Linux/iOS)
 ```
@@ -671,7 +673,9 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 - [x] Errori di dominio tipizzati (es. somma degli importi ≠ totale, nessun partecipante).
 - [x] Test unitari, test property-based e primi test vector in `spec/test-vectors`.
 - [x] CLI Node (`apps/cli`) che calcola saldi e trasferimenti da un file JSON. Passa dall'engine
-      (`calculateLedger`) e dimostra che la logica funziona senza UI.
+      (`calculateLedger`) e dimostra che la logica funziona senza UI. Dopo la Fase 2 è diventata un'app
+      completa in modalità locale: gruppi salvati su file (`adapters/local-file`), comandi per membri,
+      spese, rimborsi e impostazioni, ed esporta/importa per passare un gruppo ad altri tramite file.
 - [ ] In parallelo: spike S1 su Google Drive (§13.2), poi decisione D4.
 
 **Fatto quando:**

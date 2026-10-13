@@ -19,7 +19,7 @@ pnpm check            # formattazione, lint, tipi, confini tra pacchetti e test 
 pnpm test:watch       # test in modalità watch
 pnpm coverage         # test con copertura
 pnpm format           # formatta tutti i file
-pnpm cli saldi apps/cli/examples/weekend.json   # prova la riga di comando (vedi apps/cli/README.md)
+pnpm cli --help       # la riga di comando: gruppi e spese salvati in locale (vedi apps/cli/README.md)
 pnpm schemas          # rigenera i JSON Schema in spec/schemas dopo aver cambiato packages/schema
 ```
 
@@ -38,7 +38,7 @@ I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm 
 | [packages/adapters](packages/adapters/) | Porte di piattaforma: salvataggio locale (IndexedDB), orologio e id                                     |
 | [packages/channels](packages/channels/) | Canali di condivisione, ognuno un plugin separato: file, cartella, peer-to-peer, cloud                  |
 | [packages/ui](packages/ui/)             | Interfaccia (SPA)                                                                                       |
-| [apps/cli](apps/cli/)                   | Riga di comando: saldi e trasferimenti da un file JSON                                                  |
+| [apps/cli](apps/cli/)                   | Riga di comando: l'app in modalità locale, senza grafica                                                |
 | [apps/web](apps/web/)                   | Shell web (PWA)                                                                                         |
 | [apps/native](apps/native/)             | Shell nativa (Tauri 2: Windows, Android)                                                                |
 

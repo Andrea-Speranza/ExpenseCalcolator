@@ -1,8 +1,8 @@
 import { createMemoryStore } from '@expense/engine';
 import { IDBFactory } from 'fake-indexeddb';
 import { describe, expect, it } from 'vitest';
+import { describeLocalStoreContract } from '@expense/testing';
 import { openIndexedDbStore } from '../src/index';
-import { describeLocalStoreContract } from './contract';
 
 let databases = 0;
 

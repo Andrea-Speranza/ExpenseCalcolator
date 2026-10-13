@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@expense/system": "workspace:*",
+    "@expense/testing": "workspace:*",
     "fake-indexeddb": "^6.2.5"
   }
 }

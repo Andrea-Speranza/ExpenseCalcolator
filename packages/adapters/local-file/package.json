@@ -1,0 +1,19 @@
+{
+  "name": "@expense/local-file",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@expense/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@expense/testing": "workspace:*"
+  }
+}
