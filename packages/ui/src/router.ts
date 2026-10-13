@@ -8,6 +8,8 @@ export const GROUP_TABS: readonly GroupTab[] = ['spese', 'saldi', 'storico', 'me
 
 export type Route =
   | { readonly page: 'groups' }
+  /** I gruppi archiviati, nascosti dall'elenco principale. */
+  | { readonly page: 'archivedGroups' }
   | { readonly page: 'settings' }
   | { readonly page: 'group'; readonly groupId: string; readonly tab: GroupTab }
   /** Spesa nuova (`expenseId` null) o da modificare. */
@@ -29,6 +31,7 @@ export function parseRoute(hash: string): Route {
   const [first, groupId, section, expenseId, ...rest] = parts;
   if (first === undefined) return { page: 'groups' };
   if (first === 'impostazioni' && groupId === undefined) return { page: 'settings' };
+  if (first === 'archiviati' && groupId === undefined) return { page: 'archivedGroups' };
   if (first !== 'gruppi' || groupId === undefined || rest.length > 0) return { page: 'notFound' };
   if (section === undefined) return { page: 'group', groupId, tab: 'spese' };
   if (section === 'spese' && expenseId !== undefined) {
@@ -47,6 +50,8 @@ export function routeHref(route: Route): string {
       return '#/';
     case 'settings':
       return '#/impostazioni';
+    case 'archivedGroups':
+      return '#/archiviati';
     case 'group':
       return route.tab === 'spese'
         ? `#/gruppi/${encode(route.groupId)}`

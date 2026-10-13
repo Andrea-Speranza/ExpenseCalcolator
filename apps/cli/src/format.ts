@@ -204,7 +204,9 @@ export function describePayers(paidBy: ExpenseView['amounts']['paidBy'], names: 
 function expenseRow(expense: ExpenseView, names: Names): string[] {
   return [
     `#${shortCode(expense.expenseId)}`,
-    formatDate(expense.date),
+    expense.time === null
+      ? formatDate(expense.date)
+      : `${formatDate(expense.date)} ${expense.time}`,
     expense.deleted ? `${expense.description} [eliminata]` : expense.description,
     formatMoney(expense.amounts.total),
     describePayers(expense.amounts.paidBy, names),
@@ -225,6 +227,7 @@ function settlementRow(settlement: SettlementView, names: Names): string[] {
 const FIELDS: Readonly<Record<string, string>> = {
   description: 'descrizione',
   date: 'data',
+  time: 'ora',
   amounts: 'importi',
   category: 'categoria',
   notes: 'note',

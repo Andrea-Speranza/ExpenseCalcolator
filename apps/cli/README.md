@@ -77,6 +77,7 @@ programmi. Exit code: `0` tutto bene, `1` errore nei dati, `2` comando usato in 
   Negli elenchi la virgola decimale si riconosce da sola; si può separare anche con `;`.
 
 - **Date:** `2026-10-12` o `12/10/2026`; senza `--data` vale oggi.
+- **Ora della spesa (facoltativa):** `--ora 20:30` (anche `20.30` o `9:05`); in `spesa modifica`, `--ora ""` la toglie.
 
 ## Registro su file
 

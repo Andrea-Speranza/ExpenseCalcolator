@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   CalendarDateSchema,
+  ClockTimeSchema,
   ExpenseAmountsSchema,
   LanguageSchema,
   SettlementTransferSchema,
@@ -58,6 +59,7 @@ export const CommandSchema = z.discriminatedUnion('type', [
     ...groupRef,
     description,
     date: CalendarDateSchema,
+    time: ClockTimeSchema.optional(),
     amounts: ExpenseAmountsSchema,
     category: category.optional(),
     notes: notes.optional(),
@@ -70,6 +72,7 @@ export const CommandSchema = z.discriminatedUnion('type', [
       .object({
         description: description.optional(),
         date: CalendarDateSchema.optional(),
+        time: ClockTimeSchema.nullable().optional(),
         amounts: ExpenseAmountsSchema.optional(),
         category: category.nullable().optional(),
         notes: notes.nullable().optional(),

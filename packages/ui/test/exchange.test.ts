@@ -9,6 +9,7 @@ const group = {
   archived: false,
   mode: 'local',
   me: null,
+  createdAt: '1760000000000:00000:d',
 } as const;
 
 describe('nome del file esportato', () => {

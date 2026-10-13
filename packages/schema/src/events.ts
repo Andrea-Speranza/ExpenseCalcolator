@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   CalendarDateSchema,
   CategorySchema,
+  ClockTimeSchema,
   DescriptionSchema,
   ExpenseAmountsSchema,
   GroupModeSchema,
@@ -97,6 +98,7 @@ export const GroupEventSchema = z.discriminatedUnion('type', [
         ...expenseRef,
         description: DescriptionSchema,
         date: CalendarDateSchema,
+        time: ClockTimeSchema.optional(),
         amounts: ExpenseAmountsSchema,
         category: CategorySchema.optional(),
         notes: NotesSchema.optional(),
@@ -108,11 +110,12 @@ export const GroupEventSchema = z.discriminatedUnion('type', [
     z
       .object({
         ...expenseRef,
-        // null toglie un campo facoltativo (categoria, note).
+        // null toglie un campo facoltativo (ora, categoria, note).
         changes: z
           .object({
             description: DescriptionSchema.optional(),
             date: CalendarDateSchema.optional(),
+            time: ClockTimeSchema.nullable().optional(),
             amounts: ExpenseAmountsSchema.optional(),
             category: CategorySchema.nullable().optional(),
             notes: NotesSchema.nullable().optional(),

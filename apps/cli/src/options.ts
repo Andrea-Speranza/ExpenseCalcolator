@@ -15,6 +15,7 @@ export const OPTIONS = {
   quote: { type: 'string' },
   importo: { type: 'string' },
   data: { type: 'string' },
+  ora: { type: 'string' },
   descrizione: { type: 'string' },
   categoria: { type: 'string' },
   note: { type: 'string' },

@@ -26,7 +26,10 @@ export function GroupScreen({
   return (
     <>
       <PageHeader
-        back={{ href: routeHref({ page: 'groups' }), label: 'Gruppi' }}
+        back={{
+          href: routeHref({ page: group.archived ? 'archivedGroups' : 'groups' }),
+          label: 'Gruppi',
+        }}
         title={group.name}
         actions={
           <Button variant="outline" size="icon" asChild>

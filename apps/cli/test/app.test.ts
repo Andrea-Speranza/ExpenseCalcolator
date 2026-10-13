@@ -141,6 +141,22 @@ describe('un weekend tra amici', () => {
     expect(quote.stdout).toContain('pagato da Anna, quote: Anna 2, Luca 1, Sara 1.');
   });
 
+  it('l’ora della spesa è facoltativa: si indica, si cambia e si toglie', async () => {
+    const cli = await weekend();
+    await cli('spesa', 'aggiungi', 'Weekend', 'Cena', '90', '--ora', '20.30');
+    expect((await cli('gruppo', 'mostra', 'Weekend')).stdout).toContain('13/10/2026 20:30');
+
+    await cli('spesa', 'modifica', 'Weekend', 'Cena', '--ora', '9:05');
+    expect((await cli('gruppo', 'mostra', 'Weekend')).stdout).toContain('13/10/2026 09:05');
+
+    await cli('spesa', 'modifica', 'Weekend', 'Cena', '--ora', '');
+    expect((await cli('gruppo', 'mostra', 'Weekend')).stdout).not.toContain('09:05');
+
+    expect((await cli('spesa', 'modifica', 'Weekend', 'Cena', '--ora', '25:00')).stderr).toBe(
+      '"25:00" non è un\'ora valida (esempi: 20:30, 9.05).\n',
+    );
+  });
+
   it('modifica, elimina e ripristina spese; registra ed elimina rimborsi', async () => {
     const cli = await weekend();
     await cli('spesa', 'aggiungi', 'Weekend', 'Cena', '90');

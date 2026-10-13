@@ -1,5 +1,12 @@
 import type { Engine, ExpenseAmounts, GroupView } from '@expense/engine';
-import { changesAmounts, parseDate, parseMoney, parsePayers, parseSplit } from '../amounts';
+import {
+  changesAmounts,
+  parseDate,
+  parseMoney,
+  parsePayers,
+  parseSplit,
+  parseTime,
+} from '../amounts';
 import { describePayers, describeSplit, formatMoney, groupNames, shortCode } from '../format';
 import { describeError } from '../messages';
 import type { Values } from '../options';
@@ -17,6 +24,10 @@ const SPLIT_HELP = [
   '  --quote Anna=2,Luca=1           quote intere',
   'Chi ha pagato: --pagato Anna, oppure --pagato Anna=60 --pagato Luca=30 (predefinito: tu).',
 ];
+
+/** Ora facoltativa: come per i testi, una stringa vuota la toglie. */
+const removableTime = (value: string | undefined): string | null | undefined =>
+  value === undefined ? undefined : value.trim() === '' ? null : parseTime(value);
 
 /** Testo facoltativo: una stringa vuota lo toglie (null), assente lo lascia com'è (undefined). */
 const optionalText = (value: string | undefined): string | null | undefined =>
@@ -125,6 +136,7 @@ export const expenseCommands: readonly CommandSpec[] = [
       'percentuali',
       'quote',
       'data',
+      'ora',
       'valuta',
       'categoria',
       'note',
@@ -151,6 +163,7 @@ export const expenseCommands: readonly CommandSpec[] = [
           groupId: group.groupId,
           description,
           date: options.data === undefined ? env.today() : parseDate(options.data),
+          time: options.ora === undefined ? undefined : parseTime(options.ora),
           amounts,
           category: optionalText(options.categoria) ?? undefined,
           notes: optionalText(options.note) ?? undefined,
@@ -179,13 +192,14 @@ export const expenseCommands: readonly CommandSpec[] = [
       'percentuali',
       'quote',
       'data',
+      'ora',
       'categoria',
       'note',
     ],
     summary: 'modifica una spesa; indica solo ciò che cambia',
     details: [
       'La spesa si indica con la descrizione o con il codice mostrato da "gruppo mostra" (es. #3k9f2a).',
-      'Categoria e note: "" le toglie.',
+      'Ora, categoria e note: "" le toglie.',
       ...SPLIT_HELP,
     ],
     async run({ args: [reference = '', expenseReference = ''], options, engine, json }) {
@@ -201,6 +215,7 @@ export const expenseCommands: readonly CommandSpec[] = [
           changes: {
             description: options.descrizione,
             date: options.data === undefined ? undefined : parseDate(options.data),
+            time: removableTime(options.ora),
             amounts: changesAmounts(options)
               ? updatedAmounts(options, group, expense.amounts)
               : undefined,

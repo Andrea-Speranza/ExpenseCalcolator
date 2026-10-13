@@ -147,6 +147,16 @@ function parseWeight(text: string): number {
   return Number(text.trim());
 }
 
+/** Ora come HH:MM, anche con il punto o con una sola cifra per l'ora ("9.05" → "09:05"). */
+export function parseTime(text: string): string {
+  const match = /^(\d{1,2})[:.](\d{2})$/.exec(text.trim());
+  const [, hours = '', minutes = ''] = match ?? [];
+  if (match === null || Number(hours) > 23 || Number(minutes) > 59) {
+    throw new UserError(`"${text}" non è un'ora valida (esempi: 20:30, 9.05).`);
+  }
+  return `${hours.padStart(2, '0')}:${minutes}`;
+}
+
 /** Data come AAAA-MM-GG o GG/MM/AAAA; la verifica che esista davvero la fa l'engine. */
 export function parseDate(text: string): string {
   const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text.trim());

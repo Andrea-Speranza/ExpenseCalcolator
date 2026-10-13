@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { DeleteOrRestoreButton } from '../components/delete-entry';
 import { ErrorAlert } from '../components/error-alert';
 import { useCommand, useQuery } from '../engine/store';
-import { entryTimes, formatDate, formatMoney } from '../format';
+import { formatDate, formatMoney, lastChange } from '../format';
 import { activeMembers, memberNames, nameOf, newestFirst } from '../group-data';
 import type { Names } from '../messages';
 import { SettlementForm, type SettlementPreset } from './settlement-form';
@@ -238,9 +238,7 @@ function SettlementRow({
             {formatDate(settlement.date)}
             {settlement.notes === null ? '' : ` · ${settlement.notes}`}
           </span>
-          <span className="text-xs text-muted-foreground">
-            {entryTimes(settlement, 'Inserito')}
-          </span>
+          <span className="text-xs text-muted-foreground">{lastChange(settlement)}</span>
         </div>
         {deleted && <Badge variant="outline">Eliminato</Badge>}
         <span className="pt-0.5 font-medium whitespace-nowrap tabular-nums">

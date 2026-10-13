@@ -22,6 +22,8 @@ export interface ExpenseDraft {
   readonly description: string;
   readonly amount: string;
   readonly date: string;
+  /** Ora facoltativa (HH:MM); vuota se non indicata. */
+  readonly time: string;
   readonly category: string;
   readonly notes: string;
   /** Un solo pagatore (tutto il totale) o più pagatori con il proprio importo. */
@@ -51,6 +53,7 @@ export interface DraftErrors {
 export interface ExpenseFields {
   readonly description: string;
   readonly date: string;
+  readonly time: string | null;
   readonly amounts: ExpenseAmounts;
   readonly category: string | null;
   readonly notes: string | null;
@@ -67,6 +70,7 @@ export function newDraft(
     description: '',
     amount: '',
     date,
+    time: '',
     category: '',
     notes: '',
     payerMode: 'single',
@@ -90,6 +94,7 @@ export function draftFromExpense(expense: ExpenseView): ExpenseDraft {
     description: expense.description,
     amount: amountInputValue(total),
     date: expense.date,
+    time: expense.time ?? '',
     category: expense.category ?? '',
     notes: expense.notes ?? '',
     payerMode: singlePayer ? 'single' : 'multiple',
@@ -153,6 +158,7 @@ export function readDraft(
     value: {
       description,
       date: draft.date,
+      time: draft.time === '' ? null : draft.time,
       amounts: { total: total.value, paidBy: payers.value, split: split.value },
       category: optional(draft.category),
       notes: optional(draft.notes),
@@ -163,6 +169,7 @@ export function readDraft(
 export interface ExpenseChanges {
   readonly description?: string;
   readonly date?: string;
+  readonly time?: string | null;
   readonly amounts?: ExpenseAmounts;
   readonly category?: string | null;
   readonly notes?: string | null;
@@ -173,6 +180,7 @@ export function expenseChanges(expense: ExpenseView, fields: ExpenseFields): Exp
   const changes: { -readonly [K in keyof ExpenseChanges]: ExpenseChanges[K] } = {};
   if (fields.description !== expense.description) changes.description = fields.description;
   if (fields.date !== expense.date) changes.date = fields.date;
+  if (fields.time !== expense.time) changes.time = fields.time;
   if (canonical(fields.amounts) !== canonical(expense.amounts)) changes.amounts = fields.amounts;
   if (fields.category !== expense.category) changes.category = fields.category;
   if (fields.notes !== expense.notes) changes.notes = fields.notes;

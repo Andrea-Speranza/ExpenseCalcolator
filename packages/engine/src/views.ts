@@ -58,6 +58,8 @@ export interface ExpenseView extends EntityView {
   readonly expenseId: ExpenseId;
   readonly description: string;
   readonly date: string;
+  /** Ora del giorno (HH:MM), se indicata. */
+  readonly time: string | null;
   readonly amounts: ExpenseAmounts;
   readonly category: string | null;
   readonly notes: string | null;
@@ -80,6 +82,8 @@ export interface GroupSummary {
   readonly mode: GroupMode;
   /** Il membro che rappresenta l'utente in questo gruppo; null se non ne fa parte. */
   readonly me: MemberId | null;
+  /** Quando è stato creato il gruppo (l'ora si legge con `timeOfHlc`). */
+  readonly createdAt: Hlc;
 }
 
 export interface GroupView extends GroupSummary, EntityView {
@@ -130,6 +134,7 @@ export function groupSummary(group: GroupState, link: LinkedGroup | undefined): 
     archived: group.archived.value,
     mode: link?.mode?.value ?? 'local',
     me: link?.me?.value ?? null,
+    createdAt: group.createdAt,
   };
 }
 
@@ -206,6 +211,7 @@ function expenseView(expense: ExpenseState): ExpenseView {
     expenseId: expense.id,
     description: expense.description.value,
     date: expense.date.value,
+    time: expense.time.value,
     amounts: expense.amounts.value,
     category: expense.category.value,
     notes: expense.notes.value,

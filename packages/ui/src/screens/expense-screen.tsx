@@ -35,7 +35,7 @@ import {
   readDraft,
   type SplitMethod,
 } from '../expense-draft';
-import { formatMoney, formatPercentage, today } from '../format';
+import { entryTimes, formatMoney, formatPercentage, today } from '../format';
 import { activeMembers, memberNames } from '../group-data';
 import { navigate, routeHref } from '../router';
 
@@ -110,13 +110,14 @@ function ExpenseForm({
       return;
     }
     setErrors({});
-    const { description, date, amounts, category, notes } = read.value;
+    const { description, date, time, amounts, category, notes } = read.value;
     if (expense === null) {
       const added = await command.run({
         type: 'AddExpense',
         groupId,
         description,
         date,
+        ...(time === null ? {} : { time }),
         amounts,
         ...(category === null ? {} : { category }),
         ...(notes === null ? {} : { notes }),
@@ -149,6 +150,7 @@ function ExpenseForm({
       <PageHeader
         back={{ href: routeHref(back), label: group.name }}
         title={expense === null ? 'Nuova spesa' : 'Modifica spesa'}
+        description={expense === null ? undefined : entryTimes(expense, 'Inserita')}
       />
       <div className="flex flex-col gap-4">
         {expense?.deleted === true && (
@@ -205,21 +207,21 @@ function ExpenseForm({
               />
               <FieldError>{errors.description}</FieldError>
             </Field>
+            <Field data-invalid={errors.amount !== undefined}>
+              <FieldLabel htmlFor={`${id}-amount`}>Importo ({currency})</FieldLabel>
+              <Input
+                id={`${id}-amount`}
+                inputMode="decimal"
+                value={draft.amount}
+                onChange={(event) => {
+                  update({ amount: event.target.value });
+                }}
+                placeholder="0,00"
+                aria-invalid={errors.amount !== undefined}
+              />
+              <FieldError>{errors.amount}</FieldError>
+            </Field>
             <div className="grid grid-cols-2 gap-4">
-              <Field data-invalid={errors.amount !== undefined}>
-                <FieldLabel htmlFor={`${id}-amount`}>Importo ({currency})</FieldLabel>
-                <Input
-                  id={`${id}-amount`}
-                  inputMode="decimal"
-                  value={draft.amount}
-                  onChange={(event) => {
-                    update({ amount: event.target.value });
-                  }}
-                  placeholder="0,00"
-                  aria-invalid={errors.amount !== undefined}
-                />
-                <FieldError>{errors.amount}</FieldError>
-              </Field>
               <Field data-invalid={errors.date !== undefined}>
                 <FieldLabel htmlFor={`${id}-date`}>Data</FieldLabel>
                 <Input
@@ -232,6 +234,17 @@ function ExpenseForm({
                   aria-invalid={errors.date !== undefined}
                 />
                 <FieldError>{errors.date}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor={`${id}-time`}>Ora (facoltativa)</FieldLabel>
+                <Input
+                  id={`${id}-time`}
+                  type="time"
+                  value={draft.time}
+                  onChange={(event) => {
+                    update({ time: event.target.value });
+                  }}
+                />
               </Field>
             </div>
           </FieldGroup>
@@ -427,9 +440,29 @@ function EqualSplit({ draft, members, currency, update }: Omit<SectionProps, 'er
   const id = useId();
   const total = parseAmount(draft.amount, currency);
   const count = members.filter(({ memberId }) => draft.included[memberId] === true).length;
+  const all = count === members.length;
   return (
     <div className="flex flex-col gap-2">
       <ul className="flex flex-col divide-y rounded-xl border">
+        {/* Scorciatoia: seleziona tutti, o li toglie se lo sono già. Con una scelta parziale la casella resta
+            vuota e il conteggio dice quanti sono. La spesa salva comunque l'elenco delle persone scelte. */}
+        <li className="flex items-center gap-3 bg-muted/40 px-4 py-3">
+          <Checkbox
+            id={`${id}-all`}
+            checked={all}
+            onCheckedChange={() => {
+              update({
+                included: Object.fromEntries(members.map(({ memberId }) => [memberId, !all])),
+              });
+            }}
+          />
+          <Label htmlFor={`${id}-all`} className="flex-1 font-semibold">
+            Tutti
+          </Label>
+          <span className="text-xs text-muted-foreground">
+            {count} di {members.length}
+          </span>
+        </li>
         {members.map(({ memberId, name }) => (
           <li key={memberId} className="flex items-center gap-3 px-4 py-3">
             <Checkbox

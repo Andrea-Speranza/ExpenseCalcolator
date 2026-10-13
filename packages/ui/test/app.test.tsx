@@ -111,7 +111,7 @@ describe('app', () => {
         .getAllByRole('listitem')
         .map((tag) => tag.textContent),
     ).toEqual(['Anna', 'Luca', 'Sara']);
-    expect(within(cena).getByText(/^Inserita il .+ alle \d{2}:\d{2}$/)).toBeDefined();
+    expect(within(cena).getByText(/^Ultima modifica il .+ alle \d{2}:\d{2}$/)).toBeDefined();
 
     // Anna ha pagato 90 € per tre: riceve 60 €, Luca e Sara danno 30 € ciascuno.
     await user.click(screen.getByRole('tab', { name: 'Saldi' }));
@@ -196,9 +196,11 @@ describe('app', () => {
     await user.click(screen.getByRole('button', { name: 'Archivia il gruppo' }));
     expect(await screen.findByRole('button', { name: 'Togli dall’archivio' })).toBeDefined();
 
+    // Nell'elenco i gruppi archiviati sono nascosti, nella loro scheda.
     window.location.hash = '#/';
-    expect(await screen.findByRole('heading', { name: 'Archiviati' })).toBeDefined();
-    expect(screen.getByText('Vacanza 2026')).toBeDefined();
+    expect(await screen.findByText('Nessun gruppo attivo')).toBeDefined();
+    await user.click(screen.getByRole('tab', { name: 'Archiviati (1)' }));
+    expect(await screen.findByText('Vacanza 2026')).toBeDefined();
   });
 
   it('importa un gruppo esportato da un altro dispositivo', async () => {
@@ -348,6 +350,63 @@ describe('app', () => {
     await user.click(screen.getByRole('radio', { name: 'Spese' }));
     expect(screen.queryByText('Luca → Anna')).toBeNull();
     expect(screen.getByText('Cena')).toBeDefined();
+  });
+  it('con «Tutti» seleziona o toglie tutti, e l’ora della spesa è facoltativa', async () => {
+    const user = await renderApp();
+    const group = await createGroup(user);
+    window.location.hash = `${group}/spese/nuova`;
+    await user.type(await screen.findByLabelText('Descrizione'), 'Aperitivo');
+    await user.type(screen.getByLabelText('Importo (EUR)'), '30');
+    await user.type(screen.getByLabelText('Ora (facoltativa)'), '19:45');
+
+    const everyone = screen.getByRole('checkbox', { name: 'Tutti' });
+    expect(everyone.getAttribute('aria-checked')).toBe('true');
+    await user.click(screen.getByLabelText('Sara'));
+    expect(everyone.getAttribute('aria-checked')).toBe('false');
+    expect(screen.getByText('2 di 3')).toBeDefined();
+    await user.click(everyone);
+    await user.click(everyone);
+    expect(screen.getByText('0 di 3')).toBeDefined();
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(screen.getByText('Scegli almeno una persona.')).toBeDefined();
+
+    await user.click(everyone);
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    const row = await screen.findByRole('link', { name: /Aperitivo/ });
+    expect(within(row).getByText(/, 19:45 ·/)).toBeDefined();
+
+    // Nella pagina della spesa: quando è stata inserita.
+    await user.click(row);
+    expect(await screen.findByText(/^Inserita il .+ alle \d{2}:\d{2}$/)).toBeDefined();
+    expect(screen.getByLabelText('Ora (facoltativa)')).toHaveProperty('value', '19:45');
+  });
+
+  it('nell’elenco dei gruppi mostra la data di creazione e lo stato dei conti', async () => {
+    const user = await renderApp();
+    const group = await createGroup(user);
+    const row = async () => {
+      window.location.hash = '#/';
+      return screen.findByRole('link', { name: /Vacanza/ });
+    };
+    expect(within(await row()).getByText(/^Creato il .+ · EUR$/)).toBeDefined();
+    expect(within(await row()).getByText('Nessuna spesa')).toBeDefined();
+
+    await addExpense(user, group, 'Cena', '90');
+    expect(within(await row()).getByText('Conti aperti')).toBeDefined();
+    expect(within(await row()).getByText('ti devono 60,00 €')).toBeDefined();
+
+    // Luca e Sara pagano Anna: tutti in pari.
+    window.location.hash = `${group}/saldi`;
+    for (let paid = 0; paid < 2; paid += 1) {
+      await user.click(first(await screen.findAllByRole('button', { name: 'Pagato' })));
+      await user.click(
+        within(await screen.findByRole('dialog')).getByRole('button', { name: 'Registra' }),
+      );
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog')).toBeNull();
+      });
+    }
+    expect(within(await row()).getByText('In pari')).toBeDefined();
   });
   it('mostra una pagina di errore per gli indirizzi sconosciuti', async () => {
     window.location.hash = '#/gruppi/inesistente';

@@ -57,7 +57,7 @@ sincronizzazione, stesse regole sui conflitti.
 
 Una spesa ha due tipi di campi:
 
-- **campi indipendenti:** descrizione, data, categoria, note;
+- **campi indipendenti:** descrizione, data, ora (facoltativa), categoria, note;
 - **un blocco "importi":** totale, pagatori e divisione. Si modifica sempre tutto insieme, perché deve restare
   coerente (gli importi devono sommare al totale).
 

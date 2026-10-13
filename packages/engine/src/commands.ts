@@ -184,11 +184,11 @@ function planGroupCommand(
       const expenseId = context.newId();
       const valid = checkAmounts(group, expenseId, command.amounts);
       if (!valid.ok) return valid;
-      const { description, date, amounts, category, notes } = command;
+      const { description, date, time, amounts, category, notes } = command;
       return single(
         {
           type: 'ExpenseAdded',
-          payload: { expenseId, description, date, amounts, category, notes },
+          payload: { expenseId, description, date, time, amounts, category, notes },
         },
         { expenseId },
       );

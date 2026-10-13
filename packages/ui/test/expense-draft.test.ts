@@ -46,6 +46,7 @@ describe('readDraft', () => {
       value: {
         description: 'Cena',
         date: '2026-10-13',
+        time: null,
         amounts: {
           total: eur(9000),
           paidBy: [{ memberId: 'l', amount: eur(9000) }],
@@ -139,6 +140,7 @@ describe('modifica di una spesa', () => {
     expenseId: 'e1',
     description: 'Cena',
     date: '2026-10-13',
+    time: null,
     amounts: {
       total: eur(9000),
       paidBy: [{ memberId: 'a', amount: eur(9000) }],
@@ -167,7 +169,7 @@ describe('modifica di una spesa', () => {
 
   it('indica solo i campi cambiati', () => {
     const read = readDraft(
-      { ...draftFromExpense(expense), notes: '', amount: '60' },
+      { ...draftFromExpense(expense), notes: '', amount: '60', time: '20:30' },
       MEMBERS,
       'EUR',
     );
@@ -177,6 +179,7 @@ describe('modifica di una spesa', () => {
         paidBy: [{ memberId: 'a', amount: eur(6000) }],
         split: { method: 'equal', memberIds: ['a', 'l', 's'] },
       },
+      time: '20:30',
       notes: null,
     });
   });

@@ -55,7 +55,15 @@ describe('gruppi e membri', () => {
     const { engine } = await device('a');
     const { groupId, anna } = await weekend(engine);
     expect(unwrap(engine.query({ type: 'ListGroups' }))).toEqual([
-      { groupId, name: 'Weekend', baseCurrency: 'EUR', archived: false, mode: 'local', me: anna },
+      {
+        groupId,
+        name: 'Weekend',
+        baseCurrency: 'EUR',
+        archived: false,
+        mode: 'local',
+        me: anna,
+        createdAt: '1760000000000:00000:a_00001',
+      },
     ]);
     const group = unwrap(engine.query({ type: 'GetGroup', groupId }));
     expect(group.members.map(({ name }) => name)).toEqual(['Anna', 'Luca']);

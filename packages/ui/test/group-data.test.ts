@@ -1,7 +1,7 @@
 import type { ExpenseView } from '@expense/engine';
 import { describe, expect, it } from 'vitest';
 import { entryTimes, formatLongDate, formatMoment } from '../src/format';
-import { matchesFilter, participants } from '../src/group-data';
+import { accountsStatus, matchesFilter, newestFirst, participants } from '../src/group-data';
 
 /** Gli spazi non separabili che Intl mette negli importi diventano spazi normali. */
 const plain = (text: string | null) => text?.replace(/[\u00a0\u202f]/g, ' ') ?? null;
@@ -13,6 +13,7 @@ function expense(paidBy: string[], split: string[]): ExpenseView {
     expenseId: 'e1',
     description: 'Cena',
     date: '2026-10-13',
+    time: null,
     amounts: {
       total: eur(9000),
       paidBy: paidBy.map((memberId) => ({ memberId, amount: eur(9000 / paidBy.length) })),
@@ -95,5 +96,89 @@ describe('giorno e ora', () => {
       ),
     ).toBe('Inserito il 9 ott 2025 alle 10:53 · modificato il 10 ott 2025 alle 11:53');
     expect(formatLongDate('2026-10-13')).toBe('martedì 13 ottobre 2026');
+  });
+});
+
+describe('accountsStatus', () => {
+  const balances = (amounts: [string, number][]) => ({
+    balances: [
+      {
+        currency: 'EUR',
+        balances: amounts.map(([memberId, minor]) => ({ memberId, amount: eur(minor) })),
+      },
+    ],
+    simplifiedTransfers: [],
+    pairwiseTransfers: [],
+    excluded: [],
+  });
+
+  it('distingue gruppo vuoto, in pari e con conti aperti', () => {
+    expect(
+      accountsStatus(
+        { balances: [], simplifiedTransfers: [], pairwiseTransfers: [], excluded: [] },
+        'me',
+      ),
+    ).toEqual({ kind: 'empty' });
+    expect(
+      accountsStatus(
+        balances([
+          ['me', 0],
+          ['b', 0],
+        ]),
+        'me',
+      ),
+    ).toEqual({ kind: 'settled' });
+    expect(
+      accountsStatus(
+        balances([
+          ['me', 3000],
+          ['b', -3000],
+        ]),
+        'me',
+      ),
+    ).toEqual({
+      kind: 'open',
+      mine: [eur(3000)],
+    });
+    // Io sono in pari, ma altri no: i conti restano aperti.
+    expect(
+      accountsStatus(
+        balances([
+          ['me', 0],
+          ['b', 500],
+          ['c', -500],
+        ]),
+        'me',
+      ),
+    ).toEqual({
+      kind: 'open',
+      mine: [],
+    });
+  });
+});
+
+describe('newestFirst', () => {
+  it('ordina per data, poi per ora (le spese senza ora dopo), poi per inserimento', () => {
+    const at = (expenseId: string, date: string, time: string | null, createdAt: string) => ({
+      ...expense(['me'], ['me']),
+      expenseId,
+      date,
+      time,
+      createdAt,
+    });
+    const sorted = newestFirst([
+      at('mattina', '2026-10-13', '09:00', '3'),
+      at('senza-ora', '2026-10-13', null, '4'),
+      at('sera', '2026-10-13', '20:30', '1'),
+      at('ieri', '2026-10-12', '23:00', '5'),
+      at('senza-ora-dopo', '2026-10-13', null, '6'),
+    ]);
+    expect(sorted.map(({ expenseId }) => expenseId)).toEqual([
+      'sera',
+      'mattina',
+      'senza-ora-dopo',
+      'senza-ora',
+      'ieri',
+    ]);
   });
 });

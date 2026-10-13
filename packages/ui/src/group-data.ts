@@ -1,4 +1,12 @@
-import type { ExpenseView, GroupView, MemberView, SettlementView, Split } from '@expense/engine';
+import type {
+  BalancesView,
+  ExpenseView,
+  GroupView,
+  MemberView,
+  Money,
+  SettlementView,
+  Split,
+} from '@expense/engine';
 import { formatMoney, formatPercentage } from './format';
 import type { Names } from './messages';
 
@@ -16,10 +24,15 @@ export function activeMembers(group: GroupView): MemberView[] {
   return group.members.filter(({ archived }) => !archived);
 }
 
-/** Dalla più recente: per data, poi per ordine di inserimento. */
+/**
+ * Dalla più recente: per data, poi per ora (le spese senza ora vengono dopo quelle con l'ora, nello stesso
+ * giorno), poi per ordine di inserimento.
+ */
 export function newestFirst<T extends ExpenseView | SettlementView>(entries: readonly T[]): T[] {
+  const time = (entry: T) => ('time' in entry ? (entry.time ?? '') : '');
   return [...entries].sort((a, b) => {
     if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    if (time(a) !== time(b)) return time(a) < time(b) ? 1 : -1;
     return a.createdAt < b.createdAt ? 1 : -1;
   });
 }
@@ -73,4 +86,25 @@ export function matchesFilter(
     participants(split).some(({ memberId }) => memberId === me) &&
     paidBy.some(({ memberId }) => memberId !== me)
   );
+}
+
+/** Stato dei conti di un gruppo, per l'elenco dei gruppi. */
+export type AccountsStatus =
+  /** Nessuna spesa né rimborso (o tutti eliminati). */
+  | { readonly kind: 'empty' }
+  /** Tutti i saldi sono a zero: nessuno deve niente a nessuno. */
+  | { readonly kind: 'settled' }
+  /** Qualcuno deve ancora dare o ricevere; `mine` è il saldo di chi usa l'app, se non è zero. */
+  | { readonly kind: 'open'; readonly mine: readonly Money[] };
+
+export function accountsStatus(view: BalancesView, me: string | null): AccountsStatus {
+  if (view.balances.length === 0) return { kind: 'empty' };
+  const amounts = view.balances.flatMap(({ balances }) => balances);
+  if (amounts.every(({ amount }) => amount.minor === 0)) return { kind: 'settled' };
+  return {
+    kind: 'open',
+    mine: amounts
+      .filter(({ memberId, amount }) => memberId === me && amount.minor !== 0)
+      .map(({ amount }) => amount),
+  };
 }

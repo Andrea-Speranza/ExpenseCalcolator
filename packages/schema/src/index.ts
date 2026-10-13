@@ -21,6 +21,7 @@ export type {
 export {
   CalendarDateSchema,
   CategorySchema,
+  ClockTimeSchema,
   DescriptionSchema,
   ExpenseAmountsSchema,
   GroupModeSchema,

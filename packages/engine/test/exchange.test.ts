@@ -45,7 +45,15 @@ describe('file di scambio', () => {
       added: engine.exportEvents(groupId).length,
       invalid: 0,
       groups: [
-        { groupId, name: 'Weekend', baseCurrency: 'EUR', archived: false, mode: 'local', me: null },
+        {
+          groupId,
+          name: 'Weekend',
+          baseCurrency: 'EUR',
+          archived: false,
+          mode: 'local',
+          me: null,
+          createdAt: '1760000000000:00000:a_00001',
+        },
       ],
     });
     expect(other.query({ type: 'GetBalances', groupId })).toEqual(

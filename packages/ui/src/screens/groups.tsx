@@ -1,4 +1,4 @@
-import type { GroupSummary } from '@expense/engine';
+import { type GroupSummary, timeOfHlc } from '@expense/engine';
 import { Alert, AlertAction, AlertDescription } from '@expense/ui/components/ui/alert';
 import { Badge } from '@expense/ui/components/ui/badge';
 import { Button } from '@expense/ui/components/ui/button';
@@ -22,6 +22,7 @@ import {
 } from '@expense/ui/components/ui/empty';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@expense/ui/components/ui/field';
 import { Input } from '@expense/ui/components/ui/input';
+import { Tabs, TabsList, TabsTrigger } from '@expense/ui/components/ui/tabs';
 import {
   ChevronRightIcon,
   CircleAlertIcon,
@@ -34,16 +35,20 @@ import { CurrencySelect } from '../components/currency-select';
 import { ErrorAlert } from '../components/error-alert';
 import { PageHeader } from '../components/layout';
 import { useCommand, useQuery } from '../engine/store';
+import { formatMoment, formatMoney } from '../format';
+import { type AccountsStatus, accountsStatus } from '../group-data';
 import { describeError, describeFileError, describeImport } from '../messages';
 import { navigate, routeHref } from '../router';
 import { ImportGroupButton, type ImportResult } from './import-group';
 
-export function GroupsScreen() {
+export function GroupsScreen({ archived }: { readonly archived: boolean }) {
   const groups = useQuery({ type: 'ListGroups' });
   const [imported, setImported] = useState<ImportResult | null>(null);
-  const list = groups.ok ? groups.value : [];
-  const active = list.filter(({ archived }) => !archived);
-  const archived = list.filter((group) => group.archived);
+  // Dal più recente.
+  const list = groups.ok ? [...groups.value].reverse() : [];
+  const active = list.filter((group) => !group.archived);
+  const archivedGroups = list.filter((group) => group.archived);
+  const shown = archived ? archivedGroups : active;
   const importButton = <ImportGroupButton onResult={setImported} />;
 
   return (
@@ -82,12 +87,35 @@ export function GroupsScreen() {
           </Empty>
         ) : (
           <>
-            {active.length > 0 && <GroupList groups={active} />}
-            {archived.length > 0 && (
-              <section className="flex flex-col gap-2">
-                <h2 className="text-sm font-medium text-muted-foreground">Archiviati</h2>
-                <GroupList groups={archived} />
-              </section>
+            <Tabs
+              value={archived ? 'archiviati' : 'attivi'}
+              onValueChange={(value) => {
+                navigate(
+                  { page: value === 'archiviati' ? 'archivedGroups' : 'groups' },
+                  { replace: true },
+                );
+              }}
+            >
+              <TabsList className="w-full">
+                <TabsTrigger value="attivi">Attivi ({active.length})</TabsTrigger>
+                <TabsTrigger value="archiviati">Archiviati ({archivedGroups.length})</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            {shown.length > 0 ? (
+              <GroupList groups={shown} />
+            ) : (
+              <Empty className="border">
+                <EmptyHeader>
+                  <EmptyTitle>
+                    {archived ? 'Nessun gruppo archiviato' : 'Nessun gruppo attivo'}
+                  </EmptyTitle>
+                  <EmptyDescription>
+                    {archived
+                      ? 'Quando un gruppo è concluso puoi archiviarlo dalle sue impostazioni: comparirà qui.'
+                      : 'I gruppi archiviati sono nell’altra scheda. Puoi crearne uno nuovo.'}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             )}
           </>
         )}
@@ -143,19 +171,68 @@ function GroupList({ groups }: { readonly groups: readonly GroupSummary[] }) {
   return (
     <ul className="flex flex-col divide-y rounded-xl border">
       {groups.map((group) => (
-        <li key={group.groupId}>
-          <a
-            href={routeHref({ page: 'group', groupId: group.groupId, tab: 'spese' })}
-            className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
-          >
-            <span className="min-w-0 flex-1 truncate font-medium">{group.name}</span>
-            <Badge variant="secondary">{group.baseCurrency}</Badge>
-            <ChevronRightIcon className="size-4 text-muted-foreground" />
-          </a>
-        </li>
+        <GroupRow key={group.groupId} group={group} />
       ))}
     </ul>
   );
+}
+
+function GroupRow({ group }: { readonly group: GroupSummary }) {
+  const balances = useQuery({ type: 'GetBalances', groupId: group.groupId });
+  const status = balances.ok ? accountsStatus(balances.value, group.me) : null;
+  const created = timeOfHlc(group.createdAt);
+  return (
+    <li>
+      <a
+        href={routeHref({ page: 'group', groupId: group.groupId, tab: 'spese' })}
+        className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
+      >
+        <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate font-medium">{group.name}</span>
+          <span className="text-xs text-muted-foreground">
+            {created === null ? '' : `Creato il ${formatMoment(created).day} · `}
+            {group.baseCurrency}
+          </span>
+        </span>
+        {status !== null && <AccountsBadge status={status} />}
+        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" />
+      </a>
+    </li>
+  );
+}
+
+/** Etichetta colorata con lo stato dei conti e, se i conti sono aperti, la posizione di chi usa l'app. */
+function AccountsBadge({ status }: { readonly status: AccountsStatus }) {
+  switch (status.kind) {
+    case 'empty':
+      return <Badge variant="outline">Nessuna spesa</Badge>;
+    case 'settled':
+      return (
+        <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+          <CircleCheckIcon data-icon="inline-start" />
+          In pari
+        </Badge>
+      );
+    case 'open':
+      return (
+        <span className="flex flex-col items-end gap-1">
+          <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300">
+            Conti aperti
+          </Badge>
+          {status.mine.length > 0 && (
+            <span className="text-xs whitespace-nowrap text-muted-foreground">
+              {status.mine
+                .map((amount) =>
+                  amount.minor > 0
+                    ? `ti devono ${formatMoney(amount)}`
+                    : `devi ${formatMoney({ ...amount, minor: -amount.minor })}`,
+                )
+                .join(' · ')}
+            </span>
+          )}
+        </span>
+      );
+  }
 }
 
 function CreateGroupDialog() {

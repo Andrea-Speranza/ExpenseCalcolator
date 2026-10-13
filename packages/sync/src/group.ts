@@ -33,6 +33,8 @@ export interface ExpenseState extends Entity {
   readonly id: ExpenseId;
   readonly description: Field<string>;
   readonly date: Field<string>;
+  /** Ora del giorno (HH:MM), facoltativa. */
+  readonly time: Field<string | null>;
   readonly amounts: Field<ExpenseAmounts>;
   readonly category: Field<string | null>;
   readonly notes: Field<string | null>;
@@ -174,13 +176,14 @@ function applyToGroup(
       return { ...group, members: new Map(group.members).set(memberId, next) };
     }
     case 'ExpenseAdded': {
-      const { expenseId, description, date, amounts, category, notes } = event.payload;
+      const { expenseId, description, date, time, amounts, category, notes } = event.payload;
       if (group.expenses.has(expenseId)) return 'duplicateEntity';
       const expense: ExpenseState = {
         ...newEntity(event),
         id: expenseId,
         description: initialField(description, event),
         date: initialField(date, event),
+        time: initialField(time ?? null, event),
         amounts: initialField(amounts, event),
         category: initialField(category ?? null, event),
         notes: initialField(notes ?? null, event),
@@ -194,6 +197,7 @@ function applyToGroup(
         ...expense,
         description: set(conflicts, expense.description, changes.description, event, 'description'),
         date: set(conflicts, expense.date, changes.date, event, 'date'),
+        time: set(conflicts, expense.time, changes.time, event, 'time'),
         amounts: set(conflicts, expense.amounts, changes.amounts, event, 'amounts'),
         category: set(conflicts, expense.category, changes.category, event, 'category'),
         notes: set(conflicts, expense.notes, changes.notes, event, 'notes'),

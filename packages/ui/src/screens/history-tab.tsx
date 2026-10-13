@@ -5,7 +5,14 @@ import { ToggleGroup, ToggleGroupItem } from '@expense/ui/components/ui/toggle-g
 import { ArrowRightLeftIcon, ReceiptIcon } from 'lucide-react';
 import { useState } from 'react';
 import { PaidBy } from '../components/paid-by';
-import { formatDate, formatLongDate, formatMoment, formatMoney, today } from '../format';
+import {
+  formatDate,
+  formatLongDate,
+  formatMoment,
+  formatMoney,
+  formatWhen,
+  today,
+} from '../format';
 import { memberNames, nameOf } from '../group-data';
 import type { Names } from '../messages';
 import { routeHref } from '../router';
@@ -148,7 +155,7 @@ function HistoryRow({
         <span className="text-sm text-muted-foreground">
           {entry.kind === 'expense' ? (
             <>
-              Spesa del {formatDate(entry.view.date)} ·{' '}
+              Spesa del {formatWhen(entry.view.date, entry.view.time)} ·{' '}
               <PaidBy expense={entry.view} names={names} me={group.me} />
             </>
           ) : (

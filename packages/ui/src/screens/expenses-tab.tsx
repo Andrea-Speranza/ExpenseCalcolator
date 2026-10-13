@@ -17,7 +17,7 @@ import { ErrorAlert } from '../components/error-alert';
 import { PaidBy } from '../components/paid-by';
 import { SplitTags } from '../components/split-tags';
 import { useCommand } from '../engine/store';
-import { entryTimes, formatDate, formatMoney } from '../format';
+import { formatMoney, formatWhen, lastChange } from '../format';
 import {
   activeMembers,
   type ExpenseFilter,
@@ -208,10 +208,11 @@ function ExpenseRow({
             </span>
           </span>
           <span className="text-sm text-muted-foreground">
-            {formatDate(expense.date)} · <PaidBy expense={expense} names={names} me={group.me} />
+            {formatWhen(expense.date, expense.time)} ·{' '}
+            <PaidBy expense={expense} names={names} me={group.me} />
           </span>
           <SplitTags split={expense.amounts.split} names={names} me={group.me} />
-          <span className="text-xs text-muted-foreground">{entryTimes(expense, 'Inserita')}</span>
+          <span className="text-xs text-muted-foreground">{lastChange(expense)}</span>
           {expense.conflicts.length > 0 && (
             <Badge variant="outline">Modificata da più dispositivi: da controllare</Badge>
           )}

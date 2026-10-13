@@ -6,6 +6,7 @@ describe('parseRoute', () => {
     ['', { page: 'groups' }],
     ['#/', { page: 'groups' }],
     ['#/impostazioni', { page: 'settings' }],
+    ['#/archiviati', { page: 'archivedGroups' }],
     ['#/gruppi/g1', { page: 'group', groupId: 'g1', tab: 'spese' }],
     ['#/gruppi/g1/saldi', { page: 'group', groupId: 'g1', tab: 'saldi' }],
     ['#/gruppi/g1/membri', { page: 'group', groupId: 'g1', tab: 'membri' }],
@@ -36,6 +37,7 @@ describe('routeHref', () => {
   it.each<Route>([
     { page: 'groups' },
     { page: 'settings' },
+    { page: 'archivedGroups' },
     { page: 'group', groupId: 'g1', tab: 'spese' },
     { page: 'group', groupId: 'g1', tab: 'saldi' },
     { page: 'expense', groupId: 'g1', expenseId: null },

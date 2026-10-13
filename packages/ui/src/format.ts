@@ -84,6 +84,22 @@ export function formatMoment(
   };
 }
 
+/** Data di una spesa o di un rimborso, con l'ora se è indicata (es. "13 ott 2026, 20:30"). */
+export function formatWhen(date: string, time: string | null = null): string {
+  return time === null ? formatDate(date) : `${formatDate(date)}, ${time}`;
+}
+
+/**
+ * Per gli elenchi: quando un elemento è cambiato l'ultima volta (l'inserimento conta come prima modifica),
+ * es. "Ultima modifica il 13 ott 2026 alle 17:20". I dettagli completi stanno nella pagina dell'elemento.
+ */
+export function lastChange({ version }: { readonly version: Hlc }, timeZone?: string): string {
+  const time = timeOfHlc(version);
+  if (time === null) return '';
+  const { day, time: hour } = formatMoment(time, timeZone);
+  return `Ultima modifica il ${day} alle ${hour}`;
+}
+
 /**
  * Quando un elemento è stato inserito e, se è cambiato dopo, quando è stato modificato l'ultima volta
  * (es. "Inserita il 13 ott 2026 alle 16:42 · modificata il 14 ott 2026 alle 09:10"). Le ore vengono

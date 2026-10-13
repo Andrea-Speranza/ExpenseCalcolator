@@ -27,7 +27,9 @@ function CurrentPage() {
   const route = useRoute();
   switch (route.page) {
     case 'groups':
-      return <GroupsScreen />;
+      return <GroupsScreen key="attivi" archived={false} />;
+    case 'archivedGroups':
+      return <GroupsScreen key="archiviati" archived />;
     case 'settings':
       return <SettingsScreen />;
     case 'group':

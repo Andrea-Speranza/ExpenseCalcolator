@@ -19,6 +19,7 @@ const OPTION_HELP: Readonly<Record<OptionName, string>> = {
   quote: '--quote a=2,b=1          quote intere per membro',
   importo: '--importo <importo>      nuovo totale',
   data: '--data <data>            AAAA-MM-GG o GG/MM/AAAA (predefinita: oggi)',
+  ora: '--ora <HH:MM>            ora della spesa, facoltativa (es. 20:30)',
   descrizione: '--descrizione <testo>    nuova descrizione',
   categoria: '--categoria <testo>      categoria',
   note: '--note <testo>           note',

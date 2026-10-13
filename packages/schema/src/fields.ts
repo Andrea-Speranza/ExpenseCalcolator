@@ -15,6 +15,9 @@ export const NotesSchema = z.string().min(1).max(2000);
 /** Data di calendario della spesa o del rimborso (AAAA-MM-GG), senza ora né fuso orario. */
 export const CalendarDateSchema = z.iso.date();
 
+/** Ora del giorno di una spesa (HH:MM), facoltativa: come la data, senza fuso orario. */
+export const ClockTimeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+
 /**
  * Blocco "importi" di una spesa: totale, pagatori e divisione si modificano sempre insieme, perché devono
  * restare coerenti tra loro (ADR 0007).

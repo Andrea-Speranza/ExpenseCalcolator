@@ -38,7 +38,7 @@ e **senza un backend o un database da ospitare**.
 
 - **Gruppi:** creare, rinominare, archiviare.
 - **Membri:** aggiungere, rinominare, archiviare. Un membro può non avere l'app (lo gestiscono gli altri).
-- **Spese:** aggiungere, modificare, eliminare. Ogni spesa ha descrizione, data, importo, valuta, chi ha pagato,
+- **Spese:** aggiungere, modificare, eliminare. Ogni spesa ha descrizione, data (con l'ora facoltativa), importo, valuta, chi ha pagato,
   chi partecipa e la modalità di divisione (parti uguali, importi esatti, percentuali, quote).
 - **Rimborsi:** registrare un pagamento tra due membri ("saldare").
 - **Saldi:** saldo netto per membro e trasferimenti suggeriti, con o senza semplificazione dei debiti.
@@ -260,7 +260,7 @@ I file sul Drive vengono scritti da dispositivi con versioni diverse dell'app, q
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Group`      | id, nome, valuta base, data di creazione, archiviato                                                                                                                                                      |
 | `Member`     | id, nome visualizzato, archiviato. È una persona nel gruppo, non un account.                                                                                                                              |
-| `Expense`    | id, descrizione, data, totale (`Money`), pagatori `[{memberId, importo}]`, divisione (modalità + parametri), categoria e note opzionali                                                                   |
+| `Expense`    | id, descrizione, data e ora facoltativa, totale (`Money`), pagatori `[{memberId, importo}]`, divisione (modalità + parametri), categoria e note opzionali                                                 |
 | `Settlement` | id, da, a, importo, data                                                                                                                                                                                  |
 | `Profile`    | Impostazioni (valuta predefinita, lingua, nome), gruppi con modalità e riferimento alla cartella, membro "io" per ogni gruppo. È personale e non si condivide mai ([ADR 0005](adr/0005-modalita-uso.md)). |
 | Busta evento | id, groupId, tipo, versione `v`, payload, timestamp HLC, deviceId, membro autore                                                                                                                          |
@@ -387,7 +387,7 @@ conserva il riferimento.
 ### 8.4 Conflitti logici (stessa spesa modificata da due persone) — decisi in [ADR 0007](adr/0007-salvataggio-e-concorrenza.md)
 
 - **Campi diversi:** vincono entrambe le modifiche. L'ultima modifica vince per singolo campo (descrizione,
-  data, categoria, note) o per blocco coerente ("importi": totale, pagatori e divisione), non per l'intera spesa.
+  data, ora, categoria, note) o per blocco coerente ("importi": totale, pagatori e divisione), non per l'intera spesa.
 - **Stesso campo:** vince quella con il timestamp HLC più alto (last-writer-wins). Se il suo autore non aveva
   visto l'altra modifica, la spesa viene segnalata come modificata contemporaneamente, e il valore scartato
   resta nello storico.
@@ -741,8 +741,13 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
       esportazione e importazione tra due dispositivi (due contesti del browser). In locale con Edge, nella CI
       con Chromium.
 - [x] Rifiniture dopo la prima prova d'uso:
-  - spese e rimborsi mostrano quando sono stati inseriti e, se cambiati, l'ultima modifica (giorno e ora
-    dall'HLC, ADR 0007);
+  - negli elenchi l'ultima modifica di spese e rimborsi (giorno e ora dall'HLC, ADR 0007); inserimento e
+    ultima modifica per intero nella pagina della spesa;
+  - ora della spesa facoltativa (campo `time`, HH:MM): serve anche a ordinare le spese dello stesso giorno;
+  - nella divisione in parti uguali la casella «Tutti» seleziona o toglie tutti. La spesa salva comunque
+    l'elenco esplicito delle persone: chi entra nel gruppo dopo non finisce nelle spese passate;
+  - elenco dei gruppi: data di creazione, gruppi archiviati in una scheda a parte, etichetta con lo stato dei
+    conti («Nessuna spesa», «Conti aperti» con quanto devi o ti devono, «In pari»);
   - eliminazione direttamente dagli elenchi, con conferma: i saldi si ricalcolano e l'elemento resta
     ripristinabile;
   - scheda «Storico»: spese e rimborsi in un solo elenco, per giorno e ora di inserimento;
