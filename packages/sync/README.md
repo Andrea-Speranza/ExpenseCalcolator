@@ -1,15 +1,22 @@
-# packages/sync — Eventi e sincronizzazione (logica pura)
+# packages/sync — Eventi e concorrenza (logica pura)
 
-Contiene la logica pura della sincronizzazione:
+Contiene la logica che permette a più dispositivi e più persone di modificare gli stessi dati senza un server
+([ADR 0007](../../docs/adr/0007-salvataggio-e-concorrenza.md)):
 
-- orologio logico ibrido (HLC) e ordinamento deterministico degli eventi;
-- merge dei log di più dispositivi (idempotente);
-- proiezione eventi → stato, con le regole di conflitto;
-- formato dei segmenti e del manifest `group.json`.
+| Funzione                | Cosa fa                                                                                                                                                                |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tickHlc`, `observeHlc` | Orologio logico ibrido (HLC): ogni nuovo evento viene dopo tutti quelli già generati o visti, anche con orologi non allineati                                          |
+| `orderEvents`           | Ordine canonico degli eventi, senza doppioni: uguale su ogni dispositivo                                                                                               |
+| `projectGroup`          | Stato del gruppo: ultima modifica per campo o blocco, eliminazione come campo a sé, modifiche contemporanee segnalate, permessi tramite una `Policy` (oggi `allowAll`) |
+| `projectProfile`        | Stato del profilo: impostazioni, gruppi collegati, "chi sono io"                                                                                                       |
 
-Non fa I/O: legge e scrive file solo tramite le porte dell'engine.
+Lo stato non dipende dall'ordine in cui arrivano gli eventi né dai doppioni: è verificato con test
+property-based.
+
+Non fa I/O né legge l'ora: l'ora arriva dall'engine. In Fase 5 qui si aggiungerà il formato dei segmenti
+scambiati dai canali.
 
 - **Dipende da:** `schema`.
-- **Stato:** da implementare, Fasi 2 e 5.
+- **Stato:** Fase 2 completata.
 
 Dettagli: [PLANNING §8](../../docs/PLANNING.md#8-dati-e-condivisione-senza-server).

@@ -1,0 +1,1017 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "CreateGroup"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "baseCurrency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "me": {
+          "anyOf": [
+            {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                }
+              },
+              "required": [
+                "name"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "name",
+        "me"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "UpdateGroup"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "changes": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80
+            },
+            "baseCurrency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "archived": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "changes"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "AddMember"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "name"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "UpdateMember"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "memberId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "changes": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            },
+            "archived": {
+              "type": "boolean"
+            }
+          }
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "memberId",
+        "changes"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "ClaimMember"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "memberId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "memberId"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "AddExpense"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        "amounts": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "total": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "minor": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                }
+              },
+              "required": [
+                "minor",
+                "currency"
+              ]
+            },
+            "paidBy": {
+              "readOnly": true,
+              "type": "array",
+              "items": {
+                "readOnly": true,
+                "type": "object",
+                "properties": {
+                  "memberId": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                  },
+                  "amount": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "minor": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$"
+                      }
+                    },
+                    "required": [
+                      "minor",
+                      "currency"
+                    ]
+                  }
+                },
+                "required": [
+                  "memberId",
+                  "amount"
+                ]
+              }
+            },
+            "split": {
+              "oneOf": [
+                {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "const": "equal"
+                    },
+                    "memberIds": {
+                      "readOnly": true,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                      }
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "memberIds"
+                  ]
+                },
+                {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "const": "exact"
+                    },
+                    "amounts": {
+                      "readOnly": true,
+                      "type": "array",
+                      "items": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "memberId": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                          },
+                          "amount": {
+                            "readOnly": true,
+                            "type": "object",
+                            "properties": {
+                              "minor": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "currency": {
+                                "type": "string",
+                                "pattern": "^[A-Z]{3}$"
+                              }
+                            },
+                            "required": [
+                              "minor",
+                              "currency"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "memberId",
+                          "amount"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "amounts"
+                  ]
+                },
+                {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "const": "percentage"
+                    },
+                    "percentages": {
+                      "readOnly": true,
+                      "type": "array",
+                      "items": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "memberId": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                          },
+                          "basisPoints": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 10000
+                          }
+                        },
+                        "required": [
+                          "memberId",
+                          "basisPoints"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "percentages"
+                  ]
+                },
+                {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string",
+                      "const": "shares"
+                    },
+                    "weights": {
+                      "readOnly": true,
+                      "type": "array",
+                      "items": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "memberId": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                          },
+                          "weight": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": [
+                          "memberId",
+                          "weight"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "weights"
+                  ]
+                }
+              ]
+            }
+          },
+          "required": [
+            "total",
+            "paidBy",
+            "split"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "description",
+        "date",
+        "amounts"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "UpdateExpense"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "expenseId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "changes": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "amounts": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "total": {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "minor": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "currency": {
+                      "type": "string",
+                      "pattern": "^[A-Z]{3}$"
+                    }
+                  },
+                  "required": [
+                    "minor",
+                    "currency"
+                  ]
+                },
+                "paidBy": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "memberId": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                      },
+                      "amount": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "minor": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "currency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          }
+                        },
+                        "required": [
+                          "minor",
+                          "currency"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "memberId",
+                      "amount"
+                    ]
+                  }
+                },
+                "split": {
+                  "oneOf": [
+                    {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "const": "equal"
+                        },
+                        "memberIds": {
+                          "readOnly": true,
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                          }
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "memberIds"
+                      ]
+                    },
+                    {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "const": "exact"
+                        },
+                        "amounts": {
+                          "readOnly": true,
+                          "type": "array",
+                          "items": {
+                            "readOnly": true,
+                            "type": "object",
+                            "properties": {
+                              "memberId": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                              },
+                              "amount": {
+                                "readOnly": true,
+                                "type": "object",
+                                "properties": {
+                                  "minor": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "pattern": "^[A-Z]{3}$"
+                                  }
+                                },
+                                "required": [
+                                  "minor",
+                                  "currency"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "memberId",
+                              "amount"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "amounts"
+                      ]
+                    },
+                    {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "const": "percentage"
+                        },
+                        "percentages": {
+                          "readOnly": true,
+                          "type": "array",
+                          "items": {
+                            "readOnly": true,
+                            "type": "object",
+                            "properties": {
+                              "memberId": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                              },
+                              "basisPoints": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 10000
+                              }
+                            },
+                            "required": [
+                              "memberId",
+                              "basisPoints"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "percentages"
+                      ]
+                    },
+                    {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "method": {
+                          "type": "string",
+                          "const": "shares"
+                        },
+                        "weights": {
+                          "readOnly": true,
+                          "type": "array",
+                          "items": {
+                            "readOnly": true,
+                            "type": "object",
+                            "properties": {
+                              "memberId": {
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                              },
+                              "weight": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "memberId",
+                              "weight"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "method",
+                        "weights"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "total",
+                "paidBy",
+                "split"
+              ]
+            },
+            "category": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "expenseId",
+        "changes"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "DeleteExpense"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "expenseId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "expenseId"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "RestoreExpense"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "expenseId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "expenseId"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "AddSettlement"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "transfer": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            "to": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            "amount": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "minor": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                }
+              },
+              "required": [
+                "minor",
+                "currency"
+              ]
+            }
+          },
+          "required": [
+            "from",
+            "to",
+            "amount"
+          ]
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "transfer",
+        "date"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "UpdateSettlement"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "settlementId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "changes": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "transfer": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "from": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                },
+                "to": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                },
+                "amount": {
+                  "readOnly": true,
+                  "type": "object",
+                  "properties": {
+                    "minor": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "currency": {
+                      "type": "string",
+                      "pattern": "^[A-Z]{3}$"
+                    }
+                  },
+                  "required": [
+                    "minor",
+                    "currency"
+                  ]
+                }
+              },
+              "required": [
+                "from",
+                "to",
+                "amount"
+              ]
+            },
+            "date": {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "settlementId",
+        "changes"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "DeleteSettlement"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "settlementId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "settlementId"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "RestoreSettlement"
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "settlementId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        }
+      },
+      "required": [
+        "type",
+        "groupId",
+        "settlementId"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "UpdateSettings"
+        },
+        "changes": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "defaultCurrency": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$"
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "it",
+                "en"
+              ]
+            },
+            "displayName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            }
+          }
+        }
+      },
+      "required": [
+        "type",
+        "changes"
+      ]
+    }
+  ]
+}

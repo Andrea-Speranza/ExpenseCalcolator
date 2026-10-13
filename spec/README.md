@@ -3,9 +3,18 @@
 Qui stanno i contratti che non dipendono da TypeScript. Servono a verificare o rigenerare un'implementazione
 in qualsiasi linguaggio.
 
-- **[schemas/](schemas/)**: JSON Schema di entità, eventi e file del gruppo. Sono **generati** da
-  `packages/schema` e non vanno modificati a mano. Servono per generare modelli in altri linguaggi
-  (es. con quicktype) e per documentare il formato dei file sul Drive.
+- **[schemas/](schemas/)**: JSON Schema dei dati, **generati** da `packages/schema` con `pnpm schemas` e mai
+  modificati a mano (un test verifica che siano aggiornati). Servono a documentare il formato dei dati
+  salvati e scambiati, e a generare modelli in altri linguaggi (es. con quicktype):
+
+  | File                        | Contenuto                                                         |
+  | --------------------------- | ----------------------------------------------------------------- |
+  | `stored-event.schema.json`  | Busta di un evento qualsiasi, anche di tipi sconosciuti           |
+  | `group-event.schema.json`   | Eventi di un gruppo: gruppo, membri, spese, rimborsi              |
+  | `profile-event.schema.json` | Eventi del profilo personale: impostazioni, gruppi, "chi sono io" |
+  | `ledger.schema.json`        | Registro di spese e rimborsi (CLI e test vector)                  |
+  | `command.schema.json`       | Comandi dell'engine, per chi lo usa da un altro linguaggio        |
+
 - **[test-vectors/](test-vectors/)**: casi "input → output atteso" per la logica di calcolo, calcolati a mano.
   Li esegue la suite di test di `packages/core` (`test/vectors.test.ts`); un'altra implementazione del core
   è corretta se li supera tutti.

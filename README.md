@@ -6,7 +6,7 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 - **multipiattaforma:** web, Windows, Android;
 - **senza backend:** la condivisione passa dallo storage cloud degli utenti (es. Google Drive).
 
-> **Stato:** Fase 1 (logica di calcolo) completata; prossima la Fase 2 (modelli, eventi, engine).
+> **Stato:** Fasi 1 (logica di calcolo) e 2 (eventi, salvataggio, engine) completate; prossima la Fase 3 (UI).
 > Tutto parte da [docs/PLANNING.md](docs/PLANNING.md).
 
 ## Sviluppo
@@ -20,6 +20,7 @@ pnpm test:watch       # test in modalità watch
 pnpm coverage         # test con copertura
 pnpm format           # formatta tutti i file
 pnpm cli saldi apps/cli/examples/weekend.json   # prova la riga di comando (vedi apps/cli/README.md)
+pnpm schemas          # rigenera i JSON Schema in spec/schemas dopo aver cambiato packages/schema
 ```
 
 I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm typecheck`, `pnpm deps`, `pnpm test`.
@@ -34,7 +35,7 @@ I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm 
 | [packages/core](packages/core/)         | Logica di calcolo pura                                                                                  |
 | [packages/sync](packages/sync/)         | Log di eventi, orologio logico, merge                                                                   |
 | [packages/engine](packages/engine/)     | API pubblica usata dalla UI                                                                             |
-| [packages/adapters](packages/adapters/) | Salvataggio locale (IndexedDB)                                                                          |
+| [packages/adapters](packages/adapters/) | Porte di piattaforma: salvataggio locale (IndexedDB), orologio e id                                     |
 | [packages/channels](packages/channels/) | Canali di condivisione, ognuno un plugin separato: file, cartella, peer-to-peer, cloud                  |
 | [packages/ui](packages/ui/)             | Interfaccia (SPA)                                                                                       |
 | [apps/cli](apps/cli/)                   | Riga di comando: saldi e trasferimenti da un file JSON                                                  |

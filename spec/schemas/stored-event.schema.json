@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "readOnly": true,
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "stream": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "hlc": {
+      "type": "string",
+      "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+    },
+    "deviceId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,64}$"
+    },
+    "actor": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "base": {
+      "type": "string",
+      "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "v": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "payload": {}
+  },
+  "required": [
+    "id",
+    "stream",
+    "hlc",
+    "deviceId",
+    "actor",
+    "type",
+    "v",
+    "payload"
+  ]
+}

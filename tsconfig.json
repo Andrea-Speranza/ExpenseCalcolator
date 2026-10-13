@@ -1,9 +1,10 @@
 {
-  // Test e file di configurazione: girano in Node 22, quindi qui servono i tipi di Node ed ES2023.
+  // Test e file di configurazione: girano in Node 22, quindi qui servono i tipi di Node ed ES2023, più i
+  // tipi DOM per i test degli adapter di piattaforma (es. IndexedDB simulato).
   // Il codice sorgente di ogni pacchetto si controlla con il tsconfig.json del pacchetto stesso.
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2023"],
+    "lib": ["ES2023", "DOM"],
     "types": ["node"]
   },
   "include": [

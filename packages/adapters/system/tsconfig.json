@@ -1,0 +1,8 @@
+{
+  // Adapter di piattaforma: può usare le API del browser (Web Crypto), presenti anche nelle WebView e in Node.
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "stream": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "deviceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "actor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "type": {
+          "type": "string",
+          "const": "SettingChanged"
+        },
+        "v": {
+          "type": "number",
+          "const": 1
+        },
+        "payload": {
+          "oneOf": [
+            {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "const": "defaultCurrency"
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                }
+              },
+              "required": [
+                "key",
+                "value"
+              ]
+            },
+            {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "const": "language"
+                },
+                "value": {
+                  "type": "string",
+                  "enum": [
+                    "it",
+                    "en"
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "value"
+              ]
+            },
+            {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "const": "displayName"
+                },
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                }
+              },
+              "required": [
+                "key",
+                "value"
+              ]
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "stream",
+        "hlc",
+        "deviceId",
+        "actor",
+        "type",
+        "v",
+        "payload"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "stream": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "deviceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "actor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "type": {
+          "type": "string",
+          "const": "GroupLinked"
+        },
+        "v": {
+          "type": "number",
+          "const": 1
+        },
+        "payload": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "groupId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            "mode": {
+              "type": "string",
+              "enum": [
+                "local",
+                "personal",
+                "shared"
+              ]
+            }
+          },
+          "required": [
+            "groupId",
+            "mode"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "stream",
+        "hlc",
+        "deviceId",
+        "actor",
+        "type",
+        "v",
+        "payload"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "stream": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "deviceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "actor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "type": {
+          "type": "string",
+          "const": "GroupUnlinked"
+        },
+        "v": {
+          "type": "number",
+          "const": 1
+        },
+        "payload": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "groupId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            }
+          },
+          "required": [
+            "groupId"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "stream",
+        "hlc",
+        "deviceId",
+        "actor",
+        "type",
+        "v",
+        "payload"
+      ]
+    },
+    {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "stream": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "deviceId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "actor": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^\\d{13}:\\d{5}:[A-Za-z0-9_-]{1,64}$"
+        },
+        "type": {
+          "type": "string",
+          "const": "MemberClaimed"
+        },
+        "v": {
+          "type": "number",
+          "const": 1
+        },
+        "payload": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "groupId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            },
+            "memberId": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "groupId",
+            "memberId"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "stream",
+        "hlc",
+        "deviceId",
+        "actor",
+        "type",
+        "v",
+        "payload"
+      ]
+    }
+  ]
+}

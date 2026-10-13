@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.8 (D1, D2, D5, D6, D9 e D11 decise, D12 in parte; Fasi 0 e 1 completate, Fase 2 in corso) · **Ultimo aggiornamento:** 2026-10-13
+> **Stato:** v0.8 (D1, D2, D5, D6, D9 e D11 decise, D12 in parte; Fasi 0, 1 e 2 completate) · **Ultimo aggiornamento:** 2026-10-13
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -614,7 +614,8 @@ ExpenseCalcolator/
 │  ├─ sync/                      # HLC, log eventi, merge, proiezioni (puro)
 │  ├─ engine/                    # API pubblica: comandi, query, notifiche, porte
 │  ├─ adapters/
-│  │  └─ local-indexeddb/        # LocalStore su IndexedDB
+│  │  ├─ local-indexeddb/        # LocalStore su IndexedDB
+│  │  └─ system/                 # orologio di sistema e id ULID
 │  ├─ channels/                  # plugin di condivisione (ADR 0006)
 │  │  ├─ folder/                 # cartella sincronizzata
 │  │  └─ gdrive/                 # Google Drive (altri canali: file, p2p, dropbox, onedrive)
@@ -680,10 +681,10 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 - zero dipendenze a runtime;
 - il core compila senza tipi DOM o Node.
 
-### 11.4 Fase 2 — Modelli, eventi, engine
+### 11.4 Fase 2 — Modelli, eventi, engine (completata)
 
 - [x] Entità, eventi (gruppo e profilo) e comandi in `schema`.
-- [ ] Esportazione del JSON Schema in `spec/schemas`.
+- [x] Esportazione del JSON Schema in `spec/schemas` (`pnpm schemas`), con un test che la verifica.
 - [x] Busta degli eventi: id, stream, tipo, versione, HLC, deviceId, autore (`actor`) e versione di partenza
       (`base`) ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md)).
 - [x] HLC e ordinamento deterministico.
@@ -692,13 +693,16 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 - [x] Funzione `authorize(stato, evento)`, per ora con la politica "tutti possono tutto" (§8.11).
 - [x] Prima query senza stato dell'engine: `calculateLedger`, che valida un registro esterno e lo calcola
       (usata dalla CLI).
-- [ ] Facade `engine`: comandi, query, `subscribe`, risultati come `Result`.
-- [ ] Porte `LocalStore`, `Clock`, `IdGenerator`, con implementazioni in memoria per i test. La porta
+- [x] Facade `engine`: comandi, query, `subscribe`, risultati come `Result`; comandi eseguiti uno alla
+      volta; `exportEvents` e `receiveEvents` come gancio per i canali.
+- [x] Porte `LocalStore`, `Clock`, `IdGenerator`, con implementazioni in memoria per i test. La porta
       `SyncChannel` si definisce in Fase 5, con il primo canale.
-- [ ] Adapter `local-indexeddb`.
-- [ ] Profilo locale: impostazioni (valuta predefinita, lingua, nome) ed elenco dei gruppi ([ADR 0005](adr/0005-modalita-uso.md)).
+- [x] Adapter `local-indexeddb` (con suite di contratto della porta) e `system` (orologio e id ULID).
+- [x] Profilo locale: impostazioni (valuta predefinita, lingua, nome) ed elenco dei gruppi ([ADR 0005](adr/0005-modalita-uso.md)).
+- [x] Simulazione con più dispositivi: modifiche e sincronizzazioni in ordine casuale convergono sempre.
 
-**Fatto quando:** un test end-to-end senza UI fa questo percorso e ottiene gli stessi saldi:
+**Fatto quando:** un test end-to-end senza UI fa questo percorso e ottiene gli stessi saldi (verificato in
+`packages/adapters/local-indexeddb/test/end-to-end.test.ts`):
 
 1. crea un gruppo, i membri e le spese;
 2. chiude il processo;
