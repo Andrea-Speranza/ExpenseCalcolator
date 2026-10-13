@@ -1,6 +1,56 @@
 // API pubblica di @expense/schema: tutto ciò che non è esportato da qui è interno al pacchetto.
-export { ExpenseIdSchema, MemberIdSchema, SettlementIdSchema } from './ids';
-export type { ExpenseId, MemberId, SettlementId } from './ids';
+export { CommandSchema, QuerySchema } from './commands';
+export type { Command, CommandType, Query, QueryType } from './commands';
+export {
+  GroupEventSchema,
+  HlcSchema,
+  ProfileEventSchema,
+  SettingSchema,
+  StoredEventSchema,
+} from './events';
+export type {
+  GroupEvent,
+  GroupEventType,
+  Hlc,
+  ProfileEvent,
+  ProfileEventType,
+  Setting,
+  SettingKey,
+  StoredEvent,
+} from './events';
+export {
+  CalendarDateSchema,
+  CategorySchema,
+  DescriptionSchema,
+  ExpenseAmountsSchema,
+  GroupModeSchema,
+  GroupNameSchema,
+  LanguageSchema,
+  MemberNameSchema,
+  NotesSchema,
+  SettlementTransferSchema,
+} from './fields';
+export type { ExpenseAmounts, GroupMode, Language, SettlementTransfer } from './fields';
+export {
+  DeviceIdSchema,
+  EventIdSchema,
+  ExpenseIdSchema,
+  GroupIdSchema,
+  MemberIdSchema,
+  ProfileIdSchema,
+  SettlementIdSchema,
+  StreamIdSchema,
+} from './ids';
+export type {
+  DeviceId,
+  EventId,
+  ExpenseId,
+  GroupId,
+  MemberId,
+  ProfileId,
+  SettlementId,
+  StreamId,
+} from './ids';
 export { LedgerExpenseSchema, LedgerSchema, SettlementSchema } from './ledger';
 export type { Ledger, LedgerExpense, Settlement } from './ledger';
 export { CurrencyCodeSchema, MemberAmountSchema, MoneySchema } from './money';

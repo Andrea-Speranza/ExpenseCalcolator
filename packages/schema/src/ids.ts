@@ -12,3 +12,21 @@ export type ExpenseId = z.infer<typeof ExpenseIdSchema>;
 
 export const SettlementIdSchema = z.string().regex(ID_PATTERN);
 export type SettlementId = z.infer<typeof SettlementIdSchema>;
+
+export const GroupIdSchema = z.string().regex(ID_PATTERN);
+export type GroupId = z.infer<typeof GroupIdSchema>;
+
+/** Profilo personale: impostazioni ed elenco dei gruppi, mai condiviso con altri (ADR 0005). */
+export const ProfileIdSchema = z.string().regex(ID_PATTERN);
+export type ProfileId = z.infer<typeof ProfileIdSchema>;
+
+/** Installazione dell'app: ogni dispositivo scrive solo i propri segmenti (PLANNING §8.3). */
+export const DeviceIdSchema = z.string().regex(ID_PATTERN);
+export type DeviceId = z.infer<typeof DeviceIdSchema>;
+
+export const EventIdSchema = z.string().regex(ID_PATTERN);
+export type EventId = z.infer<typeof EventIdSchema>;
+
+/** Log di eventi: un gruppo o un profilo. */
+export const StreamIdSchema = z.string().regex(ID_PATTERN);
+export type StreamId = z.infer<typeof StreamIdSchema>;

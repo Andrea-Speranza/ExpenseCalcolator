@@ -1,8 +1,8 @@
 # 0007 — Salvataggio dei dati e modifiche contemporanee
 
-- **Stato:** proposta
+- **Stato:** accettata
 - **Data:** 2026-10-13
-- **Chiude, se accettata:** D6 (regole di conflitto). **Prepara:** D13 (permessi)
+- **Chiude:** D6 (regole di conflitto). **Prepara:** D13 (permessi)
 
 ## Contesto
 
@@ -113,6 +113,17 @@ Senza firme, `actor` è dichiarato dal dispositivo stesso. Un membro con un'app 
 fingersi un altro. Per un gruppo di amici è accettabile. Per rendere i permessi inviolabili si aggiungerà una
 firma digitale per dispositivo (Ed25519 tramite Web Crypto): la busta potrà ricevere un campo `sig` senza
 cambiare il resto (Fase 7).
+
+**Cos'è una firma dispositivo, in breve.**
+
+1. Alla prima apertura ogni installazione dell'app crea una coppia di chiavi: una **privata**, che non lascia
+   mai il dispositivo, e una **pubblica**, che viene condivisa con il gruppo.
+2. Ogni evento scritto dal dispositivo viene "firmato" con la chiave privata.
+3. Chiunque può verificare la firma con la chiave pubblica, ma nessuno può produrla senza la chiave privata.
+
+In questo modo un evento che dice "l'ha scritto Luca" si può accettare solo se è firmato da un dispositivo di
+Luca. Non serve nessun server, ed è lo stesso principio delle app di messaggistica cifrate. Tema rimandato,
+annotato in PLANNING (Fase 7 e §8.11).
 
 ### 9. Salvataggio locale
 

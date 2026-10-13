@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.7 (D1, D2, D5, D9 e D11 decise, D12 in parte; D6 proposta; Fasi 0 e 1 completate) · **Ultimo aggiornamento:** 2026-10-12
+> **Stato:** v0.8 (D1, D2, D5, D6, D9 e D11 decise, D12 in parte; Fasi 0 e 1 completate, Fase 2 in corso) · **Ultimo aggiornamento:** 2026-10-13
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -379,7 +379,7 @@ conserva il riferimento.
    regole. Il criterio è un orologio logico ibrido (HLC), con spareggio su deviceId ed eventId. Così tutti
    arrivano allo stesso stato, anche se ricevono i file in ordine diverso.
 
-### 8.4 Conflitti logici (stessa spesa modificata da due persone) **(PROPOSTA — D6, [ADR 0007](adr/0007-salvataggio-e-concorrenza.md))**
+### 8.4 Conflitti logici (stessa spesa modificata da due persone) — decisi in [ADR 0007](adr/0007-salvataggio-e-concorrenza.md)
 
 - **Campi diversi:** vincono entrambe le modifiche. L'ultima modifica vince per singolo campo (descrizione,
   data, categoria, note) o per blocco coerente ("importi": totale, pagatori e divisione), non per l'intera spesa.
@@ -682,13 +682,14 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 
 ### 11.4 Fase 2 — Modelli, eventi, engine
 
-- [ ] Entità ed eventi in `schema`, con esportazione del JSON Schema in `spec/schemas`.
-- [ ] Busta degli eventi: id, stream, tipo, versione, HLC, deviceId, autore (`actor`) e versione di partenza
+- [x] Entità, eventi (gruppo e profilo) e comandi in `schema`.
+- [ ] Esportazione del JSON Schema in `spec/schemas`.
+- [x] Busta degli eventi: id, stream, tipo, versione, HLC, deviceId, autore (`actor`) e versione di partenza
       (`base`) ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md)).
-- [ ] HLC e ordinamento deterministico.
-- [ ] Proiezione eventi → stato, con le regole di conflitto di §8.4: ultima modifica per campo o blocco,
+- [x] HLC e ordinamento deterministico.
+- [x] Proiezione eventi → stato, con le regole di conflitto di §8.4: ultima modifica per campo o blocco,
       eliminazione come campo a sé, segnalazione delle modifiche contemporanee.
-- [ ] Funzione `authorize(stato, evento)`, per ora con la politica "tutti possono tutto" (§8.11).
+- [x] Funzione `authorize(stato, evento)`, per ora con la politica "tutti possono tutto" (§8.11).
 - [x] Prima query senza stato dell'engine: `calculateLedger`, che valida un registro esterno e lo calcola
       (usata dalla CLI).
 - [ ] Facade `engine`: comandi, query, `subscribe`, risultati come `Result`.
@@ -784,7 +785,7 @@ senza alcun server nostro.
 | D3  | Shell per Android                                                       | Aperta          | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                                                                                                                                                          | Dopo S2                                |
 | D4  | Primo provider cloud e relativo scope OAuth                             | Aperta          | Google Drive; scope scelto in base a S1                                                                                                                                                                                                    | Dopo S1                                |
 | D5  | Libreria per schema e validazione                                       | **Decisa**      | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                                                                                                                                                                     | —                                      |
-| D6  | Regole di conflitto                                                     | **Proposta**    | Ultima modifica per campo o blocco, eliminazione che vince, modifiche contemporanee segnalate ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md))                                                                                          | Inizio Fase 2                          |
+| D6  | Regole di conflitto                                                     | **Decisa**      | Ultima modifica per campo o blocco, eliminazione che vince, modifiche contemporanee segnalate ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md))                                                                                          | Inizio Fase 2                          |
 | D7  | Pubblicare la versione web? Dove?                                       | Aperta          | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                                                                                                                                                          | Fase 3                                 |
 | D8  | Libreria di componenti UI                                               | Aperta          | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio                                                                                                                                         | Fase 3                                 |
 | D9  | Gestione delle valute                                                   | **Decisa**      | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                                                                                                                                                           | —                                      |
