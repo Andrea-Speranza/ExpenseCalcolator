@@ -23,6 +23,7 @@ export type {
 } from './errors';
 export { createManualClock, createMemoryStore, createSequentialIds } from './memory';
 export type { Clock, DeviceRecord, IdGenerator, LocalStore } from './ports';
+export { timeOfHlc } from './time';
 export { DEFAULT_SETTINGS } from './views';
 export type {
   BalancesView,
@@ -60,6 +61,7 @@ export type {
   CommandType,
   ExchangeFile,
   ExpenseAmounts,
+  Hlc,
   Ledger,
   MemberAmount,
   Money,

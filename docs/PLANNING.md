@@ -740,6 +740,15 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
 - [x] Test E2E con Playwright in un browser vero: uso senza rete, riapertura con i dati in IndexedDB,
       esportazione e importazione tra due dispositivi (due contesti del browser). In locale con Edge, nella CI
       con Chromium.
+- [x] Rifiniture dopo la prima prova d'uso:
+  - spese e rimborsi mostrano quando sono stati inseriti e, se cambiati, l'ultima modifica (giorno e ora
+    dall'HLC, ADR 0007);
+  - eliminazione direttamente dagli elenchi, con conferma: i saldi si ricalcolano e l'elemento resta
+    ripristinabile;
+  - scheda «Storico»: spese e rimborsi in un solo elenco, per giorno e ora di inserimento;
+  - nelle spese chi ha pagato è in evidenza e le persone tra cui è divisa sono etichette (con la parte di
+    ciascuno se non è uguale);
+  - filtri «Pagate da me» e «Pagate per me» (pagate da altri anche per me).
 - [x] Pubblicare il repository su GitHub (fatto dopo la Fase 2).
 - [x] Decidere dove pubblicare la web app: per ora da nessuna parte, solo in locale
       ([ADR 0009](adr/0009-distribuzione-locale.md)).
@@ -767,8 +776,9 @@ Verificato dai test E2E: una volta aperta funziona senza rete e ritrova i dati d
 - [ ] Test di simulazione con più dispositivi, con un canale in memoria.
 - [x] Esportazione e importazione del gruppo come file (ripiego universale): anticipate in Fase 3, nella CLI e
       nella web app. Il canale `file` le riuserà.
-- [ ] Schermata «attività» (storico delle modifiche), spostata dalla Fase 3: serve quando più dispositivi o
-      persone modificano lo stesso gruppo.
+- [ ] Attività (storico delle singole modifiche), spostata dalla Fase 3: serve quando più dispositivi o persone
+      modificano lo stesso gruppo. Si aggiunge alla scheda «Storico», che oggi mostra spese e rimborsi con giorno
+      e ora di inserimento.
 - [ ] Sync del profilo e passaggio di un gruppo da locale a personale ("salva nel cloud").
 
 **Fatto quando:** due PC che condividono la stessa cartella sincronizzata (es. con Google Drive per desktop)
@@ -791,6 +801,9 @@ senza alcun server nostro.
 - 7a — Più valute senza conversione (solo UI, [ADR 0004](adr/0004-valute.md)).
 - 7b — Conversione nella valuta del gruppo, con tasso salvato nella spesa ([ADR 0004](adr/0004-valute.md)).
 - Categorie, ricerca, filtri, statistiche.
+- Grafici delle spese: la vista va ancora progettata. Idee: chi ha speso quanto (per persona), per categoria,
+  nel tempo. Possibile base: i grafici di shadcn/ui (Recharts). Prima serve che l'engine restituisca la parte
+  di ciascuno in ogni spesa, oggi calcolata solo per i saldi.
 - Foto degli scontrini (`attachments/`).
 - Esportazione CSV e PDF.
 - Snapshot e compattazione del log.

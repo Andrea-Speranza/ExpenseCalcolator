@@ -5,11 +5,12 @@ import { Button } from '@expense/ui/components/ui/button';
 import { Dialog, DialogContent } from '@expense/ui/components/ui/dialog';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@expense/ui/components/ui/empty';
 import { Tabs, TabsList, TabsTrigger } from '@expense/ui/components/ui/tabs';
-import { ArrowRightIcon, CircleAlertIcon, PlusIcon, RotateCcwIcon, Trash2Icon } from 'lucide-react';
+import { ArrowRightIcon, CircleAlertIcon, PlusIcon } from 'lucide-react';
 import { useState } from 'react';
+import { DeleteOrRestoreButton } from '../components/delete-entry';
 import { ErrorAlert } from '../components/error-alert';
 import { useCommand, useQuery } from '../engine/store';
-import { formatDate, formatMoney } from '../format';
+import { entryTimes, formatDate, formatMoney } from '../format';
 import { activeMembers, memberNames, nameOf, newestFirst } from '../group-data';
 import type { Names } from '../messages';
 import { SettlementForm, type SettlementPreset } from './settlement-form';
@@ -220,39 +221,46 @@ function SettlementRow({
   const command = useCommand();
   const { from, to, amount } = settlement.transfer;
   const { deleted, settlementId } = settlement;
+  const { groupId } = group;
+  const who = `${nameOf(names, from)} → ${nameOf(names, to)}`;
   return (
     <li className="flex flex-col gap-2 px-4 py-3">
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <div
           className={
-            deleted ? 'flex min-w-0 flex-1 flex-col opacity-60' : 'flex min-w-0 flex-1 flex-col'
+            deleted
+              ? 'flex min-w-0 flex-1 flex-col gap-0.5 opacity-60'
+              : 'flex min-w-0 flex-1 flex-col gap-0.5'
           }
         >
-          <span className={deleted ? 'truncate line-through' : 'truncate'}>
-            {nameOf(names, from)} → {nameOf(names, to)}
-          </span>
-          <span className="truncate text-sm text-muted-foreground">
+          <span className={deleted ? 'line-through' : undefined}>{who}</span>
+          <span className="text-sm text-muted-foreground">
             {formatDate(settlement.date)}
             {settlement.notes === null ? '' : ` · ${settlement.notes}`}
           </span>
+          <span className="text-xs text-muted-foreground">
+            {entryTimes(settlement, 'Inserito')}
+          </span>
         </div>
         {deleted && <Badge variant="outline">Eliminato</Badge>}
-        <span className="font-medium tabular-nums">{formatMoney(amount)}</span>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          disabled={command.pending}
-          aria-label={deleted ? 'Ripristina il rimborso' : 'Elimina il rimborso'}
-          onClick={() => {
-            void command.run(
-              deleted
-                ? { type: 'RestoreSettlement', groupId: group.groupId, settlementId }
-                : { type: 'DeleteSettlement', groupId: group.groupId, settlementId },
-            );
+        <span className="pt-0.5 font-medium whitespace-nowrap tabular-nums">
+          {formatMoney(amount)}
+        </span>
+        <DeleteOrRestoreButton
+          deleted={deleted}
+          label={`il rimborso ${who}`}
+          texts={{
+            title: 'Eliminare il rimborso?',
+            description: `${who}, ${formatMoney(amount)}. Non conterà più nei saldi, che verranno ricalcolati. Resterà nell'elenco come eliminato, da dove potrai ripristinarlo.`,
           }}
-        >
-          {deleted ? <RotateCcwIcon /> : <Trash2Icon />}
-        </Button>
+          disabled={command.pending}
+          onDelete={() => {
+            void command.run({ type: 'DeleteSettlement', groupId, settlementId });
+          }}
+          onRestore={() => {
+            void command.run({ type: 'RestoreSettlement', groupId, settlementId });
+          }}
+        />
       </div>
       <ErrorAlert error={command.error} names={names} />
     </li>

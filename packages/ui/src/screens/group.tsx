@@ -7,6 +7,7 @@ import { activeMembers, memberNames } from '../group-data';
 import { type GroupTab, isGroupTab, navigate, routeHref } from '../router';
 import { BalancesTab } from './balances-tab';
 import { ExpensesTab } from './expenses-tab';
+import { HistoryTab } from './history-tab';
 import { MembersTab } from './members-tab';
 
 export function GroupScreen({
@@ -54,6 +55,7 @@ export function GroupScreen({
         <TabsList className="mb-4 w-full">
           <TabsTrigger value="spese">Spese</TabsTrigger>
           <TabsTrigger value="saldi">Saldi</TabsTrigger>
+          <TabsTrigger value="storico">Storico</TabsTrigger>
           <TabsTrigger value="membri">Membri</TabsTrigger>
         </TabsList>
         <TabsContent value="spese">
@@ -61,6 +63,9 @@ export function GroupScreen({
         </TabsContent>
         <TabsContent value="saldi">
           <BalancesTab group={group} />
+        </TabsContent>
+        <TabsContent value="storico">
+          <HistoryTab group={group} />
         </TabsContent>
         <TabsContent value="membri">
           <MembersTab group={group} />

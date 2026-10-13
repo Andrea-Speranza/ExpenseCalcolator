@@ -70,6 +70,21 @@ async function createGroup(user: UserEvent): Promise<string> {
   return window.location.hash.replace(/\/membri$/, '');
 }
 
+/** Spesa da `amount` euro con la descrizione indicata, dal form "Nuova spesa" (paga Anna, divisa tra tutti). */
+async function addExpense(
+  user: UserEvent,
+  group: string,
+  description: string,
+  amount: string,
+  change?: () => Promise<void>,
+): Promise<void> {
+  window.location.hash = `${group}/spese/nuova`;
+  await user.type(await screen.findByLabelText('Descrizione'), description);
+  await user.type(screen.getByLabelText('Importo (EUR)'), amount);
+  await change?.();
+  await user.click(screen.getByRole('button', { name: 'Salva' }));
+  await screen.findByRole('link', { name: new RegExp(description) });
+}
 function first<T>(items: readonly T[]): T {
   const [item] = items;
   if (item === undefined) throw new Error('Nessun elemento trovato.');
@@ -87,8 +102,16 @@ describe('app', () => {
     await user.type(screen.getByLabelText('Importo (EUR)'), '90');
     await user.click(screen.getByRole('button', { name: 'Salva' }));
 
-    await screen.findByText('Cena');
-    expect(screen.getByText('pagato da Anna', { exact: false })).toBeDefined();
+    // Nella riga: chi ha pagato in evidenza, le persone tra cui è divisa e quando è stata inserita.
+    const cena = await screen.findByRole('link', { name: /Cena/ });
+    expect(within(cena).getByText('Anna (tu)').tagName).toBe('STRONG');
+    const tags = within(cena).getByRole('list', { name: 'Divisa tra' });
+    expect(
+      within(tags)
+        .getAllByRole('listitem')
+        .map((tag) => tag.textContent),
+    ).toEqual(['Anna', 'Luca', 'Sara']);
+    expect(within(cena).getByText(/^Inserita il .+ alle \d{2}:\d{2}$/)).toBeDefined();
 
     // Anna ha pagato 90 € per tre: riceve 60 €, Luca e Sara danno 30 € ciascuno.
     await user.click(screen.getByRole('tab', { name: 'Saldi' }));
@@ -239,6 +262,92 @@ describe('app', () => {
     expect(
       await screen.findByText('Questo file non è un gruppo esportato da questa app.'),
     ).toBeDefined();
+  });
+  it('elimina una spesa dall’elenco dopo la conferma, e la ripristina', async () => {
+    const user = await renderApp();
+    const group = await createGroup(user);
+    await addExpense(user, group, 'Cena', '90');
+
+    await user.click(screen.getByRole('button', { name: 'Elimina la spesa «Cena»' }));
+    const confirm = await screen.findByRole('alertdialog');
+    expect(within(confirm).getByText('Eliminare «Cena»?')).toBeDefined();
+    await user.click(within(confirm).getByRole('button', { name: 'Annulla' }));
+    expect(screen.queryByRole('heading', { name: 'Eliminate' })).toBeNull();
+
+    await user.click(screen.getByRole('button', { name: 'Elimina la spesa «Cena»' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Elimina' }),
+    );
+    expect(await screen.findByRole('heading', { name: 'Eliminate' })).toBeDefined();
+
+    // Senza la spesa i saldi tornano in pari.
+    await user.click(screen.getByRole('tab', { name: 'Saldi' }));
+    expect(await screen.findByText('Ancora nessuna spesa: tutti in pari.')).toBeDefined();
+
+    await user.click(screen.getByRole('tab', { name: 'Spese' }));
+    await user.click(await screen.findByRole('button', { name: 'Ripristina la spesa «Cena»' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Eliminate' })).toBeNull();
+    });
+    await user.click(screen.getByRole('tab', { name: 'Saldi' }));
+    expect(await screen.findByText('+60,00 €')).toBeDefined();
+  });
+
+  it('filtra le spese pagate da me e quelle pagate da altri anche per me', async () => {
+    const user = await renderApp();
+    const group = await createGroup(user);
+    await addExpense(user, group, 'Cena', '90');
+    await addExpense(user, group, 'Taxi', '30', async () => {
+      await user.selectOptions(screen.getByLabelText('Chi ha pagato'), 'Luca');
+    });
+    // Il cinema lo paga Luca solo per sé e per Sara: Anna non c'entra.
+    await addExpense(user, group, 'Cinema', '20', async () => {
+      await user.selectOptions(screen.getByLabelText('Chi ha pagato'), 'Luca');
+      await user.click(screen.getByLabelText('Anna'));
+    });
+
+    const shown = () =>
+      screen
+        .queryAllByRole('link', { name: /Cena|Taxi|Cinema/ })
+        .map((link) => /Cena|Taxi|Cinema/.exec(link.textContent)?.[0]);
+    expect(shown()).toEqual(['Cinema', 'Taxi', 'Cena']);
+
+    await user.click(screen.getByRole('radio', { name: 'Pagate da me' }));
+    expect(shown()).toEqual(['Cena']);
+    expect(screen.getByText('Hai pagato')).toBeDefined();
+
+    await user.click(screen.getByRole('radio', { name: 'Pagate per me' }));
+    expect(shown()).toEqual(['Taxi']);
+
+    await user.click(screen.getByRole('radio', { name: 'Tutte' }));
+    expect(shown()).toHaveLength(3);
+  });
+
+  it('lo storico mette insieme spese e rimborsi, con giorno e ora', async () => {
+    const user = await renderApp();
+    const group = await createGroup(user);
+    await addExpense(user, group, 'Cena', '90');
+    await user.click(screen.getByRole('tab', { name: 'Saldi' }));
+    await user.click(first(await screen.findAllByRole('button', { name: 'Pagato' })));
+    await user.click(
+      within(await screen.findByRole('dialog')).getByRole('button', { name: 'Registra' }),
+    );
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    await user.click(screen.getByRole('tab', { name: 'Storico' }));
+    const items = await screen.findAllByRole('listitem');
+    expect(items.map((item) => /Cena|Luca → Anna/.exec(item.textContent)?.[0])).toEqual([
+      'Luca → Anna',
+      'Cena',
+    ]);
+    expect(first(items).textContent).toMatch(/^\d{2}:\d{2}/);
+    expect(screen.getByText(/^Rimborso del /)).toBeDefined();
+
+    await user.click(screen.getByRole('radio', { name: 'Spese' }));
+    expect(screen.queryByText('Luca → Anna')).toBeNull();
+    expect(screen.getByText('Cena')).toBeDefined();
   });
   it('mostra una pagina di errore per gli indirizzi sconosciuti', async () => {
     window.location.hash = '#/gruppi/inesistente';

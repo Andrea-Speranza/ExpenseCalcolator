@@ -95,6 +95,7 @@ export default defineConfig(
       'react-refresh/only-export-components': 'off',
       '@typescript-eslint/array-type': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
     },
   },
   {

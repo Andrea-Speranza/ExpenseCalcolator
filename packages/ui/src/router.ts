@@ -3,8 +3,8 @@ import { useSyncExternalStore } from 'react';
 // Navigazione con l'hash dell'indirizzo (es. "#/gruppi/01K…/saldi"): funziona allo stesso modo nel browser,
 // da file locali e dentro le WebView delle app native, senza configurare il server (ADR 0009).
 
-export type GroupTab = 'spese' | 'saldi' | 'membri';
-export const GROUP_TABS: readonly GroupTab[] = ['spese', 'saldi', 'membri'];
+export type GroupTab = 'spese' | 'saldi' | 'storico' | 'membri';
+export const GROUP_TABS: readonly GroupTab[] = ['spese', 'saldi', 'storico', 'membri'];
 
 export type Route =
   | { readonly page: 'groups' }

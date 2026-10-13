@@ -19,6 +19,7 @@ import { Textarea } from '@expense/ui/components/ui/textarea';
 import { CircleAlertIcon, Trash2Icon } from 'lucide-react';
 import { type SubmitEvent, useId, useState } from 'react';
 import { parseAmount } from '../amounts';
+import { ConfirmDelete } from '../components/delete-entry';
 import { ErrorAlert } from '../components/error-alert';
 import { NotFound, PageHeader } from '../components/layout';
 import { useCommand, useQuery } from '../engine/store';
@@ -280,17 +281,21 @@ function ExpenseForm({
           <ErrorAlert error={command.error} names={names} />
           <div className="flex flex-wrap-reverse items-center gap-3">
             {expense !== null && !expense.deleted && (
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={command.pending}
-                onClick={() => {
+              <ConfirmDelete
+                texts={{
+                  title: `Eliminare «${expense.description}»?`,
+                  description:
+                    'Non conterà più nei saldi, che verranno ricalcolati. Resterà tra le spese eliminate, da dove potrai ripristinarla.',
+                }}
+                onConfirm={() => {
                   void remove(expense.expenseId);
                 }}
               >
-                <Trash2Icon data-icon="inline-start" />
-                Elimina
-              </Button>
+                <Button type="button" variant="destructive" disabled={command.pending}>
+                  <Trash2Icon data-icon="inline-start" />
+                  Elimina
+                </Button>
+              </ConfirmDelete>
             )}
             <div className="ml-auto flex gap-2">
               <Button variant="outline" asChild>
