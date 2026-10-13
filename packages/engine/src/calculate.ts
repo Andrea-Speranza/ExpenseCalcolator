@@ -13,6 +13,7 @@ import {
 } from '@expense/core';
 import { type Ledger, LedgerSchema } from '@expense/schema';
 import type { InvalidInput } from './errors';
+import { invalidInput } from './input';
 
 /** Registro validato, con saldi e trasferimenti suggeriti nei due modi (PLANNING §9.4–9.5). */
 export interface LedgerReport {
@@ -30,15 +31,7 @@ export type CalculationError = InvalidInput | LedgerError | UnbalancedBalances |
  */
 export function calculateLedger(input: unknown): Result<LedgerReport, CalculationError> {
   const parsed = LedgerSchema.safeParse(input);
-  if (!parsed.success) {
-    return err({
-      code: 'InvalidInput',
-      issues: parsed.error.issues.map(({ path, message }) => ({
-        path: path.map(String).join('.'),
-        message,
-      })),
-    });
-  }
+  if (!parsed.success) return err(invalidInput(parsed.error.issues));
   const ledger = parsed.data;
 
   const balances = computeBalances(ledger);
