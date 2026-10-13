@@ -63,10 +63,10 @@ export default {
     },
     {
       name: 'engine-no-outer-layers',
-      comment: 'engine definisce le porte ma non conosce adapter, ui o app.',
+      comment: 'engine definisce le porte ma non conosce adapter, canali, ui o app.',
       severity: 'error',
       from: { path: '^packages/engine/src/' },
-      to: { path: '^(packages/(adapters|ui)|apps)/' },
+      to: { path: '^(packages/(adapters|channels|ui)|apps)/' },
     },
     {
       name: 'adapters-only-ports',
@@ -77,6 +77,14 @@ export default {
       to: { path: '^(packages|apps)/', pathNot: '^packages/(engine|schema|adapters/$1)/' },
     },
     {
+      name: 'channels-only-ports',
+      comment:
+        'Un canale di condivisione è un plugin: conosce solo la porta (engine) e i tipi (schema), non gli altri canali (ADR 0006).',
+      severity: 'error',
+      from: { path: '^packages/channels/([^/]+)/src/' },
+      to: { path: '^(packages|apps)/', pathNot: '^packages/(engine|schema|channels/$1)/' },
+    },
+    {
       name: 'ui-only-engine',
       comment: 'La UI parla solo con engine (e usa schema per tipi e validazione dei form).',
       severity: 'error',
@@ -85,7 +93,8 @@ export default {
     },
     {
       name: 'apps-no-internals',
-      comment: 'Le shell collegano ui, engine e adapter; non usano direttamente core e sync.',
+      comment:
+        'Le shell collegano ui, engine, adapter e canali; non usano direttamente core e sync.',
       severity: 'error',
       from: { path: '^apps/' },
       to: { path: '^packages/(core|sync)/' },

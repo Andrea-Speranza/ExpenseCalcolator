@@ -34,7 +34,8 @@ I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm 
 | [packages/core](packages/core/)         | Logica di calcolo pura                                                                                  |
 | [packages/sync](packages/sync/)         | Log di eventi, orologio logico, merge                                                                   |
 | [packages/engine](packages/engine/)     | API pubblica usata dalla UI                                                                             |
-| [packages/adapters](packages/adapters/) | Storage locale e provider cloud                                                                         |
+| [packages/adapters](packages/adapters/) | Salvataggio locale (IndexedDB)                                                                          |
+| [packages/channels](packages/channels/) | Canali di condivisione, ognuno un plugin separato: file, cartella, peer-to-peer, cloud                  |
 | [packages/ui](packages/ui/)             | Interfaccia (SPA)                                                                                       |
 | [apps/cli](apps/cli/)                   | Riga di comando: saldi e trasferimenti da un file JSON                                                  |
 | [apps/web](apps/web/)                   | Shell web (PWA)                                                                                         |

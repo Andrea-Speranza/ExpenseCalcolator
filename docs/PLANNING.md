@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.6 (D1, D2, D5, D9 e D11 decise; Fasi 0 e 1 completate) · **Ultimo aggiornamento:** 2026-10-12
+> **Stato:** v0.7 (D1, D2, D5, D9 e D11 decise, D12 in parte; D6 proposta; Fasi 0 e 1 completate) · **Ultimo aggiornamento:** 2026-10-12
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -113,15 +113,16 @@ iOS è rimandato, non escluso: l'architettura lo supporta.
                   └────────────────────────────────────┘
 ```
 
-| Pacchetto    | Responsabilità                                                                                  | Può dipendere da                     | Dove gira            |
-| ------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------- |
-| `schema`     | Tipi di entità, eventi, comandi e query; validazione; JSON Schema; migrazioni                   | —                                    | ovunque              |
-| `core`       | Calcolo: importi, divisioni, saldi, semplificazione dei debiti                                  | `schema` (solo tipi)                 | ovunque              |
-| `sync`       | Orologio logico (HLC), merge dei log di eventi, proiezione eventi → stato, formato dei segmenti | `schema`                             | ovunque              |
-| `engine`     | API pubblica (comandi, query, notifiche); definisce le porte                                    | `schema`, `core`, `sync`             | ovunque              |
-| `adapters/*` | Implementazioni delle porte (IndexedDB, cartella, Google Drive)                                 | `engine` (solo interfacce), `schema` | dipende dall'adapter |
-| `ui`         | Schermate e componenti                                                                          | `engine`, `schema`                   | browser / WebView    |
-| `apps/*`     | Impacchettano la UI e collegano all'engine gli adapter giusti per la piattaforma                | `ui`, `adapters/*`                   | piattaforma          |
+| Pacchetto    | Responsabilità                                                                                      | Può dipendere da                     | Dove gira            |
+| ------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------ | -------------------- |
+| `schema`     | Tipi di entità, eventi, comandi e query; validazione; JSON Schema; migrazioni                       | —                                    | ovunque              |
+| `core`       | Calcolo: importi, divisioni, saldi, semplificazione dei debiti                                      | `schema` (solo tipi)                 | ovunque              |
+| `sync`       | Orologio logico (HLC), merge dei log di eventi, proiezione eventi → stato, formato dei segmenti     | `schema`                             | ovunque              |
+| `engine`     | API pubblica (comandi, query, notifiche); definisce le porte                                        | `schema`, `core`, `sync`             | ovunque              |
+| `adapters/*` | Implementazioni delle porte di piattaforma (es. salvataggio locale su IndexedDB)                    | `engine` (solo interfacce), `schema` | dipende dall'adapter |
+| `channels/*` | Plugin di condivisione: file, cartella, peer-to-peer, cloud ([ADR 0006](adr/0006-canali-plugin.md)) | `engine` (solo la porta), `schema`   | dipende dal canale   |
+| `ui`         | Schermate e componenti                                                                              | `engine`, `schema`                   | browser / WebView    |
+| `apps/*`     | Impacchettano la UI e collegano all'engine gli adapter giusti per la piattaforma                    | `ui`, `adapters/*`                   | piattaforma          |
 
 ---
 
@@ -204,16 +205,17 @@ Dato che sono messaggi JSON, lo stesso contratto funziona senza modifiche all'en
 
 ### 5.4 Porte (ciò che l'engine chiede alla piattaforma)
 
-| Porta         | Scopo                                                  | Adapter previsti                                                       |
-| ------------- | ------------------------------------------------------ | ---------------------------------------------------------------------- |
-| `LocalStore`  | Salvare e leggere eventi e stato in locale             | IndexedDB (vale su tutte le piattaforme, §8.10); in memoria per i test |
-| `RemoteStore` | Elencare, leggere e creare file in una cartella remota | Cartella locale sincronizzata; Google Drive; in memoria per i test     |
-| `Clock`       | Ora corrente                                           | Di sistema; finto per i test                                           |
-| `IdGenerator` | Id univoci ordinabili (ULID o UUIDv7)                  | Di sistema; deterministico per i test                                  |
+| Porta         | Scopo                                                            | Adapter previsti                                                                                    |
+| ------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `LocalStore`  | Salvare e leggere eventi e stato in locale                       | IndexedDB (vale su tutte le piattaforme, §8.10); in memoria per i test                              |
+| `SyncChannel` | Trasportare segmenti di eventi verso altri dispositivi e persone | Plugin in `packages/channels/` (§8.6, [ADR 0006](adr/0006-canali-plugin.md)); in memoria per i test |
+| `Clock`       | Ora corrente                                                     | Di sistema; finto per i test                                                                        |
+| `IdGenerator` | Id univoci ordinabili (ULID o UUIDv7)                            | Di sistema; deterministico per i test                                                               |
 
-`RemoteStore` è volutamente minimo: `list(path)`, `read(path)`, `create(path, bytes)`. Non esiste "sovrascrivi"
-(§8.3). Aggiungere un provider cloud vuol dire implementare queste tre operazioni. Login e token sono affare
-interno di ciascun adapter.
+`SyncChannel` è volutamente minima e non permette mai di sovrascrivere un file (§8.3). I canali "a deposito"
+(cartella, cloud) elencano, leggono e creano file; quelli "a messaggi" (file condiviso, peer-to-peer) inviano
+e ricevono pacchetti di segmenti. Il dettaglio si fissa con il primo canale reale. Login e token sono affare
+interno di ciascun canale.
 
 ### 5.5 Versionamento dell'API
 
@@ -377,13 +379,18 @@ conserva il riferimento.
    regole. Il criterio è un orologio logico ibrido (HLC), con spareggio su deviceId ed eventId. Così tutti
    arrivano allo stesso stato, anche se ricevono i file in ordine diverso.
 
-### 8.4 Conflitti logici (stessa spesa modificata da due persone) **(DA CONFERMARE — D6)**
+### 8.4 Conflitti logici (stessa spesa modificata da due persone) **(PROPOSTA — D6, [ADR 0007](adr/0007-salvataggio-e-concorrenza.md))**
 
-- **Modifica contro modifica:** vince quella con il timestamp HLC più alto. È un last-writer-wins a livello di
-  spesa; si può raffinare a livello di singolo campo.
-- **Eliminazione contro modifica concorrente:** vince l'eliminazione. La spesa resta nello storico e si può ripristinare.
-- Lo storico degli eventi si conserva sempre. La schermata "Attività" mostra chi ha modificato cosa e la UI
-  segnala le modifiche concorrenti.
+- **Campi diversi:** vincono entrambe le modifiche. L'ultima modifica vince per singolo campo (descrizione,
+  data, categoria, note) o per blocco coerente ("importi": totale, pagatori e divisione), non per l'intera spesa.
+- **Stesso campo:** vince quella con il timestamp HLC più alto (last-writer-wins). Se il suo autore non aveva
+  visto l'altra modifica, la spesa viene segnalata come modificata contemporaneamente, e il valore scartato
+  resta nello storico.
+- **Eliminazione contro modifica:** l'eliminazione è un campo a sé, che le modifiche non annullano. Vince
+  l'eliminazione; la spesa resta nello storico e si può ripristinare con un'azione esplicita.
+- **Impostazioni:** stesso meccanismo, una chiave per impostazione. Quelle del gruppo sono condivise, quelle del
+  profilo restano personali.
+- **Storico:** si conserva sempre. La schermata "Attività" mostra chi ha modificato cosa.
 
 ### 8.5 Algoritmo di sync
 
@@ -396,25 +403,28 @@ La sync parte all'avvio, dopo ogni modifica (con un breve ritardo per raggruppar
 "trascina per aggiornare" e periodicamente quando c'è connessione. In caso di errori di rete riprova con
 attese crescenti; nel frattempo l'app resta utilizzabile.
 
-### 8.6 Provider (adapter `RemoteStore`)
+### 8.6 Canali di condivisione (plugin)
 
-> Il confronto completo delle alternative (file condiviso, cartella sincronizzata, peer-to-peer, Dropbox,
-> Google Drive, OneDrive) è in [CONDIVISIONE.md](CONDIVISIONE.md). La raccomandazione lì proposta (D12)
-> potrebbe cambiare l'ordine qui sotto.
+Ogni modo di condividere è un **plugin separato** in `packages/channels/`, che implementa la porta
+`SyncChannel` dell'engine ([ADR 0006](adr/0006-canali-plugin.md)).
 
-In ordine di implementazione:
+- **Cosa fanno:** trasportano soltanto segmenti di eventi. Merge, conflitti e permessi restano in `sync` ed
+  `engine`, uguali per tutti i canali.
+- **Indipendenza:** ogni canale si sviluppa e si aggiunge separatamente, e le shell includono quelli che
+  vogliono. Senza nessun canale l'app funziona in modalità locale.
+- **Più canali insieme:** un gruppo può usarne più d'uno.
 
-1. **Cartella locale sincronizzata (desktop).** L'app scrive in una cartella del disco che è già sincronizzata
-   da Google Drive per desktop, OneDrive, Dropbox o Syncthing. Non servono API né login: il lavoro lo fa il
-   client di sincronizzazione. È anche il modo più comodo per sviluppare e testare la sync. Sul web funziona
-   solo nei browser basati su Chromium (File System Access API).
-2. **Google Drive API (Android e web, poi anche desktop).** L'utente fa login OAuth e l'app legge e scrive
-   direttamente nella cartella condivisa.
-3. **In seguito:** OneDrive (Microsoft Graph) e Dropbox.
-4. **Ripiego sempre disponibile:** esportare e importare il gruppo come file da mandare via WhatsApp o email.
+| Canale                                               | Note                                                                                                    |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `file` — file condiviso (WhatsApp, Telegram, email…) | Nessun account; manuale                                                                                 |
+| `folder` — cartella sincronizzata                    | Nessun account; su desktop la sincronizzazione la fa il client cloud o Syncthing; sul web solo Chromium |
+| `p2p` — peer-to-peer con link o QR                   | Nessun account; serve essere online nello stesso momento; prima serve uno spike                         |
+| `gdrive`, `dropbox`, `onedrive`                      | Account cloud; automatici; vincoli in §8.8 e in [CONDIVISIONE.md](CONDIVISIONE.md)                      |
 
-Limite: tutti i membri che usano l'app su uno stesso gruppo devono usare lo stesso provider, cioè quello che
-ospita la cartella. Chi non usa l'app resta un membro gestito dagli altri.
+Il confronto completo è in [CONDIVISIONE.md](CONDIVISIONE.md). L'ordine di realizzazione è la decisione D12.
+
+Limite dei canali cloud: tutti i membri che li usano su uno stesso gruppo devono avere un account presso lo
+stesso provider, cioè quello che ospita la cartella. Chi non usa l'app resta un membro gestito dagli altri.
 
 ### 8.7 Flussi: creare un gruppo e unirsi
 
@@ -483,6 +493,25 @@ ospita la cartella. Chi non usa l'app resta un membro gestito dagli altri.
   vale ovunque.
 - Sul web si richiede lo storage persistente (`navigator.storage.persist()`) per evitare che il browser cancelli i dati.
 - In futuro, se i volumi crescessero, si può passare a SQLite tramite un plugin Tauri.
+
+### 8.11 Permessi (in futuro, predisposti da subito)
+
+Chi può modificare cosa si decide più avanti (D13). Le ipotesi sono due:
+
+- ognuno modifica solo le proprie voci, e il creatore del gruppo può correggere tutto;
+- ruoli amministratore e membro.
+
+Il formato dei dati le permette già entrambe ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md)):
+
+- ogni evento registra l'autore (`actor`);
+- ogni elemento registra chi l'ha creato;
+- ogni dispositivo, applicando gli eventi, passa da una funzione `authorize(stato, evento)`.
+
+Oggi quella funzione permette tutto. Domani applicherà la politica scelta nelle impostazioni del gruppo:
+tutti i dispositivi applicano le stesse regole agli stessi eventi, quindi arrivano allo stesso risultato
+anche senza un server.
+
+Per renderla inviolabile anche contro un'app modificata serviranno firme digitali per dispositivo (Fase 7).
 
 ---
 
@@ -585,9 +614,10 @@ ExpenseCalcolator/
 │  ├─ sync/                      # HLC, log eventi, merge, proiezioni (puro)
 │  ├─ engine/                    # API pubblica: comandi, query, notifiche, porte
 │  ├─ adapters/
-│  │  ├─ local-indexeddb/        # LocalStore su IndexedDB
-│  │  ├─ remote-folder/          # RemoteStore su cartella sincronizzata
-│  │  └─ remote-gdrive/          # RemoteStore su Google Drive API
+│  │  └─ local-indexeddb/        # LocalStore su IndexedDB
+│  ├─ channels/                  # plugin di condivisione (ADR 0006)
+│  │  ├─ folder/                 # cartella sincronizzata
+│  │  └─ gdrive/                 # Google Drive (altri canali: file, p2p, dropbox, onedrive)
 │  └─ ui/                        # SPA condivisa da tutte le shell
 └─ apps/
    ├─ cli/                       # riga di comando: saldi e trasferimenti da un file JSON
@@ -653,13 +683,17 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 ### 11.4 Fase 2 — Modelli, eventi, engine
 
 - [ ] Entità ed eventi in `schema`, con esportazione del JSON Schema in `spec/schemas`.
-- [ ] Busta degli eventi: id, tipo, versione, HLC, deviceId, autore.
+- [ ] Busta degli eventi: id, stream, tipo, versione, HLC, deviceId, autore (`actor`) e versione di partenza
+      (`base`) ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md)).
 - [ ] HLC e ordinamento deterministico.
-- [ ] Proiezione eventi → stato, con le regole di conflitto di §8.4.
+- [ ] Proiezione eventi → stato, con le regole di conflitto di §8.4: ultima modifica per campo o blocco,
+      eliminazione come campo a sé, segnalazione delle modifiche contemporanee.
+- [ ] Funzione `authorize(stato, evento)`, per ora con la politica "tutti possono tutto" (§8.11).
 - [x] Prima query senza stato dell'engine: `calculateLedger`, che valida un registro esterno e lo calcola
       (usata dalla CLI).
 - [ ] Facade `engine`: comandi, query, `subscribe`, risultati come `Result`.
-- [ ] Porte `LocalStore`, `RemoteStore`, `Clock`, `IdGenerator`, con implementazioni in memoria per i test.
+- [ ] Porte `LocalStore`, `Clock`, `IdGenerator`, con implementazioni in memoria per i test. La porta
+      `SyncChannel` si definisce in Fase 5, con il primo canale.
 - [ ] Adapter `local-indexeddb`.
 - [ ] Profilo locale: impostazioni (valuta predefinita, lingua, nome) ed elenco dei gruppi ([ADR 0005](adr/0005-modalita-uso.md)).
 
@@ -703,8 +737,10 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 
 - [ ] Formato della cartella del gruppo e dei segmenti (§8.2), manifest `group.json`.
 - [ ] Algoritmo push/pull/merge (§8.5) e stato della sync visibile nella UI.
-- [ ] Adapter `remote-folder`: Tauri fs su desktop, File System Access API sul web con Chromium.
-- [ ] Test di simulazione con più dispositivi e test di contratto per `RemoteStore`.
+- [ ] Porta `SyncChannel` e suite di test di contratto per i canali ([ADR 0006](adr/0006-canali-plugin.md)).
+- [ ] Canale `folder` (plugin): Tauri fs su desktop, File System Access API sul web con Chromium.
+- [ ] Gli altri canali senza account (`file`, poi `p2p`) secondo l'ordine scelto in D12.
+- [ ] Test di simulazione con più dispositivi, con un canale in memoria.
 - [ ] Esportazione e importazione del gruppo come file (ripiego universale).
 - [ ] Sync del profilo e passaggio di un gruppo da locale a personale ("salva nel cloud").
 
@@ -715,7 +751,7 @@ arrivano agli stessi saldi dopo modifiche offline fatte in contemporanea.
 
 - [ ] Progetto Google Cloud e credenziali OAuth per web e Android.
 - [ ] Login OAuth (PKCE) su web e Android.
-- [ ] Adapter `remote-gdrive` (`list`/`read`/`create`), con gestione dei limiti di frequenza e dei tentativi.
+- [ ] Canale `gdrive` (plugin), con gestione dei limiti di frequenza e dei tentativi.
 - [ ] Flussi: crea gruppo condiviso, invita (link o QR), unisciti, "chi sei?".
 - [ ] Passaggio di un gruppo da personale a condiviso ("condividi") e ritorno ("smetti di condividere").
 - [ ] Esperienza utente per conflitti e attività (es. "modificato da Sara mentre lo modificavi anche tu").
@@ -732,6 +768,7 @@ senza alcun server nostro.
 - Esportazione CSV e PDF.
 - Snapshot e compattazione del log.
 - Cifratura end-to-end dei segmenti.
+- Permessi secondo la politica scelta in D13, e firme digitali per dispositivo che li rendono inviolabili (§8.11).
 - Provider OneDrive e Dropbox.
 - iOS, macOS, Linux.
 - Spese ricorrenti.
@@ -740,20 +777,21 @@ senza alcun server nostro.
 
 ## 12. Decisioni aperte
 
-| ID  | Decisione                                                               | Stato      | Scelta o raccomandazione                                                                                                                        | Quando             |
-| --- | ----------------------------------------------------------------------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| D1  | Linguaggio del core e dell'intera app                                   | **Decisa** | TypeScript ([ADR 0001](adr/0001-linguaggio-typescript.md))                                                                                      | —                  |
-| D2  | Framework UI                                                            | **Decisa** | React + Vite ([ADR 0002](adr/0002-framework-ui-react.md))                                                                                       | —                  |
-| D3  | Shell per Android                                                       | Aperta     | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                                                               | Dopo S2            |
-| D4  | Primo provider cloud e relativo scope OAuth                             | Aperta     | Google Drive; scope scelto in base a S1                                                                                                         | Dopo S1            |
-| D5  | Libreria per schema e validazione                                       | **Decisa** | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                                                                          | —                  |
-| D6  | Regole di conflitto                                                     | Aperta     | Last-writer-wins per spesa; l'eliminazione vince sulla modifica concorrente                                                                     | Fase 2             |
-| D7  | Pubblicare la versione web? Dove?                                       | Aperta     | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                                                               | Fase 3             |
-| D8  | Libreria di componenti UI                                               | Aperta     | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio                                              | Fase 3             |
-| D9  | Gestione delle valute                                                   | **Decisa** | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                                                                | —                  |
-| D10 | Dettagli della conversione (direzione del tasso, arrotondamento, fonte) | Aperta     | Vedi "Da decidere" in [ADR 0004](adr/0004-valute.md)                                                                                            | Fase 7b            |
-| D11 | Modalità d'uso (locale, personale, condivisa) e profilo utente          | **Decisa** | Un solo meccanismo; cambia solo dove è pubblicato il log ([ADR 0005](adr/0005-modalita-uso.md))                                                 | —                  |
-| D12 | Canali di condivisione e loro ordine                                    | Aperta     | Prima file condiviso e cartella sincronizzata (nessun account), poi peer-to-peer, infine un provider cloud ([CONDIVISIONE.md](CONDIVISIONE.md)) | Prima della Fase 5 |
+| ID  | Decisione                                                               | Stato           | Scelta o raccomandazione                                                                                                                                                                                                                   | Quando                                 |
+| --- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
+| D1  | Linguaggio del core e dell'intera app                                   | **Decisa**      | TypeScript ([ADR 0001](adr/0001-linguaggio-typescript.md))                                                                                                                                                                                 | —                                      |
+| D2  | Framework UI                                                            | **Decisa**      | React + Vite ([ADR 0002](adr/0002-framework-ui-react.md))                                                                                                                                                                                  | —                                      |
+| D3  | Shell per Android                                                       | Aperta          | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                                                                                                                                                          | Dopo S2                                |
+| D4  | Primo provider cloud e relativo scope OAuth                             | Aperta          | Google Drive; scope scelto in base a S1                                                                                                                                                                                                    | Dopo S1                                |
+| D5  | Libreria per schema e validazione                                       | **Decisa**      | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                                                                                                                                                                     | —                                      |
+| D6  | Regole di conflitto                                                     | **Proposta**    | Ultima modifica per campo o blocco, eliminazione che vince, modifiche contemporanee segnalate ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md))                                                                                          | Inizio Fase 2                          |
+| D7  | Pubblicare la versione web? Dove?                                       | Aperta          | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                                                                                                                                                          | Fase 3                                 |
+| D8  | Libreria di componenti UI                                               | Aperta          | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio                                                                                                                                         | Fase 3                                 |
+| D9  | Gestione delle valute                                                   | **Decisa**      | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                                                                                                                                                           | —                                      |
+| D10 | Dettagli della conversione (direzione del tasso, arrotondamento, fonte) | Aperta          | Vedi "Da decidere" in [ADR 0004](adr/0004-valute.md)                                                                                                                                                                                       | Fase 7b                                |
+| D11 | Modalità d'uso (locale, personale, condivisa) e profilo utente          | **Decisa**      | Un solo meccanismo; cambia solo dove è pubblicato il log ([ADR 0005](adr/0005-modalita-uso.md))                                                                                                                                            | —                                      |
+| D12 | Canali di condivisione e loro ordine                                    | In parte decisa | Canali come plugin separati ([ADR 0006](adr/0006-canali-plugin.md)). Ordine ancora aperto: prima file condiviso e cartella sincronizzata (nessun account), poi peer-to-peer, infine un provider cloud ([CONDIVISIONE.md](CONDIVISIONE.md)) | Prima della Fase 5                     |
+| D13 | Permessi: chi può modificare cosa                                       | Aperta          | Predisposti in ADR 0007, per ora "tutti possono tutto". Ipotesi: ognuno modifica le proprie voci e il creatore corregge tutto, oppure ruoli (§8.11)                                                                                        | Quando servirà, al più tardi in Fase 7 |
 
 ---
 
@@ -843,30 +881,32 @@ senza alcun server nostro.
 
 **Livelli di test:**
 
-| Livello           | Cosa verifica                                                                                                                                                                                | Dove                               |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| Unitari           | Ogni funzione del core                                                                                                                                                                       | `packages/core`                    |
-| Test vector       | Casi "input → output atteso" condivisi tra linguaggi                                                                                                                                         | `spec/test-vectors`                |
-| Property-based    | Invarianti di §9.7, generando migliaia di casi casuali                                                                                                                                       | `packages/core`, `packages/sync`   |
-| Simulazione sync  | N dispositivi virtuali, `RemoteStore` in memoria, ordini di arrivo casuali. Il risultato deve essere lo stesso stato a prescindere dall'ordine, e un evento ripetuto non deve avere effetto. | `packages/sync`, `packages/engine` |
-| Contratto adapter | Ogni adapter `LocalStore`/`RemoteStore` passa la stessa suite di test                                                                                                                        | `packages/adapters/*`              |
-| E2E               | Percorsi principali della UI                                                                                                                                                                 | `apps/web`                         |
+| Livello                    | Cosa verifica                                                                                                                                                                         | Dove                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Unitari                    | Ogni funzione del core                                                                                                                                                                | `packages/core`                              |
+| Test vector                | Casi "input → output atteso" condivisi tra linguaggi                                                                                                                                  | `spec/test-vectors`                          |
+| Property-based             | Invarianti di §9.7, generando migliaia di casi casuali                                                                                                                                | `packages/core`, `packages/sync`             |
+| Simulazione sync           | N dispositivi virtuali, canale in memoria, ordini di arrivo casuali. Il risultato deve essere lo stesso stato a prescindere dall'ordine, e un evento ripetuto non deve avere effetto. | `packages/sync`, `packages/engine`           |
+| Contratto adapter e canali | Ogni adapter `LocalStore` e ogni canale `SyncChannel` passa la stessa suite di test della sua porta                                                                                   | `packages/adapters/*`, `packages/channels/*` |
+| E2E                        | Percorsi principali della UI                                                                                                                                                          | `apps/web`                                   |
 
 ---
 
 ## 15. Glossario
 
-| Termine             | Significato                                                                                                                                                      |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Porta / Adapter** | Interfaccia richiesta dalla logica / sua implementazione concreta per una piattaforma o un servizio.                                                             |
-| **Evento**          | Fatto immutabile ("spesa aggiunta", "membro rinominato"). Lo stato si ottiene applicando gli eventi in ordine.                                                   |
-| **Proiezione**      | Lo stato corrente calcolato a partire dagli eventi.                                                                                                              |
-| **Segmento**        | File immutabile che contiene un blocco di eventi scritti da un dispositivo.                                                                                      |
-| **HLC**             | _Hybrid Logical Clock_: orologio che combina l'ora di sistema con un contatore logico, per ordinare gli eventi in modo coerente anche con orologi non allineati. |
-| **Local-first**     | I dati vivono prima di tutto sul dispositivo; il cloud serve solo a condividerli.                                                                                |
-| **Shell**           | L'app nativa (o la PWA) che contiene e mostra la UI web.                                                                                                         |
-| **WebView**         | Componente del sistema operativo che mostra pagine web dentro un'app (WebView2 su Windows, System WebView su Android).                                           |
-| **PWA**             | _Progressive Web App_: sito installabile che funziona offline grazie a un Service Worker.                                                                        |
+| Termine              | Significato                                                                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Porta / Adapter**  | Interfaccia richiesta dalla logica / sua implementazione concreta per una piattaforma o un servizio.                                                             |
+| **Canale**           | Plugin che trasporta segmenti di eventi tra dispositivi: file condiviso, cartella sincronizzata, peer-to-peer, cloud.                                            |
+| **Autore (`actor`)** | Il membro che ha fatto una modifica, registrato in ogni evento: serve allo storico e ai permessi futuri.                                                         |
+| **Evento**           | Fatto immutabile ("spesa aggiunta", "membro rinominato"). Lo stato si ottiene applicando gli eventi in ordine.                                                   |
+| **Proiezione**       | Lo stato corrente calcolato a partire dagli eventi.                                                                                                              |
+| **Segmento**         | File immutabile che contiene un blocco di eventi scritti da un dispositivo.                                                                                      |
+| **HLC**              | _Hybrid Logical Clock_: orologio che combina l'ora di sistema con un contatore logico, per ordinare gli eventi in modo coerente anche con orologi non allineati. |
+| **Local-first**      | I dati vivono prima di tutto sul dispositivo; il cloud serve solo a condividerli.                                                                                |
+| **Shell**            | L'app nativa (o la PWA) che contiene e mostra la UI web.                                                                                                         |
+| **WebView**          | Componente del sistema operativo che mostra pagine web dentro un'app (WebView2 su Windows, System WebView su Android).                                           |
+| **PWA**              | _Progressive Web App_: sito installabile che funziona offline grazie a un Service Worker.                                                                        |
 
 ---
 

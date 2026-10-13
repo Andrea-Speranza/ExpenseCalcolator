@@ -9,6 +9,7 @@ interno di Tauri. Non usa un webserver né la rete.
 | Android             | Android System WebView            | Fase 4 (Tauri o Capacitor in base allo spike S2, D3) |
 | macOS / Linux / iOS | WKWebView / WebKitGTK / WKWebView | Fase 7                                               |
 
-Collega all'engine gli adapter della piattaforma, ad esempio `remote-folder` tramite il plugin fs di Tauri.
+Collega all'engine gli adapter della piattaforma e i canali di condivisione scelti, ad esempio il canale
+`folder` tramite il plugin fs di Tauri.
 
 Dettagli: [PLANNING §7](../../docs/PLANNING.md#7-ui-pagine-web-locali-dentro-app-native).

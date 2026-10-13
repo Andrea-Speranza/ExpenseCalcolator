@@ -2,6 +2,7 @@
 packages:
   - packages/*
   - packages/adapters/*
+  - packages/channels/*
   - apps/*
 
 # Pacchetti autorizzati a eseguire script durante l'installazione (pnpm li blocca per sicurezza).
