@@ -39,5 +39,7 @@ Le opzioni scartate e il motivo.
 | [0005](0005-modalita-uso.md)              | Tre modalità d'uso: locale, personale, condivisa   | Accettata |
 | [0006](0006-canali-plugin.md)             | Canali di condivisione come plugin                 | Accettata |
 | [0007](0007-salvataggio-e-concorrenza.md) | Salvataggio dei dati e modifiche contemporanee     | Accettata |
+| [0008](0008-componenti-ui-shadcn.md)      | Componenti UI: shadcn/ui con Tailwind CSS          | Accettata |
+| [0009](0009-distribuzione-locale.md)      | Distribuzione della web app: solo locale           | Accettata |
 
 Le altre decisioni da registrare sono quelle aperte in [PLANNING.md §12](../PLANNING.md#12-decisioni-aperte).

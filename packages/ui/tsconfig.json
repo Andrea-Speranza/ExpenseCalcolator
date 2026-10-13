@@ -1,0 +1,12 @@
+{
+  // La UI gira nel browser e nelle WebView: tipi DOM e JSX di React. ES2023 serve a Intl per formattare gli
+  // importi da testo decimale esatto.
+  // I componenti si importano con il nome del pacchetto (es. "@expense/ui/components/ui/button"), come nei
+  // monorepo di shadcn/ui (ADR 0008): niente alias da ripetere in ogni app che usa la UI.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx"
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,11 @@
+{
+  // La web app gira nel browser (tipi DOM e JSX di React). Comprende anche vite.config.ts, che usa solo i
+  // plugin di Vite e nessuna API di Node.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "jsx": "react-jsx"
+  },
+  "include": ["src", "vite.config.ts"]
+}

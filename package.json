@@ -18,6 +18,9 @@
     "test:watch": "vitest",
     "coverage": "vitest run --coverage",
     "cli": "pnpm --silent --filter @expense/cli build && node apps/cli/dist/spese.mjs",
+    "web": "pnpm --filter @expense/web dev",
+    "web:build": "pnpm --filter @expense/web build",
+    "web:preview": "pnpm --filter @expense/web build && pnpm --filter @expense/web preview",
     "schemas": "node scripts/update-json-schemas.mjs"
   },
   "devDependencies": {
@@ -30,7 +33,10 @@
     "dependency-cruiser": "^18.6.0",
     "eslint": "^10.12.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
     "fast-check": "^4.10.2",
+    "jsdom": "^30.1.2",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.1",

@@ -5,13 +5,17 @@ import markdown from '@eslint/markdown';
 import vitest from '@vitest/eslint-plugin';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import prettier from 'eslint-config-prettier';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 // Ogni linguaggio usa il set raccomandato dal suo plugin ufficiale. Le regole di JavaScript e
 // TypeScript sono limitate ai file di codice, perché non si applicano a JSON e Markdown.
-const CODE_FILES = ['**/*.{js,mjs,cjs,ts,mts,cts}'];
+const CODE_FILES = ['**/*.{js,mjs,cjs,ts,mts,cts,tsx}'];
 const JS_FILES = ['**/*.{js,mjs,cjs}'];
-const TEST_FILES = ['{packages,apps}/**/test/**/*.ts'];
+const TEST_FILES = ['{packages,apps}/**/test/**/*.{ts,tsx}'];
+// Codice React: la UI condivisa e la shell web.
+const REACT_FILES = ['{packages/ui,apps/web}/**/*.{ts,tsx}'];
 // JSON con commenti: i tsconfig e le impostazioni di VS Code.
 const JSONC_FILES = ['**/tsconfig*.json', '.vscode/*.json'];
 
@@ -67,6 +71,23 @@ export default defineConfig(
           message: CLOCK_MESSAGE,
         },
       ],
+    },
+  },
+  // React: regole ufficiali degli hook (comprese quelle del React Compiler) e, come nel modello React di
+  // Vite, file di componenti compatibili con l'aggiornamento a caldo.
+  {
+    files: REACT_FILES,
+    extends: [reactHooks.configs.flat.recommended, reactRefresh.configs.vite],
+  },
+  {
+    // Componenti generati da shadcn/ui (ADR 0008): si aggiornano con la sua CLI, quindi non si correggono a
+    // mano. Si disattivano solo le regole che lo stile di shadcn non segue per scelta (es. esportare le
+    // varianti uttonVariants accanto al componente). TypeScript li controlla comunque in modalità strict.
+    files: ['packages/ui/src/components/ui/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+      '@typescript-eslint/array-type': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
     },
   },
   {

@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.8 (D1, D2, D5, D6, D9 e D11 decise, D12 in parte; Fasi 0, 1 e 2 completate) · **Ultimo aggiornamento:** 2026-10-13
+> **Stato:** v0.9 (D1, D2, D5–D9 e D11 decise, D12 in parte; Fasi 0, 1 e 2 completate, Fase 3 in corso) · **Ultimo aggiornamento:** 2026-10-13
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -292,20 +292,20 @@ salvate in locale e renderizzate dall'app senza rete è quindi esattamente come 
 La UI è una SPA (single page application) compilata in file statici HTML/CSS/JS, in `packages/ui`.
 Gli stessi file vengono impacchettati in ogni "shell":
 
-| Piattaforma               | Shell                                  | Motore di rendering                             | Come servono le pagine locali                                                         |
-| ------------------------- | -------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Windows (poi macOS/Linux) | Tauri 2                                | WebView2 (Chromium, già presente in Windows 11) | Protocollo interno che legge i file dal pacchetto dell'app                            |
-| Android                   | Tauri 2 (in alternativa Capacitor, D3) | Android System WebView (Chromium)               | Come sopra                                                                            |
-| Web                       | PWA                                    | Browser                                         | Un Service Worker mette in cache tutta l'app alla prima visita e poi la serve offline |
+| Piattaforma                  | Shell                                  | Motore di rendering                             | Come servono le pagine locali                                                                                                       |
+| ---------------------------- | -------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Windows (poi macOS/Linux)    | Tauri 2                                | WebView2 (Chromium, già presente in Windows 11) | Protocollo interno che legge i file dal pacchetto dell'app                                                                          |
+| Android                      | Tauri 2 (in alternativa Capacitor, D3) | Android System WebView (Chromium)               | Come sopra                                                                                                                          |
+| Web (per ora solo in locale) | `apps/web` (Vite)                      | Browser                                         | Servite da `localhost` sul PC; una futura PWA le terrebbe in cache per l'uso offline ([ADR 0009](adr/0009-distribuzione-locale.md)) |
 
 - **Nessun webserver vero.** Le shell non aprono una porta su `localhost`. Registrano un protocollo interno
   (su Windows, Tauri usa `http://tauri.localhost`) che risponde leggendo i file dal pacchetto. L'effetto è
   quello del "webserver locale" che avevi in mente, ma senza porte aperte, conflitti, richieste del firewall o
   accessi da altre app.
 - Di conseguenza la UI non dipende mai dalla rete: la rete serve solo a sincronizzare i dati.
-- La versione web va comunque pubblicata come file statici da qualche parte, per esempio GitHub Pages o
-  Cloudflare Pages: sono gratuiti e non richiedono backend né DB. Se non si vuole neanche questo, si rinuncia
-  alla versione web e si resta sulle app installabili **(DA CONFERMARE — D7)**.
+- Per ora la web app **non si pubblica online** ([ADR 0009](adr/0009-distribuzione-locale.md)): è inclusa
+  nelle app native e nel browser del PC si usa in locale (`pnpm web`). In futuro potrà essere ospitata sul
+  proprio NAS o su un hosting statico, senza cambiare codice.
 
 ### 7.3 Perché Tauri e non Electron
 
@@ -324,7 +324,8 @@ Motivi principali:
 - offre una via di fuga verso React Native, se un giorno la WebView non bastasse su mobile.
 
 La UI legge lo stato tramite `engine.subscribe`, che in React si collega direttamente con
-`useSyncExternalStore`. La libreria di componenti si sceglie in Fase 3 **(D8)**.
+`useSyncExternalStore`. I componenti sono quelli di shadcn/ui con Tailwind CSS
+([ADR 0008](adr/0008-componenti-ui-shadcn.md)).
 
 Requisiti per la UI:
 
@@ -621,10 +622,10 @@ ExpenseCalcolator/
 │  ├─ channels/                  # plugin di condivisione (ADR 0006)
 │  │  ├─ folder/                 # cartella sincronizzata
 │  │  └─ gdrive/                 # Google Drive (altri canali: file, p2p, dropbox, onedrive)
-│  └─ ui/                        # SPA condivisa da tutte le shell
+│  └─ ui/                        # SPA condivisa da tutte le shell (React, shadcn/ui)
 └─ apps/
    ├─ cli/                       # riga di comando: l'app in modalità locale, senza grafica
-   ├─ web/                       # shell PWA (manifest, service worker, deploy statico)
+   ├─ web/                       # shell web: UI + IndexedDB, build Vite (per ora solo in locale)
    └─ native/                    # shell Tauri 2 (Windows, Android; poi macOS/Linux/iOS)
 ```
 
@@ -637,7 +638,7 @@ ExpenseCalcolator/
 | Milestone                | Risultato                                                             | Fasi |
 | ------------------------ | --------------------------------------------------------------------- | ---- |
 | **M1** Core verificato   | Calcolo completo e testato, senza UI                                  | 0–1  |
-| **M2** App locale        | Modalità locale: app usabile su un solo dispositivo (web/PWA)         | 2–3  |
+| **M2** App locale        | Modalità locale: app usabile su un solo dispositivo (web, in locale)  | 2–3  |
 | **M3** App installabili  | Windows e Android                                                     | 4    |
 | **M4** Multi-dispositivo | Modalità personale: dati e profilo sincronizzati tramite una cartella | 5    |
 | **M5** Gruppi condivisi  | Modalità condivisa: Google Drive, inviti, adesione                    | 6    |
@@ -712,23 +713,29 @@ quando il repository verrà pubblicato su GitHub, cioè quando ci sarà qualcosa
 2. chiude il processo;
 3. riapre i dati da IndexedDB.
 
-### 11.5 Fase 3 — UI MVP (web/PWA, un solo dispositivo)
+### 11.5 Fase 3 — UI MVP (web app locale, un solo dispositivo) (in corso)
 
-- [ ] Scegliere la libreria di componenti (D8), poi impostare la struttura di `ui`, il routing e il tema chiaro/scuro.
-- [ ] Schermate:
-  - elenco gruppi;
-  - dettaglio gruppo con spese e saldi;
-  - nuova o modifica spesa, con tutte le modalità di divisione;
-  - membri;
-  - registra rimborso;
-  - attività;
-  - impostazioni (valuta predefinita, lingua, nome).
-- [ ] Testi in italiano, importi e date formattati con `Intl`.
-- [ ] Valuta: le spese usano solo quella del gruppo, ma i saldi si mostrano già per valuta ([ADR 0004](adr/0004-valute.md)).
-- [ ] PWA: manifest, service worker, funzionamento offline, richiesta di storage persistente.
-- [ ] Test E2E dei percorsi principali con Playwright.
-- [ ] Pubblicare il repository su GitHub, appena la UI mostra qualcosa di usabile, e verificare che la CI passi.
-      Nello stesso momento si decide D7 (dove pubblicare la versione web).
+- [x] Scegliere la libreria di componenti: shadcn/ui ([ADR 0008](adr/0008-componenti-ui-shadcn.md)).
+- [x] Impostare la struttura di `ui` e `apps/web`, il routing (hash) e il tema chiaro/scuro (segue il sistema).
+- Schermate:
+  - [x] elenco gruppi e nuovo gruppo;
+  - [x] dettaglio gruppo con spese, saldi e trasferimenti suggeriti;
+  - [x] nuova o modifica spesa, con tutte le modalità di divisione e più pagatori; elimina e ripristina;
+  - [x] membri: aggiungi, rinomina, archivia, «sono io»;
+  - [x] registra rimborso, anche partendo da un trasferimento suggerito; elimina e ripristina;
+  - [x] impostazioni (valuta predefinita, nome). La lingua arriverà con le traduzioni;
+  - [ ] impostazioni del gruppo (nome, archiviazione);
+  - [ ] attività (storico delle modifiche);
+  - [ ] esporta e importa un gruppo come file, come nella CLI.
+- [x] Testi in italiano, importi e date formattati con `Intl`.
+- [x] Valuta: le spese usano solo quella del gruppo, ma i saldi si mostrano già per valuta ([ADR 0004](adr/0004-valute.md)).
+- [x] Richiesta di storage persistente nel browser. Manifest e service worker (PWA) rimandati finché la web
+      app non sarà pubblicata ([ADR 0009](adr/0009-distribuzione-locale.md)).
+- [x] Test d'integrazione della UI con jsdom e Testing Library: l'app intera, con un engine in memoria.
+- [ ] Test E2E dei percorsi principali con Playwright, in un browser vero.
+- [x] Pubblicare il repository su GitHub (fatto dopo la Fase 2).
+- [x] Decidere dove pubblicare la web app: per ora da nessuna parte, solo in locale
+      ([ADR 0009](adr/0009-distribuzione-locale.md)).
 
 **Fatto quando:** l'app si usa davvero per un gruppo su un solo dispositivo, anche in modalità aereo.
 
@@ -794,8 +801,8 @@ senza alcun server nostro.
 | D4  | Primo provider cloud e relativo scope OAuth                             | Aperta          | Google Drive; scope scelto in base a S1                                                                                                                                                                                                    | Dopo S1                                |
 | D5  | Libreria per schema e validazione                                       | **Decisa**      | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                                                                                                                                                                     | —                                      |
 | D6  | Regole di conflitto                                                     | **Decisa**      | Ultima modifica per campo o blocco, eliminazione che vince, modifiche contemporanee segnalate ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md))                                                                                          | Inizio Fase 2                          |
-| D7  | Pubblicare la versione web? Dove?                                       | Aperta          | Sì, su hosting statico gratuito (GitHub Pages o Cloudflare Pages)                                                                                                                                                                          | Fase 3                                 |
-| D8  | Libreria di componenti UI                                               | Aperta          | Confronto tra Ionic React (aspetto nativo Android/iOS) e componenti headless con un design proprio                                                                                                                                         | Fase 3                                 |
+| D7  | Pubblicare la versione web? Dove?                                       | **Decisa**      | Per ora no: inclusa nelle app native e usata in locale nel browser ([ADR 0009](adr/0009-distribuzione-locale.md))                                                                                                                          | —                                      |
+| D8  | Libreria di componenti UI                                               | **Decisa**      | shadcn/ui con Tailwind CSS ([ADR 0008](adr/0008-componenti-ui-shadcn.md))                                                                                                                                                                  | —                                      |
 | D9  | Gestione delle valute                                                   | **Decisa**      | Valuta esplicita ovunque, conversione rimandata ([ADR 0004](adr/0004-valute.md))                                                                                                                                                           | —                                      |
 | D10 | Dettagli della conversione (direzione del tasso, arrotondamento, fonte) | Aperta          | Vedi "Da decidere" in [ADR 0004](adr/0004-valute.md)                                                                                                                                                                                       | Fase 7b                                |
 | D11 | Modalità d'uso (locale, personale, condivisa) e profilo utente          | **Decisa**      | Un solo meccanismo; cambia solo dove è pubblicato il log ([ADR 0005](adr/0005-modalita-uso.md))                                                                                                                                            | —                                      |
@@ -854,12 +861,13 @@ senza alcun server nostro.
 - **Zod 4** per modelli dati, validazione e generazione del JSON Schema (ADR 0003).
 - **ESLint** con il set raccomandato del plugin ufficiale di ogni linguaggio in uso:
 
-  | Linguaggio                 | Regole                                                                                                           |
-  | -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-  | JavaScript e TypeScript    | `@eslint/js` e typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, più `switch-exhaustiveness-check` |
-  | Test                       | `@vitest/eslint-plugin`                                                                                          |
-  | JSON e JSONC               | `@eslint/json`                                                                                                   |
-  | Markdown (dialetto GitHub) | `@eslint/markdown`, che verifica anche i link interni ai documenti                                               |
+  | Linguaggio                 | Regole                                                                                                                                     |
+  | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+  | JavaScript e TypeScript    | `@eslint/js` e typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, più `switch-exhaustiveness-check`                           |
+  | React                      | `eslint-plugin-react-hooks` (regole ufficiali, comprese quelle del React Compiler) e `eslint-plugin-react-refresh` (modello React di Vite) |
+  | Test                       | `@vitest/eslint-plugin`                                                                                                                    |
+  | JSON e JSONC               | `@eslint/json`                                                                                                                             |
+  | Markdown (dialetto GitHub) | `@eslint/markdown`, che verifica anche i link interni ai documenti                                                                         |
 
   YAML (configurazione della CI e del workspace) è solo formattato e validato sintatticamente da Prettier.
 
@@ -871,11 +879,14 @@ senza alcun server nostro.
 **Convenzioni del repository:**
 
 - **Nessuna build per i pacchetti interni.** Ogni pacchetto espone solo `src/index.ts` (campo `exports` del
-  `package.json`); Vite e Vitest leggono direttamente il TypeScript.
-- **Test in una cartella separata:** `packages/<pacchetto>/test/`, con file `*.test.ts`.
+  `package.json`); Vite e Vitest leggono direttamente il TypeScript. `packages/ui` espone in più gli stili e,
+  per percorso, i componenti di shadcn/ui (`@expense/ui/components/ui/button`).
+- **Test in una cartella separata:** `packages/<pacchetto>/test/`, con file `*.test.ts` (`*.test.tsx` per
+  React).
 - **Due configurazioni TypeScript.** Il codice in `src/` si controlla con il `tsconfig.json` del pacchetto,
-  che non ha né tipi DOM né tipi Node. I test si controllano con il `tsconfig.json` della radice, che include i
-  tipi di Node.
+  che ha solo i tipi della sua piattaforma: nessuno per `schema`, `core`, `sync` ed `engine`, DOM per UI e
+  web, Node per la CLI. I test si controllano con il `tsconfig.json` della radice, che include i tipi di Node
+  e DOM.
 - **Un solo comando di verifica.** `pnpm check` esegue in sequenza formattazione, lint, controllo dei tipi,
   confini e test. È lo stesso comando che usa la CI.
 
@@ -897,7 +908,8 @@ senza alcun server nostro.
 | Property-based             | Invarianti di §9.7, generando migliaia di casi casuali                                                                                                                                | `packages/core`, `packages/sync`             |
 | Simulazione sync           | N dispositivi virtuali, canale in memoria, ordini di arrivo casuali. Il risultato deve essere lo stesso stato a prescindere dall'ordine, e un evento ripetuto non deve avere effetto. | `packages/sync`, `packages/engine`           |
 | Contratto adapter e canali | Ogni adapter `LocalStore` e ogni canale `SyncChannel` passa la stessa suite di test della sua porta                                                                                   | `packages/adapters/*`, `packages/channels/*` |
-| E2E                        | Percorsi principali della UI                                                                                                                                                          | `apps/web`                                   |
+| UI                         | Logica dei form (importi, divisioni, errori per campo) e l'app intera usata come farebbe una persona: jsdom e Testing Library, con un engine in memoria                               | `packages/ui`                                |
+| E2E                        | Percorsi principali della UI in un browser vero, con IndexedDB (Playwright)                                                                                                           | `apps/web`                                   |
 
 ---
 
