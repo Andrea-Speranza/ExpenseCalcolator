@@ -1,3 +1,10 @@
+import {
+  exportGroupFile,
+  type InvalidExchangeFile,
+  importExchangeFile,
+  parseExchangeFile,
+  serializeExchangeFile,
+} from '@expense/engine';
 import { formatSettings } from '../format';
 import { describeError } from '../messages';
 import { findGroup } from '../resolve';
@@ -5,10 +12,8 @@ import { done, orFail, UserError } from '../result';
 import { type CommandSpec, toJson } from './command';
 
 // Impostazioni personali, ed esportazione/importazione dei gruppi su file: il modo manuale di passare un
-// gruppo a un altro dispositivo o a un'altra persona (il canale "file", CONDIVISIONE.md).
-
-/** Formato del file esportato: gli eventi del gruppo, così come sono salvati. */
-const EXPORT_FORMAT = 'expense-calcolator/eventi';
+// gruppo a un altro dispositivo o a un'altra persona (il canale "file", CONDIVISIONE.md). Il formato del file
+// è lo stesso della web app (engine, exchange.ts).
 
 export const settingsCommands: readonly CommandSpec[] = [
   {
@@ -54,10 +59,10 @@ export const settingsCommands: readonly CommandSpec[] = [
     async run({ args: [reference = '', file = ''], env, engine, json }) {
       const current = await engine();
       const group = findGroup(current, reference);
-      const events = current.exportEvents(group.groupId);
-      const content = { format: EXPORT_FORMAT, version: 1, group: group.name, events };
+      const content = orFail(exportGroupFile(current, group.groupId), describeError);
+      const { events } = content;
       try {
-        await env.writeFile(file, `${JSON.stringify(content, null, 2)}\n`);
+        await env.writeFile(file, serializeExchangeFile(content));
       } catch {
         throw new UserError(`Impossibile scrivere il file "${file}".`);
       }
@@ -73,23 +78,20 @@ export const settingsCommands: readonly CommandSpec[] = [
     options: [],
     summary: 'importa un gruppo esportato da un altro dispositivo, o le sue novità',
     async run({ args: [file = ''], env, engine, json }) {
-      let data: unknown;
+      let text: string;
       try {
-        data = JSON.parse((await env.readFile(file)).replace(/^\uFEFF/, ''));
+        text = await env.readFile(file);
       } catch {
         throw new UserError(`Impossibile leggere "${file}" come file esportato.`);
       }
-      const events = exportedEvents(data);
-      if (events === undefined)
-        throw new UserError(`"${file}" non è un file esportato da questa app.`);
+      const parsed = parseExchangeFile(text);
+      if (!parsed.ok) throw new UserError(describeFileError(parsed.error, file));
       const current = await engine();
-      const summary = orFail(await current.receiveEvents(events), describeError);
-      if (json) return done(toJson(summary));
-      const groups = orFail(current.query({ type: 'ListGroups' }), describeError);
-      const streams = new Set(
-        events.flatMap((event) => (isStreamEvent(event) ? [event.stream] : [])),
+      const { groups: touched, ...summary } = orFail(
+        await importExchangeFile(current, parsed.value),
+        describeError,
       );
-      const touched = groups.filter(({ groupId }) => streams.has(groupId));
+      if (json) return done(toJson(summary));
       const names = touched.map(({ name }) => `«${name}»`);
       const lines = [
         summary.added === 0
@@ -105,19 +107,13 @@ export const settingsCommands: readonly CommandSpec[] = [
   },
 ];
 
-function exportedEvents(data: unknown): readonly unknown[] | undefined {
-  if (typeof data !== 'object' || data === null || !('format' in data) || !('events' in data))
-    return undefined;
-  return data.format === EXPORT_FORMAT && Array.isArray(data.events)
-    ? (data.events as unknown[])
-    : undefined;
-}
-
-function isStreamEvent(event: unknown): event is { readonly stream: string } {
-  return (
-    typeof event === 'object' &&
-    event !== null &&
-    'stream' in event &&
-    typeof event.stream === 'string'
-  );
+function describeFileError({ reason }: InvalidExchangeFile, file: string): string {
+  switch (reason) {
+    case 'notJson':
+      return `Impossibile leggere "${file}" come file esportato.`;
+    case 'notExchangeFile':
+      return `"${file}" non è un file esportato da questa app.`;
+    case 'newerVersion':
+      return `"${file}" è stato esportato da una versione più recente dell'app: aggiornala per importarlo.`;
+  }
 }

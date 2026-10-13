@@ -20,16 +20,19 @@ const stop = engine.subscribe(() => aggiornaLaSchermata());
 - **Scambio di eventi** (`exportEvents`, `receiveEvents`): il gancio per i canali di condivisione
   ([ADR 0006](../../docs/adr/0006-canali-plugin.md)). Scarta i doppioni, conserva gli eventi di tipi
   sconosciuti e aggiorna l'orologio dopo aver visto eventi altrui.
+- **File di scambio** (`exportGroupFile`, `serializeExchangeFile`, `parseExchangeFile`,
+  `importExchangeFile`): esporta e importa un gruppo come file, nello stesso formato per CLI, web app e app
+  native. È la forma manuale del canale `file`.
 - **Porte:** `LocalStore`, `Clock`, `IdGenerator`, con implementazioni in memoria (`createMemoryStore`,
   `createManualClock`, `createSequentialIds`). Quelle reali stanno in [packages/adapters](../adapters/).
 - **Senza stato:** `calculateLedger` calcola saldi e trasferimenti da un registro esterno (lo usa la CLI).
 
-Errori: sempre `Result` con un `code` (`InvalidInput`, `NotFound`, `NoChanges`, `StorageFailed` e gli errori
-di dominio del core). L'unica eccezione è `openEngine`, che rifiuta la promessa se il salvataggio locale non
+Errori: sempre `Result` con un `code` (`InvalidInput`, `NotFound`, `NoChanges`, `StorageFailed`,
+`InvalidExchangeFile` e gli errori di dominio del core). L'unica eccezione è `openEngine`, che rifiuta la promessa se il salvataggio locale non
 è leggibile.
 
 - **Dipende da:** `schema`, `core`, `sync`.
-- **Stato:** Fase 2 completata.
+- **Stato:** Fase 2 completata; file di scambio aggiunto in Fase 3.
 
 Dettagli: [PLANNING §5](../../docs/PLANNING.md#5-esposizione-delle-funzionalità-api) e
 [ADR 0007](../../docs/adr/0007-salvataggio-e-concorrenza.md).

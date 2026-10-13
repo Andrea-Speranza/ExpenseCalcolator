@@ -19,17 +19,18 @@ root.render(<App engine={engine} />);
 
 ## Struttura
 
-| Percorso                          | Contenuto                                                                              |
-| --------------------------------- | -------------------------------------------------------------------------------------- |
-| `src/app.tsx`                     | Radice: collega l'engine e sceglie la pagina                                           |
-| `src/screens/`                    | Schermate: gruppi, gruppo (spese, saldi, membri), spesa, rimborso, impostazioni        |
-| `src/engine/`                     | Collegamento tra engine e React: `useQuery` (con `useSyncExternalStore`), `useCommand` |
-| `src/expense-draft.ts`            | Form della spesa: dai testi scritti ai dati del comando, con gli errori per campo      |
-| `src/amounts.ts`, `src/format.ts` | Lettura e formattazione di importi, percentuali e date                                 |
-| `src/messages.ts`                 | Errori dell'engine spiegati in italiano                                                |
-| `src/router.ts`                   | Pagine e indirizzi                                                                     |
-| `src/components/`                 | Componenti dell'app (struttura della pagina, scelta della valuta, errori)              |
-| `src/components/ui/`              | Componenti di shadcn/ui, generati dalla sua CLI                                        |
+| Percorso                          | Contenuto                                                                                                                                                      |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/app.tsx`                     | Radice: collega l'engine e sceglie la pagina                                                                                                                   |
+| `src/screens/`                    | Schermate: gruppi (con importazione), gruppo (spese, saldi, membri) e sue impostazioni (nome, esportazione, archivio), spesa, rimborso, impostazioni personali |
+| `src/engine/`                     | Collegamento tra engine e React: `useQuery` (con `useSyncExternalStore`), `useCommand`                                                                         |
+| `src/expense-draft.ts`            | Form della spesa: dai testi scritti ai dati del comando, con gli errori per campo                                                                              |
+| `src/amounts.ts`, `src/format.ts` | Lettura e formattazione di importi, percentuali e date                                                                                                         |
+| `src/messages.ts`                 | Errori dell'engine spiegati in italiano                                                                                                                        |
+| `src/router.ts`                   | Pagine e indirizzi                                                                                                                                             |
+| `src/download.ts`                 | Salvataggio dei file esportati (da verificare nelle WebView delle app native, Fase 4)                                                                          |
+| `src/components/`                 | Componenti dell'app (struttura della pagina, scelta della valuta, errori)                                                                                      |
+| `src/components/ui/`              | Componenti di shadcn/ui, generati dalla sua CLI                                                                                                                |
 
 ## Componenti di shadcn/ui
 
@@ -44,7 +45,7 @@ rigenerano (`--overwrite`).
 
 ## Test
 
-In `test/`: la logica senza grafica (importi, form della spesa, indirizzi) e test d'integrazione con jsdom e
+In `test/`: la logica senza grafica (importi, form della spesa, indirizzi, file esportati) e test d'integrazione con jsdom e
 Testing Library, che usano l'app intera con un engine in memoria come farebbe una persona.
 
 Dettagli: [PLANNING §7](../../docs/PLANNING.md#7-ui-pagine-web-locali-dentro-app-native).

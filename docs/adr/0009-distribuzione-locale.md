@@ -30,7 +30,7 @@ online non serve. Le app native funzionano offline comunque.
 
 - **Vantaggi:** nessun servizio esterno, nessun costo, nessun dato o file dell'app su server altrui.
 - **Costo:** gli altri non possono aprire l'app da un link: per usarla devono installare l'app nativa.
-  Fino ad allora possono ricevere i dati tramite esporta/importa (CLI) e, più avanti, tramite i canali di
+  Fino ad allora possono ricevere i dati tramite esporta/importa (CLI e web app) e, più avanti, tramite i canali di
   condivisione.
 
 ## Possibilità future

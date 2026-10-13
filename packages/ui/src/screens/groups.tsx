@@ -1,4 +1,5 @@
 import type { GroupSummary } from '@expense/engine';
+import { Alert, AlertAction, AlertDescription } from '@expense/ui/components/ui/alert';
 import { Badge } from '@expense/ui/components/ui/badge';
 import { Button } from '@expense/ui/components/ui/button';
 import {
@@ -21,52 +22,120 @@ import {
 } from '@expense/ui/components/ui/empty';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@expense/ui/components/ui/field';
 import { Input } from '@expense/ui/components/ui/input';
-import { ChevronRightIcon, PlusIcon, UsersIcon } from 'lucide-react';
+import {
+  ChevronRightIcon,
+  CircleAlertIcon,
+  CircleCheckIcon,
+  PlusIcon,
+  UsersIcon,
+} from 'lucide-react';
 import { type SubmitEvent, useId, useState } from 'react';
 import { CurrencySelect } from '../components/currency-select';
 import { ErrorAlert } from '../components/error-alert';
 import { PageHeader } from '../components/layout';
 import { useCommand, useQuery } from '../engine/store';
+import { describeError, describeFileError, describeImport } from '../messages';
 import { navigate, routeHref } from '../router';
+import { ImportGroupButton, type ImportResult } from './import-group';
 
 export function GroupsScreen() {
   const groups = useQuery({ type: 'ListGroups' });
+  const [imported, setImported] = useState<ImportResult | null>(null);
   const list = groups.ok ? groups.value : [];
   const active = list.filter(({ archived }) => !archived);
   const archived = list.filter((group) => group.archived);
+  const importButton = <ImportGroupButton onResult={setImported} />;
 
   return (
     <>
-      <PageHeader title="Gruppi" actions={list.length > 0 ? <CreateGroupDialog /> : undefined} />
-      <ErrorAlert error={groups.ok ? null : groups.error} />
-      {list.length === 0 ? (
-        <Empty className="border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <UsersIcon />
-            </EmptyMedia>
-            <EmptyTitle>Nessun gruppo</EmptyTitle>
-            <EmptyDescription>
-              Crea un gruppo per una vacanza, la casa o una cena: aggiungi chi partecipa e registra
-              le spese. I dati restano su questo dispositivo.
-            </EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <CreateGroupDialog />
-          </EmptyContent>
-        </Empty>
-      ) : (
-        <div className="flex flex-col gap-6">
-          <GroupList groups={active} />
-          {archived.length > 0 && (
-            <section className="flex flex-col gap-2">
-              <h2 className="text-sm font-medium text-muted-foreground">Archiviati</h2>
-              <GroupList groups={archived} />
-            </section>
-          )}
-        </div>
-      )}
+      <PageHeader
+        title="Gruppi"
+        actions={
+          list.length > 0 ? (
+            <>
+              {importButton}
+              <CreateGroupDialog />
+            </>
+          ) : undefined
+        }
+      />
+      <div className="flex flex-col gap-6">
+        <ErrorAlert error={groups.ok ? null : groups.error} />
+        {imported !== null && <ImportOutcome result={imported} />}
+        {list.length === 0 ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <UsersIcon />
+              </EmptyMedia>
+              <EmptyTitle>Nessun gruppo</EmptyTitle>
+              <EmptyDescription>
+                Crea un gruppo per una vacanza, la casa o una cena: aggiungi chi partecipa e
+                registra le spese. I dati restano su questo dispositivo. Se qualcuno ti ha mandato
+                un gruppo esportato, aprilo con «Importa».
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent className="flex-row justify-center">
+              {importButton}
+              <CreateGroupDialog />
+            </EmptyContent>
+          </Empty>
+        ) : (
+          <>
+            {active.length > 0 && <GroupList groups={active} />}
+            {archived.length > 0 && (
+              <section className="flex flex-col gap-2">
+                <h2 className="text-sm font-medium text-muted-foreground">Archiviati</h2>
+                <GroupList groups={archived} />
+              </section>
+            )}
+          </>
+        )}
+      </div>
     </>
+  );
+}
+
+/** Esito dell'importazione; se il gruppo è nuovo su questo dispositivo, invita a dire chi sei. */
+function ImportOutcome({ result }: { readonly result: ImportResult }) {
+  if (!result.ok) {
+    return (
+      <Alert variant="destructive">
+        <CircleAlertIcon />
+        <AlertDescription>
+          {result.error.code === 'StorageFailed'
+            ? describeError(result.error)
+            : describeFileError(result.error)}
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  const { added, groups } = result.value;
+  const [group] = groups;
+  const claim = added > 0 && group?.me === null;
+  return (
+    <Alert>
+      <CircleCheckIcon />
+      <AlertDescription>
+        {describeImport(result.value)}
+        {claim && ' Apri il gruppo e, nella scheda Membri, scegli «Sono io» accanto al tuo nome.'}
+      </AlertDescription>
+      {group !== undefined && (
+        <AlertAction>
+          <Button size="sm" variant="outline" asChild>
+            <a
+              href={routeHref({
+                page: 'group',
+                groupId: group.groupId,
+                tab: claim ? 'membri' : 'spese',
+              })}
+            >
+              Apri
+            </a>
+          </Button>
+        </AlertAction>
+      )}
+    </Alert>
   );
 }
 

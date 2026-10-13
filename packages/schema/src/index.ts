@@ -31,6 +31,8 @@ export {
   SettlementTransferSchema,
 } from './fields';
 export type { ExpenseAmounts, GroupMode, Language, SettlementTransfer } from './fields';
+export { EXCHANGE_FILE_FORMAT, ExchangeFileSchema } from './exchange';
+export type { ExchangeFile } from './exchange';
 export {
   DeviceIdSchema,
   EventIdSchema,

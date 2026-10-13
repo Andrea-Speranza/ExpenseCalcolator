@@ -7,7 +7,8 @@
 - busta degli eventi (con HLC, autore e versione di partenza) e tipi di evento di gruppo e profilo
   ([ADR 0007](../../docs/adr/0007-salvataggio-e-concorrenza.md));
 - comandi e query dell'engine;
-- registro di calcolo (`Ledger`), usato dalla CLI e dai test vector.
+- registro di calcolo (`Ledger`), usato dalla CLI e dai test vector;
+- file di scambio di un gruppo (`ExchangeFile`), per esportarlo e importarlo da CLI, web app e app native.
 
 Libreria: Zod 4 ([ADR 0003](../../docs/adr/0003-schema-validazione-zod.md)). Gli schemi dei dati salvati
 descrivono solo la forma; le future migrazioni (upcaster) saranno funzioni separate. Gli eventi di tipi

@@ -1,7 +1,9 @@
 import type {
   CommandError,
   ExpenseError,
+  ImportSummary,
   InvalidAllocation,
+  InvalidExchangeFile,
   InvalidExpense,
   QueryError,
   SettlementError,
@@ -47,6 +49,30 @@ export function describeError(error: CommandError | QueryError, names: Names = N
     case 'AmountOutOfRange':
     case 'InvalidSettlement':
       return `${capitalize(describeEntryError(error, names))}.`;
+  }
+}
+
+/** Esito dell'importazione di un file di scambio. */
+export function describeImport({ added, invalid, groups }: ImportSummary): string {
+  const names = groups.map(({ name }) => `«${name}»`).join(', ');
+  const where = names === '' ? '' : ` in ${names}`;
+  const result =
+    added === 0
+      ? 'Nessuna novità: queste modifiche erano già presenti.'
+      : added === 1
+        ? `Importata 1 modifica${where}.`
+        : `Importate ${String(added)} modifiche${where}.`;
+  if (invalid === 0) return result;
+  return `${result} ${invalid === 1 ? 'Scartata 1 voce non valida' : `Scartate ${String(invalid)} voci non valide`}.`;
+}
+
+export function describeFileError({ reason }: InvalidExchangeFile): string {
+  switch (reason) {
+    case 'notJson':
+    case 'notExchangeFile':
+      return 'Questo file non è un gruppo esportato da questa app.';
+    case 'newerVersion':
+      return 'Il file è stato esportato da una versione più recente dell’app: aggiornala per importarlo.';
   }
 }
 

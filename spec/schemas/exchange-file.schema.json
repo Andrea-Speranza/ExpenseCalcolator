@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "readOnly": true,
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "expense-calcolator/eventi"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "group": {
+      "type": "string"
+    },
+    "events": {
+      "readOnly": true,
+      "description": "Eventi salvati (stored-event.schema.json). Si validano uno per uno all’importazione: quelli non validi si scartano.",
+      "type": "array",
+      "items": {}
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "group",
+    "events"
+  ]
+}

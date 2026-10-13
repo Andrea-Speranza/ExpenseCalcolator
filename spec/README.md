@@ -14,6 +14,7 @@ in qualsiasi linguaggio.
   | `profile-event.schema.json` | Eventi del profilo personale: impostazioni, gruppi, "chi sono io" |
   | `ledger.schema.json`        | Registro di spese e rimborsi (CLI e test vector)                  |
   | `command.schema.json`       | Comandi dell'engine, per chi lo usa da un altro linguaggio        |
+  | `exchange-file.schema.json` | File di scambio di un gruppo (esporta/importa): formato, eventi   |
 
 - **[test-vectors/](test-vectors/)**: casi "input → output atteso" per la logica di calcolo, calcolati a mano.
   Li esegue la suite di test di `packages/core` (`test/vectors.test.ts`); un'altra implementazione del core

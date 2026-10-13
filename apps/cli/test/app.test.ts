@@ -401,6 +401,10 @@ describe('esporta e importa tra due dispositivi', () => {
       new Map([
         ['altro.json', '{"ciao": 1}'],
         ['rotto.json', '{'],
+        [
+          'futuro.json',
+          '{"format": "expense-calcolator/eventi", "version": 2, "group": "X", "events": []}',
+        ],
       ]),
     );
     expect((await cli('importa', 'altro.json')).stderr).toBe(
@@ -408,6 +412,12 @@ describe('esporta e importa tra due dispositivi', () => {
     );
     expect((await cli('importa', 'rotto.json')).stderr).toBe(
       'Impossibile leggere "rotto.json" come file esportato.\n',
+    );
+    expect((await cli('importa', 'futuro.json')).stderr).toBe(
+      '"futuro.json" è stato esportato da una versione più recente dell\'app: aggiornala per importarlo.\n',
+    );
+    expect((await cli('importa', 'manca.json')).stderr).toBe(
+      'Impossibile leggere "manca.json" come file esportato.\n',
     );
   });
 });

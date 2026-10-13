@@ -4,6 +4,7 @@ import { EngineProvider } from './engine/provider';
 import { useRoute } from './router';
 import { ExpenseScreen } from './screens/expense-screen';
 import { GroupScreen } from './screens/group';
+import { GroupSettingsScreen } from './screens/group-settings';
 import { GroupsScreen } from './screens/groups';
 import { SettingsScreen } from './screens/settings';
 
@@ -39,6 +40,8 @@ function CurrentPage() {
           expenseId={route.expenseId}
         />
       );
+    case 'groupSettings':
+      return <GroupSettingsScreen key={route.groupId} groupId={route.groupId} />;
     case 'notFound':
       return <NotFound />;
   }

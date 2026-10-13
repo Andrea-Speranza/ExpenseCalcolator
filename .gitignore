@@ -4,6 +4,8 @@ node_modules/
 # Output di build e test
 dist/
 coverage/
+test-results/
+playwright-report/
 *.tsbuildinfo
 
 # Log

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
   CommandSchema,
+  ExchangeFileSchema,
   GroupEventSchema,
   LedgerSchema,
   ProfileEventSchema,
@@ -20,6 +21,7 @@ const SCHEMAS = {
   'profile-event': ProfileEventSchema,
   ledger: LedgerSchema,
   command: CommandSchema,
+  'exchange-file': ExchangeFileSchema,
 };
 
 const DIRECTORY = join(import.meta.dirname, '../../../spec/schemas');

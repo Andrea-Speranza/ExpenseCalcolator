@@ -18,3 +18,15 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
+      # Test E2E nel Chromium di Playwright, con le librerie di sistema che gli servono.
+      - run: pnpm --filter @expense/web exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      # Se falliscono, il rapporto con le tracce si scarica dalla pagina dell'esecuzione.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7

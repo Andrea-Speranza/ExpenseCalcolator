@@ -12,6 +12,8 @@ export type Route =
   | { readonly page: 'group'; readonly groupId: string; readonly tab: GroupTab }
   /** Spesa nuova (`expenseId` null) o da modificare. */
   | { readonly page: 'expense'; readonly groupId: string; readonly expenseId: string | null }
+  /** Nome, archiviazione ed esportazione del gruppo. */
+  | { readonly page: 'groupSettings'; readonly groupId: string }
   | { readonly page: 'notFound' };
 
 export function isGroupTab(value: string): value is GroupTab {
@@ -32,8 +34,9 @@ export function parseRoute(hash: string): Route {
   if (section === 'spese' && expenseId !== undefined) {
     return { page: 'expense', groupId, expenseId: expenseId === 'nuova' ? null : expenseId };
   }
-  if (isGroupTab(section) && expenseId === undefined)
-    return { page: 'group', groupId, tab: section };
+  if (expenseId !== undefined) return { page: 'notFound' };
+  if (section === 'impostazioni') return { page: 'groupSettings', groupId };
+  if (isGroupTab(section)) return { page: 'group', groupId, tab: section };
   return { page: 'notFound' };
 }
 
@@ -50,6 +53,8 @@ export function routeHref(route: Route): string {
         : `#/gruppi/${encode(route.groupId)}/${route.tab}`;
     case 'expense':
       return `#/gruppi/${encode(route.groupId)}/spese/${route.expenseId === null ? 'nuova' : encode(route.expenseId)}`;
+    case 'groupSettings':
+      return `#/gruppi/${encode(route.groupId)}/impostazioni`;
   }
 }
 

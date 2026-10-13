@@ -1,0 +1,9 @@
+{
+  // Test E2E: girano in Node con Playwright, che guida un browser vero.
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["."]
+}

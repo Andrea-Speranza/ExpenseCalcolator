@@ -6,8 +6,8 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 - **multipiattaforma:** web, Windows, Android;
 - **senza backend:** la condivisione passa dallo storage cloud degli utenti (es. Google Drive).
 
-> **Stato:** Fasi 1 (logica di calcolo) e 2 (eventi, salvataggio, engine) completate; Fase 3 (UI) in corso: la web
-> app funziona in locale nel browser (`pnpm web`).
+> **Stato:** Fasi 1 (logica di calcolo), 2 (eventi, salvataggio, engine) e 3 (UI) completate: la web app
+> funziona in locale nel browser (`pnpm web`). Prossima la Fase 4: app native per Windows e Android.
 > Tutto parte da [docs/PLANNING.md](docs/PLANNING.md).
 
 ## Sviluppo
@@ -16,7 +16,8 @@ Prerequisiti: Node.js ≥ 22.13 e pnpm 10. La versione di pnpm è fissata nel ca
 
 ```sh
 pnpm install          # installa le dipendenze di tutto il workspace
-pnpm check            # formattazione, lint, tipi, confini tra pacchetti e test (lo stesso comando della CI)
+pnpm check            # formattazione, lint, tipi, confini tra pacchetti, test e build (lo stesso comando della CI)
+pnpm e2e              # test E2E della web app in un browser vero (Playwright; in locale usa Edge)
 pnpm test:watch       # test in modalità watch
 pnpm coverage         # test con copertura
 pnpm format           # formatta tutti i file

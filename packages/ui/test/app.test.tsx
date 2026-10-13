@@ -5,7 +5,10 @@ import {
   createManualClock,
   createMemoryStore,
   createSequentialIds,
+  type Engine,
+  exportGroupFile,
   openEngine,
+  serializeExchangeFile,
 } from '@expense/engine';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent, { type UserEvent } from '@testing-library/user-event';
@@ -35,13 +38,17 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-async function renderApp(): Promise<UserEvent> {
-  const engine = await openEngine({
+/** Un dispositivo: engine con salvataggio in memoria e id prevedibili con il prefisso indicato. */
+function memoryEngine(prefix = 't'): Promise<Engine> {
+  return openEngine({
     store: createMemoryStore(),
     clock: createManualClock(),
-    ids: createSequentialIds('t'),
+    ids: createSequentialIds(prefix),
   });
-  render(<App engine={engine} />);
+}
+
+async function renderApp(engine?: Engine): Promise<UserEvent> {
+  render(<App engine={engine ?? (await memoryEngine())} />);
   return userEvent.setup();
 }
 
@@ -151,6 +158,88 @@ describe('app', () => {
     expect(await screen.findByText('Gli importi sommano 10,00 € invece di 30,00 €.')).toBeDefined();
   });
 
+  it('rinomina e archivia il gruppo dalle sue impostazioni', async () => {
+    const user = await renderApp();
+    await createGroup(user);
+
+    await user.click(screen.getByRole('link', { name: 'Impostazioni del gruppo' }));
+    const name = await screen.findByLabelText('Nome del gruppo');
+    await user.clear(name);
+    await user.type(name, 'Vacanza 2026');
+    await user.click(screen.getByRole('button', { name: 'Salva' }));
+    expect(await screen.findByText('Nome salvato.')).toBeDefined();
+    expect(screen.getByRole('link', { name: 'Vacanza 2026' })).toBeDefined();
+
+    await user.click(screen.getByRole('button', { name: 'Archivia il gruppo' }));
+    expect(await screen.findByRole('button', { name: 'Togli dall’archivio' })).toBeDefined();
+
+    window.location.hash = '#/';
+    expect(await screen.findByRole('heading', { name: 'Archiviati' })).toBeDefined();
+    expect(screen.getByText('Vacanza 2026')).toBeDefined();
+  });
+
+  it('importa un gruppo esportato da un altro dispositivo', async () => {
+    // Su un altro dispositivo Anna crea il gruppo, con Luca e una cena da 60 € pagata da lei.
+    const other = await memoryEngine('altro');
+    const created = await other.execute({
+      type: 'CreateGroup',
+      name: 'Cena',
+      me: { name: 'Anna' },
+    });
+    if (!created.ok || created.value.memberId === null) throw new Error('gruppo non creato');
+    const { groupId, memberId: anna } = created.value;
+    const luca = await other.execute({ type: 'AddMember', groupId, name: 'Luca' });
+    if (!luca.ok) throw new Error('membro non aggiunto');
+    const eur = (minor: number) => ({ minor, currency: 'EUR' });
+    await other.execute({
+      type: 'AddExpense',
+      groupId,
+      description: 'Pizzeria',
+      date: '2026-10-13',
+      amounts: {
+        total: eur(6000),
+        paidBy: [{ memberId: anna, amount: eur(6000) }],
+        split: { method: 'equal', memberIds: [anna, luca.value.memberId] },
+      },
+    });
+    const exported = exportGroupFile(other, groupId);
+    if (!exported.ok) throw new Error('esportazione non riuscita');
+    const file = new File([serializeExchangeFile(exported.value)], 'Cena.spese.json', {
+      type: 'application/json',
+    });
+
+    // Luca lo importa sul proprio dispositivo e dice chi è.
+    const user = await renderApp();
+    await user.upload(screen.getByLabelText('File da importare'), file);
+    expect(
+      await screen.findByText(/Importate 4 modifiche in «Cena»\. Apri il gruppo/),
+    ).toBeDefined();
+    await user.click(screen.getByRole('link', { name: 'Apri' }));
+    const lucaRow = (await screen.findByText('Luca')).closest('li');
+    if (lucaRow === null) throw new Error('riga di Luca non trovata');
+    await user.click(within(lucaRow).getByRole('button', { name: 'Sono io' }));
+    expect(await within(lucaRow).findByText('Tu')).toBeDefined();
+
+    await user.click(screen.getByRole('tab', { name: 'Saldi' }));
+    expect(await screen.findByText('+30,00 €')).toBeDefined();
+    expect(screen.getByText('-30,00 €')).toBeDefined();
+
+    // Lo stesso file una seconda volta non porta novità.
+    window.location.hash = '#/';
+    await user.upload(await screen.findByLabelText('File da importare'), file);
+    expect(
+      await screen.findByText('Nessuna novità: queste modifiche erano già presenti.'),
+    ).toBeDefined();
+  });
+
+  it('spiega perché un file non si può importare', async () => {
+    const user = await renderApp();
+    const file = new File(['{"ciao": 1}'], 'altro.json', { type: 'application/json' });
+    await user.upload(screen.getByLabelText('File da importare'), file);
+    expect(
+      await screen.findByText('Questo file non è un gruppo esportato da questa app.'),
+    ).toBeDefined();
+  });
   it('mostra una pagina di errore per gli indirizzi sconosciuti', async () => {
     window.location.hash = '#/gruppi/inesistente';
     await renderApp();

@@ -8,6 +8,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss()],
-  server: { host: 'localhost', strictPort: false },
+  // L'app si carica dal disco (app native) o da localhost: dividerla in più file non la renderebbe più veloce.
+  // L'avviso resta per accorgersi se le dipendenze crescono troppo.
+  build: { chunkSizeWarningLimit: 1000 },
+  server: { host: 'localhost' },
   preview: { host: 'localhost' },
 });

@@ -39,6 +39,15 @@ export interface StorageFailed {
   readonly message: string;
 }
 
+/**
+ * Un file che non si può importare: non è JSON, non è un file di scambio di questa app, oppure l'ha scritto
+ * una versione più recente dell'app (che va aggiornata).
+ */
+export interface InvalidExchangeFile {
+  readonly code: 'InvalidExchangeFile';
+  readonly reason: 'notJson' | 'notExchangeFile' | 'newerVersion';
+}
+
 export type CommandError =
   InvalidInput | NotFound | NoChanges | StorageFailed | ExpenseError | SettlementError;
 

@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.9 (D1, D2, D5–D9 e D11 decise, D12 in parte; Fasi 0, 1 e 2 completate, Fase 3 in corso) · **Ultimo aggiornamento:** 2026-10-13
+> **Stato:** v0.10 (D1, D2, D5–D9 e D11 decise, D12 in parte; Fasi 0, 1, 2 e 3 completate) · **Ultimo aggiornamento:** 2026-10-13
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -717,7 +717,7 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
 2. chiude il processo;
 3. riapre i dati da IndexedDB.
 
-### 11.5 Fase 3 — UI MVP (web app locale, un solo dispositivo) (in corso)
+### 11.5 Fase 3 — UI MVP (web app locale, un solo dispositivo) (completata)
 
 - [x] Scegliere la libreria di componenti: shadcn/ui ([ADR 0008](adr/0008-componenti-ui-shadcn.md)).
 - [x] Impostare la struttura di `ui` e `apps/web`, il routing (hash) e il tema chiaro/scuro (segue il sistema).
@@ -728,20 +728,24 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
   - [x] membri: aggiungi, rinomina, archivia, «sono io»;
   - [x] registra rimborso, anche partendo da un trasferimento suggerito; elimina e ripristina;
   - [x] impostazioni (valuta predefinita, nome). La lingua arriverà con le traduzioni;
-  - [ ] impostazioni del gruppo (nome, archiviazione);
-  - [ ] attività (storico delle modifiche);
-  - [ ] esporta e importa un gruppo come file, come nella CLI.
+  - [x] impostazioni del gruppo: nome e archiviazione. La valuta non si cambia, come nella CLI;
+  - [x] esporta e importa un gruppo come file, nello stesso formato della CLI (`ExchangeFile`, JSON Schema in
+        `spec/schemas`): copia di sicurezza e passaggio a un altro dispositivo o a un'altra persona;
+  - spostata alla Fase 5: attività (storico delle modifiche).
 - [x] Testi in italiano, importi e date formattati con `Intl`.
 - [x] Valuta: le spese usano solo quella del gruppo, ma i saldi si mostrano già per valuta ([ADR 0004](adr/0004-valute.md)).
 - [x] Richiesta di storage persistente nel browser. Manifest e service worker (PWA) rimandati finché la web
       app non sarà pubblicata ([ADR 0009](adr/0009-distribuzione-locale.md)).
 - [x] Test d'integrazione della UI con jsdom e Testing Library: l'app intera, con un engine in memoria.
-- [ ] Test E2E dei percorsi principali con Playwright, in un browser vero.
+- [x] Test E2E con Playwright in un browser vero: uso senza rete, riapertura con i dati in IndexedDB,
+      esportazione e importazione tra due dispositivi (due contesti del browser). In locale con Edge, nella CI
+      con Chromium.
 - [x] Pubblicare il repository su GitHub (fatto dopo la Fase 2).
 - [x] Decidere dove pubblicare la web app: per ora da nessuna parte, solo in locale
       ([ADR 0009](adr/0009-distribuzione-locale.md)).
 
 **Fatto quando:** l'app si usa davvero per un gruppo su un solo dispositivo, anche in modalità aereo.
+Verificato dai test E2E: una volta aperta funziona senza rete e ritrova i dati dopo la riapertura.
 
 ### 11.6 Fase 4 — Shell native (`apps/native`)
 
@@ -761,7 +765,10 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
 - [ ] Canale `folder` (plugin): Tauri fs su desktop, File System Access API sul web con Chromium.
 - [ ] Gli altri canali senza account (`file`, poi `p2p`) secondo l'ordine scelto in D12.
 - [ ] Test di simulazione con più dispositivi, con un canale in memoria.
-- [ ] Esportazione e importazione del gruppo come file (ripiego universale).
+- [x] Esportazione e importazione del gruppo come file (ripiego universale): anticipate in Fase 3, nella CLI e
+      nella web app. Il canale `file` le riuserà.
+- [ ] Schermata «attività» (storico delle modifiche), spostata dalla Fase 3: serve quando più dispositivi o
+      persone modificano lo stesso gruppo.
 - [ ] Sync del profilo e passaggio di un gruppo da locale a personale ("salva nel cloud").
 
 **Fatto quando:** due PC che condividono la stessa cartella sincronizzata (es. con Google Drive per desktop)
@@ -861,7 +868,8 @@ senza alcun server nostro.
 
 - Monorepo con **pnpm workspaces**, **TypeScript 6** in modalità strict. Non usiamo la 7 perché
   typescript-eslint non la supporta ancora: da rivalutare quando la supporterà.
-- **Vite** per la build, **Vitest** per i test, **fast-check** per i test property-based, **Playwright** per i test E2E.
+- **Vite** per la build, **Vitest** per i test, **fast-check** per i test property-based, **Playwright** per i test E2E
+  (in locale con Edge già installato, nella CI con il Chromium di Playwright).
 - **Zod 4** per modelli dati, validazione e generazione del JSON Schema (ADR 0003).
 - **ESLint** con il set raccomandato del plugin ufficiale di ogni linguaggio in uso:
 
@@ -892,7 +900,7 @@ senza alcun server nostro.
   web, Node per la CLI. I test si controllano con il `tsconfig.json` della radice, che include i tipi di Node
   e DOM.
 - **Un solo comando di verifica.** `pnpm check` esegue in sequenza formattazione, lint, controllo dei tipi,
-  confini e test. È lo stesso comando che usa la CI.
+  confini, test e build della web app. La CI esegue lo stesso comando e in più i test E2E (`pnpm e2e`).
 
 **Regole controllate automaticamente:**
 

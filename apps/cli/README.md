@@ -36,24 +36,24 @@ spese trasferimenti montagna
 
 ## Comandi
 
-| Comando                                                         | Cosa fa                                                       |
-| --------------------------------------------------------------- | ------------------------------------------------------------- |
-| `gruppi`                                                        | Elenca i gruppi                                               |
-| `gruppo crea <nome> [--io <nome>] [--valuta <codice>]`          | Crea un gruppo; con `--io` ne fai parte anche tu              |
-| `gruppo mostra <gruppo>`                                        | Membri, spese, rimborsi ed eventuali modifiche contemporanee  |
-| `gruppo rinomina` · `archivia` · `riattiva`                     | Cambia nome o archivia il gruppo                              |
-| `gruppo io <gruppo> <membro>`                                   | Indica quale membro sei tu ("nessuno" se non ne fai parte)    |
-| `membro aggiungi` · `rinomina` · `archivia` · `riattiva`        | Gestione dei membri                                           |
-| `spesa aggiungi <gruppo> <descrizione> <importo>`               | Registra una spesa                                            |
-| `spesa modifica <gruppo> <spesa>`                               | Modifica solo ciò che indichi                                 |
-| `spesa elimina` · `ripristina`                                  | Elimina (resta nello storico) o ripristina                    |
-| `rimborso aggiungi <gruppo> <da> <a> <importo>`                 | Registra un rimborso                                          |
-| `rimborso elimina` · `ripristina`                               | Elimina o ripristina un rimborso                              |
-| `saldi <gruppo>`                                                | Saldo di ogni membro, per valuta                              |
-| `trasferimenti <gruppo> [--per-coppia]`                         | Pagamenti suggeriti per pareggiare i conti                    |
-| `impostazioni [--valuta] [--lingua] [--nome]`                   | Mostra o cambia le impostazioni personali                     |
-| `esporta <gruppo> <file>` · `importa <file>`                    | Passa un gruppo a un altro dispositivo o persona tramite file |
-| `registro verifica` · `saldi` · `trasferimenti <registro.json>` | Calcoli su un registro letto da file, senza salvare nulla     |
+| Comando                                                         | Cosa fa                                                                                      |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `gruppi`                                                        | Elenca i gruppi                                                                              |
+| `gruppo crea <nome> [--io <nome>] [--valuta <codice>]`          | Crea un gruppo; con `--io` ne fai parte anche tu                                             |
+| `gruppo mostra <gruppo>`                                        | Membri, spese, rimborsi ed eventuali modifiche contemporanee                                 |
+| `gruppo rinomina` · `archivia` · `riattiva`                     | Cambia nome o archivia il gruppo                                                             |
+| `gruppo io <gruppo> <membro>`                                   | Indica quale membro sei tu ("nessuno" se non ne fai parte)                                   |
+| `membro aggiungi` · `rinomina` · `archivia` · `riattiva`        | Gestione dei membri                                                                          |
+| `spesa aggiungi <gruppo> <descrizione> <importo>`               | Registra una spesa                                                                           |
+| `spesa modifica <gruppo> <spesa>`                               | Modifica solo ciò che indichi                                                                |
+| `spesa elimina` · `ripristina`                                  | Elimina (resta nello storico) o ripristina                                                   |
+| `rimborso aggiungi <gruppo> <da> <a> <importo>`                 | Registra un rimborso                                                                         |
+| `rimborso elimina` · `ripristina`                               | Elimina o ripristina un rimborso                                                             |
+| `saldi <gruppo>`                                                | Saldo di ogni membro, per valuta                                                             |
+| `trasferimenti <gruppo> [--per-coppia]`                         | Pagamenti suggeriti per pareggiare i conti                                                   |
+| `impostazioni [--valuta] [--lingua] [--nome]`                   | Mostra o cambia le impostazioni personali                                                    |
+| `esporta <gruppo> <file>` · `importa <file>`                    | Passa un gruppo a un altro dispositivo o persona tramite file (stesso formato della web app) |
+| `registro verifica` · `saldi` · `trasferimenti <registro.json>` | Calcoli su un registro letto da file, senza salvare nulla                                    |
 
 Ogni comando ha il suo aiuto: `spese spesa aggiungi --help`. Con `--json` il risultato esce in JSON, per altri
 programmi. Exit code: `0` tutto bene, `1` errore nei dati, `2` comando usato in modo sbagliato.

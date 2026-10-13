@@ -1,4 +1,6 @@
+import { Button } from '@expense/ui/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@expense/ui/components/ui/tabs';
+import { Settings2Icon } from 'lucide-react';
 import { NotFound, PageHeader } from '../components/layout';
 import { useQuery } from '../engine/store';
 import { activeMembers, memberNames } from '../group-data';
@@ -25,6 +27,16 @@ export function GroupScreen({
       <PageHeader
         back={{ href: routeHref({ page: 'groups' }), label: 'Gruppi' }}
         title={group.name}
+        actions={
+          <Button variant="outline" size="icon" asChild>
+            <a
+              href={routeHref({ page: 'groupSettings', groupId })}
+              aria-label="Impostazioni del gruppo"
+            >
+              <Settings2Icon />
+            </a>
+          </Button>
+        }
         description={[
           group.baseCurrency,
           people === 1 ? '1 persona' : `${String(people)} persone`,

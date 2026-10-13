@@ -4,9 +4,17 @@ export type { CalculationError, LedgerReport } from './calculate';
 export type { CommandResult, CommandResults } from './commands';
 export { openEngine } from './engine';
 export type { Engine, EngineDependencies, QueryResults, ReceiveSummary } from './engine';
+export {
+  exportGroupFile,
+  importExchangeFile,
+  parseExchangeFile,
+  serializeExchangeFile,
+} from './exchange';
+export type { ImportSummary } from './exchange';
 export type {
   CommandError,
   InputIssue,
+  InvalidExchangeFile,
   InvalidInput,
   NoChanges,
   NotFound,
@@ -50,6 +58,7 @@ export type {
 export type {
   Command,
   CommandType,
+  ExchangeFile,
   ExpenseAmounts,
   Ledger,
   MemberAmount,

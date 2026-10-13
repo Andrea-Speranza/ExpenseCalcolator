@@ -15,7 +15,7 @@ const CODE_FILES = ['**/*.{js,mjs,cjs,ts,mts,cts,tsx}'];
 const JS_FILES = ['**/*.{js,mjs,cjs}'];
 const TEST_FILES = ['{packages,apps}/**/test/**/*.{ts,tsx}'];
 // Codice React: la UI condivisa e la shell web.
-const REACT_FILES = ['{packages/ui,apps/web}/**/*.{ts,tsx}'];
+const REACT_FILES = ['{packages/ui,apps/web}/src/**/*.{ts,tsx}'];
 // JSON con commenti: i tsconfig e le impostazioni di VS Code.
 const JSONC_FILES = ['**/tsconfig*.json', '.vscode/*.json'];
 
@@ -25,7 +25,14 @@ const PLATFORM_AGNOSTIC_SOURCES = ['packages/{schema,core,sync,engine}/src/**/*.
 const CLOCK_MESSAGE = "Usa la porta Clock: questo codice non deve leggere l'ora di sistema.";
 
 export default defineConfig(
-  globalIgnores(['**/node_modules/', '**/dist/', '**/coverage/', 'spec/schemas/']),
+  globalIgnores([
+    '**/node_modules/',
+    '**/dist/',
+    '**/coverage/',
+    '**/test-results/',
+    '**/playwright-report/',
+    'spec/schemas/',
+  ]),
 
   // JavaScript e TypeScript: raccomandazioni di ESLint e di typescript-eslint nella versione più
   // completa (strict + stylistic, con controllo dei tipi), come suggerito dalla documentazione.
