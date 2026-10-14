@@ -10,6 +10,8 @@ Le novità si scrivono man mano sotto «Non rilasciato», divise in **Aggiunto**
 
 ## [Non rilasciato]
 
+## [0.1.0-alpha.1] - 2026-10-14
+
 Prima versione di prova.
 
 ### Aggiunto
@@ -26,4 +28,5 @@ Prima versione di prova.
 - Interfaccia in italiano e in inglese: all'inizio nella lingua del dispositivo, poi a scelta nelle
   impostazioni, dove si vede anche la versione dell'app.
 
-[Non rilasciato]: https://github.com/Andrea-Speranza/ExpenseCalcolator/commits/main
+[Non rilasciato]: https://github.com/Andrea-Speranza/ExpenseCalcolator/compare/v0.1.0-alpha.1...HEAD
+[0.1.0-alpha.1]: https://github.com/Andrea-Speranza/ExpenseCalcolator/releases/tag/v0.1.0-alpha.1
