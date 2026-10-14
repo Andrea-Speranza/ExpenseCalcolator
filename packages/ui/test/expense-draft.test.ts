@@ -9,6 +9,10 @@ import {
   percentageProgress,
   readDraft,
 } from '../src/expense-draft';
+import { createUiI18n } from '../src/i18n';
+
+/** Valori dei campi formattati come in italiano (es. "12,50"). */
+const { format } = createUiI18n('it');
 
 const member = (memberId: string, name: string): MemberView => ({
   memberId,
@@ -117,20 +121,20 @@ describe('readDraft', () => {
     expect(read).toEqual({
       ok: false,
       error: {
-        description: 'Scrivi una descrizione.',
-        date: 'Indica la data.',
-        amount: 'In EUR si usano al massimo 2 decimali.',
-        payments: { a: 'Non è un importo valido (esempi: 12 oppure 12,50).' },
-        members: { l: 'La percentuale supera il 100%.' },
+        description: { code: 'descriptionRequired' },
+        date: { code: 'dateRequired' },
+        amount: { code: 'tooManyDecimals', currency: 'EUR', max: 2 },
+        payments: { a: { code: 'invalidAmount' } },
+        members: { l: { code: 'percentageOver100' } },
       },
     });
     expect(readDraft(draft({ included: {} }), MEMBERS, 'EUR')).toMatchObject({
       ok: false,
-      error: { split: 'Scegli almeno una persona.' },
+      error: { split: { code: 'participantsRequired' } },
     });
     expect(readDraft(draft({ payer: '' }), MEMBERS, 'EUR')).toMatchObject({
       ok: false,
-      error: { payer: 'Indica chi ha pagato.' },
+      error: { payer: { code: 'payerRequired' } },
     });
   });
 });
@@ -156,7 +160,7 @@ describe('modifica di una spesa', () => {
   };
 
   it('il form riparte dai valori salvati e senza modifiche non cambia nulla', () => {
-    const loaded = draftFromExpense(expense);
+    const loaded = draftFromExpense(expense, format);
     expect(loaded).toMatchObject({
       amount: '90,00',
       payerMode: 'single',
@@ -169,7 +173,7 @@ describe('modifica di una spesa', () => {
 
   it('indica solo i campi cambiati', () => {
     const read = readDraft(
-      { ...draftFromExpense(expense), notes: '', amount: '60', time: '20:30' },
+      { ...draftFromExpense(expense, format), notes: '', amount: '60', time: '20:30' },
       MEMBERS,
       'EUR',
     );
@@ -185,23 +189,26 @@ describe('modifica di una spesa', () => {
   });
 
   it('riconosce più pagatori e le altre modalità di divisione', () => {
-    const loaded = draftFromExpense({
-      ...expense,
-      amounts: {
-        total: eur(9000),
-        paidBy: [
-          { memberId: 'a', amount: eur(5000) },
-          { memberId: 'l', amount: eur(4000) },
-        ],
-        split: {
-          method: 'percentage',
-          percentages: [
-            { memberId: 'a', basisPoints: 2550 },
-            { memberId: 's', basisPoints: 7450 },
+    const loaded = draftFromExpense(
+      {
+        ...expense,
+        amounts: {
+          total: eur(9000),
+          paidBy: [
+            { memberId: 'a', amount: eur(5000) },
+            { memberId: 'l', amount: eur(4000) },
           ],
+          split: {
+            method: 'percentage',
+            percentages: [
+              { memberId: 'a', basisPoints: 2550 },
+              { memberId: 's', basisPoints: 7450 },
+            ],
+          },
         },
       },
-    });
+      format,
+    );
     expect(loaded).toMatchObject({
       payerMode: 'multiple',
       payments: { a: '50,00', l: '40,00' },

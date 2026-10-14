@@ -17,7 +17,7 @@ import { ErrorAlert } from '../components/error-alert';
 import { PaidBy } from '../components/paid-by';
 import { SplitTags } from '../components/split-tags';
 import { useCommand } from '../engine/store';
-import { formatMoney, formatWhen, lastChange } from '../format';
+import { lastChange } from '../format';
 import {
   activeMembers,
   type ExpenseFilter,
@@ -25,20 +25,22 @@ import {
   memberNames,
   newestFirst,
 } from '../group-data';
+import { K, useI18n } from '../i18n';
 import type { Names } from '../messages';
 import { routeHref } from '../router';
 
-const FILTERS: readonly { readonly value: ExpenseFilter; readonly label: string }[] = [
-  { value: 'all', label: 'Tutte' },
-  { value: 'paidByMe', label: 'Pagate da me' },
-  { value: 'paidForMe', label: 'Pagate per me' },
-];
+const FILTERS = [
+  { value: 'all', label: K.expenses.filters.all },
+  { value: 'paidByMe', label: K.expenses.filters.paidByMe },
+  { value: 'paidForMe', label: K.expenses.filters.paidForMe },
+] as const satisfies readonly { readonly value: ExpenseFilter; readonly label: string }[];
 
 function isFilter(value: string): value is ExpenseFilter {
   return FILTERS.some((filter) => filter.value === value);
 }
 
 export function ExpensesTab({ group }: { readonly group: GroupView }) {
+  const { t } = useI18n();
   const [filter, setFilter] = useState<ExpenseFilter>('all');
   const names = memberNames(group);
   const visible = group.expenses.filter((expense) => matchesFilter(expense, filter, group.me));
@@ -50,13 +52,13 @@ export function ExpensesTab({ group }: { readonly group: GroupView }) {
     return (
       <Empty className="border">
         <EmptyHeader>
-          <EmptyTitle>Prima aggiungi chi partecipa</EmptyTitle>
-          <EmptyDescription>Le spese si dividono tra i membri del gruppo.</EmptyDescription>
+          <EmptyTitle>{t(K.expenses.noMembers.title)}</EmptyTitle>
+          <EmptyDescription>{t(K.expenses.noMembers.description)}</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button asChild>
             <a href={routeHref({ page: 'group', groupId: group.groupId, tab: 'membri' })}>
-              Aggiungi membri
+              {t(K.expenses.noMembers.action)}
             </a>
           </Button>
         </EmptyContent>
@@ -71,7 +73,7 @@ export function ExpensesTab({ group }: { readonly group: GroupView }) {
         <Button asChild>
           <a href={newExpense}>
             <PlusIcon data-icon="inline-start" />
-            Nuova spesa
+            {t(K.expenses.new)}
           </a>
         </Button>
       </div>
@@ -85,12 +87,12 @@ export function ExpensesTab({ group }: { readonly group: GroupView }) {
             // Un nuovo clic sul filtro attivo lo deseleziona: si torna a "Tutte".
             setFilter(isFilter(value) ? value : 'all');
           }}
-          aria-label="Filtra le spese"
+          aria-label={t(K.expenses.filters.label)}
           className="flex-wrap"
         >
           {FILTERS.map(({ value, label }) => (
             <ToggleGroupItem key={value} value={value}>
-              {label}
+              {t(label)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
@@ -102,10 +104,10 @@ export function ExpensesTab({ group }: { readonly group: GroupView }) {
               <ReceiptIcon />
             </EmptyMedia>
             <EmptyTitle>
-              {filter === 'all' ? 'Nessuna spesa' : 'Nessuna spesa con questo filtro'}
+              {t(filter === 'all' ? K.expenses.empty.title : K.expenses.empty.filtered)}
             </EmptyTitle>
             {filter === 'all' && (
-              <EmptyDescription>Registra la prima spesa del gruppo.</EmptyDescription>
+              <EmptyDescription>{t(K.expenses.empty.description)}</EmptyDescription>
             )}
           </EmptyHeader>
         </Empty>
@@ -114,7 +116,7 @@ export function ExpensesTab({ group }: { readonly group: GroupView }) {
       )}
       {deleted.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Eliminate</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">{t(K.expenses.deleted)}</h2>
           <ExpenseList group={group} expenses={deleted} names={names} />
         </section>
       )}
@@ -132,6 +134,7 @@ function Totals({
   readonly filter: ExpenseFilter;
   readonly me: string | null;
 }) {
+  const { t, format } = useI18n();
   const totals = new Map<string, number>();
   const add = ({ currency, minor }: Money) => {
     totals.set(currency, (totals.get(currency) ?? 0) + minor);
@@ -144,17 +147,20 @@ function Totals({
     }
   }
   const amounts: Money[] = [...totals].map(([currency, minor]) => ({ currency, minor }));
-  const label =
+  const label = t(
     filter === 'all'
-      ? 'Totale spese'
+      ? K.expenses.totals.all
       : filter === 'paidByMe'
-        ? 'Hai pagato'
-        : 'Totale di queste spese';
+        ? K.expenses.totals.paidByMe
+        : K.expenses.totals.filtered,
+  );
   return (
     <div className="flex flex-col">
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className="font-heading text-xl font-semibold tabular-nums">
-        {amounts.length === 0 ? '—' : amounts.map((amount) => formatMoney(amount)).join(' · ')}
+        {amounts.length === 0
+          ? '—'
+          : amounts.map((amount) => format.money(amount)).join(t(K.common.separator))}
       </span>
     </div>
   );
@@ -187,6 +193,8 @@ function ExpenseRow({
   readonly expense: ExpenseView;
   readonly names: Names;
 }) {
+  const i18n = useI18n();
+  const { t, format } = i18n;
   const command = useCommand();
   const { groupId } = group;
   const { expenseId, deleted } = expense;
@@ -204,27 +212,27 @@ function ExpenseRow({
               {expense.description}
             </span>
             <span className="font-medium whitespace-nowrap tabular-nums">
-              {formatMoney(expense.amounts.total)}
+              {format.money(expense.amounts.total)}
             </span>
           </span>
           <span className="text-sm text-muted-foreground">
-            {formatWhen(expense.date, expense.time)} ·{' '}
+            {format.dateTime(expense.date, expense.time)}
+            {t(K.common.separator)}
             <PaidBy expense={expense} names={names} me={group.me} />
           </span>
           <SplitTags split={expense.amounts.split} names={names} me={group.me} />
-          <span className="text-xs text-muted-foreground">{lastChange(expense)}</span>
+          <span className="text-xs text-muted-foreground">{lastChange(i18n, expense)}</span>
           {expense.conflicts.length > 0 && (
-            <Badge variant="outline">Modificata da più dispositivi: da controllare</Badge>
+            <Badge variant="outline">{t(K.expenses.conflict)}</Badge>
           )}
         </a>
         <div className="pt-1.5">
           <DeleteOrRestoreButton
             deleted={deleted}
-            label={`la spesa «${expense.description}»`}
+            label={t(K.expenses.deleteLabel, { name: expense.description })}
             texts={{
-              title: `Eliminare «${expense.description}»?`,
-              description:
-                'Non conterà più nei saldi, che verranno ricalcolati. Resterà tra le spese eliminate, da dove potrai ripristinarla.',
+              title: t(K.expenses.deleteTitle, { name: expense.description }),
+              description: t(K.expenses.deleteDescription),
             }}
             disabled={command.pending}
             onDelete={() => {

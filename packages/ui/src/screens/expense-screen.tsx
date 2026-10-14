@@ -18,7 +18,7 @@ import { Tabs, TabsList, TabsTrigger } from '@expense/ui/components/ui/tabs';
 import { Textarea } from '@expense/ui/components/ui/textarea';
 import { CircleAlertIcon, Trash2Icon } from 'lucide-react';
 import { type SubmitEvent, useId, useState } from 'react';
-import { parseAmount } from '../amounts';
+import { type InputProblem, parseAmount } from '../amounts';
 import { ConfirmDelete } from '../components/delete-entry';
 import { ErrorAlert } from '../components/error-alert';
 import { NotFound, PageHeader } from '../components/layout';
@@ -28,6 +28,7 @@ import {
   draftFromExpense,
   type ExpenseDraft,
   expenseChanges,
+  type FormProblem,
   expenseMembers,
   exactProgress,
   newDraft,
@@ -35,23 +36,31 @@ import {
   readDraft,
   type SplitMethod,
 } from '../expense-draft';
-import { entryTimes, formatMoney, formatPercentage, today } from '../format';
+import { expenseTimes, today } from '../format';
 import { activeMembers, memberNames } from '../group-data';
+import { K, type UiI18n, useI18n } from '../i18n';
+import { describeProblem } from '../messages';
 import { navigate, routeHref } from '../router';
 
 /** Valore della scelta "Più persone" tra i pagatori: non può essere un id (ammette solo [A-Za-z0-9_-]). */
 const MULTIPLE_PAYERS = '*';
 
-const METHODS: readonly {
+const { methods } = K.expense;
+const METHODS = [
+  { value: 'equal', label: methods.equal, hint: methods.equalHint },
+  { value: 'exact', label: methods.exact, hint: methods.exactHint },
+  { value: 'percentage', label: methods.percentage, hint: methods.percentageHint },
+  { value: 'shares', label: methods.shares, hint: methods.sharesHint },
+] as const satisfies readonly {
   readonly value: SplitMethod;
   readonly label: string;
   readonly hint: string;
-}[] = [
-  { value: 'equal', label: 'Uguale', hint: 'Ognuno paga la stessa parte.' },
-  { value: 'exact', label: 'Importi', hint: 'Scrivi quanto spetta a ciascuno.' },
-  { value: 'percentage', label: '%', hint: 'Scrivi la percentuale di ciascuno.' },
-  { value: 'shares', label: 'Quote', hint: 'Chi ha 2 quote paga il doppio di chi ne ha 1.' },
-];
+}[];
+
+/** Testo di un problema in un campo, se c'è. */
+function problemText(i18n: UiI18n, problem: FormProblem | undefined): string | undefined {
+  return problem === undefined ? undefined : describeProblem(i18n, problem);
+}
 
 function isSplitMethod(value: string): value is SplitMethod {
   return METHODS.some((method) => method.value === value);
@@ -64,12 +73,13 @@ export function ExpenseScreen({
   readonly groupId: string;
   readonly expenseId: string | null;
 }) {
+  const { t } = useI18n();
   const result = useQuery({ type: 'GetGroup', groupId });
-  if (!result.ok) return <NotFound message="Questo gruppo non esiste su questo dispositivo." />;
+  if (!result.ok) return <NotFound message={t(K.common.groupNotHere)} />;
   const group = result.value;
   if (expenseId === null) return <ExpenseForm key="nuova" group={group} expense={null} />;
   const expense = group.expenses.find((entry) => entry.expenseId === expenseId);
-  if (expense === undefined) return <NotFound message="Questa spesa non esiste." />;
+  if (expense === undefined) return <NotFound message={t(K.expense.notFound)} />;
   return <ExpenseForm key={expenseId} group={group} expense={expense} />;
 }
 
@@ -80,10 +90,12 @@ function ExpenseForm({
   readonly group: GroupView;
   readonly expense: ExpenseView | null;
 }) {
+  const i18n = useI18n();
+  const { t } = i18n;
   const [draft, setDraft] = useState<ExpenseDraft>(() =>
     expense === null
       ? newDraft(activeMembers(group), group.me, today())
-      : draftFromExpense(expense),
+      : draftFromExpense(expense, i18n.format),
   );
   const [errors, setErrors] = useState<DraftErrors>({});
   const command = useCommand();
@@ -149,14 +161,14 @@ function ExpenseForm({
     <>
       <PageHeader
         back={{ href: routeHref(back), label: group.name }}
-        title={expense === null ? 'Nuova spesa' : 'Modifica spesa'}
-        description={expense === null ? undefined : entryTimes(expense, 'Inserita')}
+        title={t(expense === null ? K.expense.newTitle : K.expense.editTitle)}
+        description={expense === null ? undefined : expenseTimes(i18n, expense)}
       />
       <div className="flex flex-col gap-4">
         {expense?.deleted === true && (
           <Alert>
             <CircleAlertIcon />
-            <AlertDescription>Questa spesa è eliminata: non conta nei saldi.</AlertDescription>
+            <AlertDescription>{t(K.expense.deletedNotice)}</AlertDescription>
             <AlertAction>
               <Button
                 size="sm"
@@ -170,7 +182,7 @@ function ExpenseForm({
                   });
                 }}
               >
-                Ripristina
+                {t(K.common.restore)}
               </Button>
             </AlertAction>
           </Alert>
@@ -178,10 +190,7 @@ function ExpenseForm({
         {expense !== null && expense.conflicts.length > 0 && (
           <Alert>
             <CircleAlertIcon />
-            <AlertDescription>
-              Questa spesa è stata modificata da più dispositivi nello stesso momento: controlla che
-              i dati siano giusti e salva.
-            </AlertDescription>
+            <AlertDescription>{t(K.expense.conflict)}</AlertDescription>
           </Alert>
         )}
         <form
@@ -193,22 +202,22 @@ function ExpenseForm({
         >
           <FieldGroup>
             <Field data-invalid={errors.description !== undefined}>
-              <FieldLabel htmlFor={`${id}-description`}>Descrizione</FieldLabel>
+              <FieldLabel htmlFor={`${id}-description`}>{t(K.expense.description)}</FieldLabel>
               <Input
                 id={`${id}-description`}
                 value={draft.description}
                 onChange={(event) => {
                   update({ description: event.target.value });
                 }}
-                placeholder="Es. Cena al ristorante"
+                placeholder={t(K.expense.descriptionPlaceholder)}
                 maxLength={200}
                 aria-invalid={errors.description !== undefined}
                 autoFocus={expense === null}
               />
-              <FieldError>{errors.description}</FieldError>
+              <FieldError>{problemText(i18n, errors.description)}</FieldError>
             </Field>
             <Field data-invalid={errors.amount !== undefined}>
-              <FieldLabel htmlFor={`${id}-amount`}>Importo ({currency})</FieldLabel>
+              <FieldLabel htmlFor={`${id}-amount`}>{t(K.common.amountIn, { currency })}</FieldLabel>
               <Input
                 id={`${id}-amount`}
                 inputMode="decimal"
@@ -216,14 +225,14 @@ function ExpenseForm({
                 onChange={(event) => {
                   update({ amount: event.target.value });
                 }}
-                placeholder="0,00"
+                placeholder={t(K.common.amountPlaceholder)}
                 aria-invalid={errors.amount !== undefined}
               />
-              <FieldError>{errors.amount}</FieldError>
+              <FieldError>{problemText(i18n, errors.amount)}</FieldError>
             </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field data-invalid={errors.date !== undefined}>
-                <FieldLabel htmlFor={`${id}-date`}>Data</FieldLabel>
+                <FieldLabel htmlFor={`${id}-date`}>{t(K.common.date)}</FieldLabel>
                 <Input
                   id={`${id}-date`}
                   type="date"
@@ -233,10 +242,10 @@ function ExpenseForm({
                   }}
                   aria-invalid={errors.date !== undefined}
                 />
-                <FieldError>{errors.date}</FieldError>
+                <FieldError>{problemText(i18n, errors.date)}</FieldError>
               </Field>
               <Field>
-                <FieldLabel htmlFor={`${id}-time`}>Ora (facoltativa)</FieldLabel>
+                <FieldLabel htmlFor={`${id}-time`}>{t(K.expense.time)}</FieldLabel>
                 <Input
                   id={`${id}-time`}
                   type="time"
@@ -267,19 +276,19 @@ function ExpenseForm({
 
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor={`${id}-category`}>Categoria (facoltativa)</FieldLabel>
+              <FieldLabel htmlFor={`${id}-category`}>{t(K.expense.category)}</FieldLabel>
               <Input
                 id={`${id}-category`}
                 value={draft.category}
                 onChange={(event) => {
                   update({ category: event.target.value });
                 }}
-                placeholder="Es. Cibo, Trasporti"
+                placeholder={t(K.expense.categoryPlaceholder)}
                 maxLength={60}
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor={`${id}-notes`}>Note (facoltative)</FieldLabel>
+              <FieldLabel htmlFor={`${id}-notes`}>{t(K.expense.notes)}</FieldLabel>
               <Textarea
                 id={`${id}-notes`}
                 value={draft.notes}
@@ -296,9 +305,8 @@ function ExpenseForm({
             {expense !== null && !expense.deleted && (
               <ConfirmDelete
                 texts={{
-                  title: `Eliminare «${expense.description}»?`,
-                  description:
-                    'Non conterà più nei saldi, che verranno ricalcolati. Resterà tra le spese eliminate, da dove potrai ripristinarla.',
+                  title: t(K.expenses.deleteTitle, { name: expense.description }),
+                  description: t(K.expenses.deleteDescription),
                 }}
                 onConfirm={() => {
                   void remove(expense.expenseId);
@@ -306,16 +314,16 @@ function ExpenseForm({
               >
                 <Button type="button" variant="destructive" disabled={command.pending}>
                   <Trash2Icon data-icon="inline-start" />
-                  Elimina
+                  {t(K.common.delete)}
                 </Button>
               </ConfirmDelete>
             )}
             <div className="ml-auto flex gap-2">
               <Button variant="outline" asChild>
-                <a href={routeHref(back)}>Annulla</a>
+                <a href={routeHref(back)}>{t(K.common.cancel)}</a>
               </Button>
               <Button type="submit" disabled={command.pending}>
-                Salva
+                {t(K.common.save)}
               </Button>
             </div>
           </div>
@@ -341,10 +349,12 @@ function Payers({
   currency,
   update,
 }: SectionProps & { readonly id: string }) {
+  const i18n = useI18n();
+  const { t } = i18n;
   return (
     <FieldSet>
       <Field data-invalid={errors.payer !== undefined}>
-        <FieldLabel htmlFor={`${id}-payer`}>Chi ha pagato</FieldLabel>
+        <FieldLabel htmlFor={`${id}-payer`}>{t(K.expense.payer)}</FieldLabel>
         <NativeSelect
           id={`${id}-payer`}
           className="w-full"
@@ -359,15 +369,19 @@ function Payers({
           }}
           aria-invalid={errors.payer !== undefined}
         >
-          {draft.payer === '' && <NativeSelectOption value="">Scegli…</NativeSelectOption>}
+          {draft.payer === '' && (
+            <NativeSelectOption value="">{t(K.common.choose)}</NativeSelectOption>
+          )}
           {members.map(({ memberId, name }) => (
             <NativeSelectOption key={memberId} value={memberId}>
               {name}
             </NativeSelectOption>
           ))}
-          <NativeSelectOption value={MULTIPLE_PAYERS}>Più persone…</NativeSelectOption>
+          <NativeSelectOption value={MULTIPLE_PAYERS}>
+            {t(K.expense.multiplePayers)}
+          </NativeSelectOption>
         </NativeSelect>
-        <FieldError>{errors.payer}</FieldError>
+        <FieldError>{problemText(i18n, errors.payer)}</FieldError>
       </Field>
       {draft.payerMode === 'multiple' && (
         <MemberInputs
@@ -386,10 +400,12 @@ function Payers({
 }
 
 function SplitEditor({ draft, members, errors, currency, update }: SectionProps) {
+  const i18n = useI18n();
+  const { t } = i18n;
   const method = METHODS.find(({ value }) => value === draft.method);
   return (
     <FieldSet>
-      <FieldLegend>Come dividere</FieldLegend>
+      <FieldLegend>{t(K.expense.split)}</FieldLegend>
       <Tabs
         value={draft.method}
         onValueChange={(value) => {
@@ -399,12 +415,12 @@ function SplitEditor({ draft, members, errors, currency, update }: SectionProps)
         <TabsList className="w-full">
           {METHODS.map(({ value, label }) => (
             <TabsTrigger key={value} value={value}>
-              {label}
+              {t(label)}
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
-      {method !== undefined && <FieldDescription>{method.hint}</FieldDescription>}
+      {method !== undefined && <FieldDescription>{t(method.hint)}</FieldDescription>}
       {draft.method === 'equal' ? (
         <EqualSplit draft={draft} members={members} currency={currency} update={update} />
       ) : (
@@ -419,7 +435,11 @@ function SplitEditor({ draft, members, errors, currency, update }: SectionProps)
           }
           errors={errors.members}
           suffix={
-            draft.method === 'exact' ? currency : draft.method === 'percentage' ? '%' : 'quote'
+            draft.method === 'exact'
+              ? currency
+              : draft.method === 'percentage'
+                ? '%'
+                : t(K.expense.sharesUnit)
           }
           inputMode={draft.method === 'shares' ? 'numeric' : 'decimal'}
           onChange={(memberId, value) => {
@@ -431,12 +451,13 @@ function SplitEditor({ draft, members, errors, currency, update }: SectionProps)
         />
       )}
       <SplitProgress draft={draft} members={members} currency={currency} />
-      {errors.split !== undefined && <FieldError>{errors.split}</FieldError>}
+      {errors.split !== undefined && <FieldError>{problemText(i18n, errors.split)}</FieldError>}
     </FieldSet>
   );
 }
 
 function EqualSplit({ draft, members, currency, update }: Omit<SectionProps, 'errors'>) {
+  const { t, format } = useI18n();
   const id = useId();
   const total = parseAmount(draft.amount, currency);
   const count = members.filter(({ memberId }) => draft.included[memberId] === true).length;
@@ -457,10 +478,10 @@ function EqualSplit({ draft, members, currency, update }: Omit<SectionProps, 'er
             }}
           />
           <Label htmlFor={`${id}-all`} className="flex-1 font-semibold">
-            Tutti
+            {t(K.expense.all)}
           </Label>
           <span className="text-xs text-muted-foreground">
-            {count} di {members.length}
+            {t(K.expense.selected, { selected: count, total: members.length })}
           </span>
         </li>
         {members.map(({ memberId, name }) => (
@@ -480,7 +501,9 @@ function EqualSplit({ draft, members, currency, update }: Omit<SectionProps, 'er
       </ul>
       {total.ok && count > 0 && (
         <p className="text-sm text-muted-foreground">
-          Circa {formatMoney({ minor: Math.round(total.value.minor / count), currency })} a testa.
+          {t(K.expense.perHead, {
+            amount: format.money({ minor: Math.round(total.value.minor / count), currency }),
+          })}
         </p>
       )}
     </div>
@@ -497,11 +520,12 @@ function MemberInputs({
 }: {
   readonly members: readonly MemberView[];
   readonly values: Readonly<Record<string, string>>;
-  readonly errors: Readonly<Record<string, string>> | undefined;
+  readonly errors: Readonly<Record<string, InputProblem>> | undefined;
   readonly suffix: string;
   readonly inputMode: 'decimal' | 'numeric';
   readonly onChange: (memberId: string, value: string) => void;
 }) {
+  const i18n = useI18n();
   const id = useId();
   return (
     <ul className="flex flex-col divide-y rounded-xl border">
@@ -525,7 +549,9 @@ function MemberInputs({
               />
               <span className="w-10 text-sm text-muted-foreground">{suffix}</span>
             </div>
-            {error !== undefined && <p className="text-sm text-destructive">{error}</p>}
+            {error !== undefined && (
+              <p className="text-sm text-destructive">{describeProblem(i18n, error)}</p>
+            )}
           </li>
         );
       })}
@@ -543,18 +569,19 @@ function SplitProgress({
   readonly members: readonly MemberView[];
   readonly currency: string;
 }) {
+  const { t, format } = useI18n();
   let text: string | null = null;
   if (draft.method === 'exact') {
     const progress = exactProgress(draft, members, currency);
     if (progress !== null) {
       const missing = progress.total.minor - progress.assigned.minor;
-      const amount = formatMoney({ minor: Math.abs(missing), currency });
+      const amount = format.money({ minor: Math.abs(missing), currency });
       text =
         missing === 0
-          ? 'Totale raggiunto.'
-          : missing > 0
-            ? `Mancano ${amount}.`
-            : `${amount} in più del totale.`;
+          ? t(K.expense.progress.exactDone)
+          : t(missing > 0 ? K.expense.progress.exactMissing : K.expense.progress.exactOver, {
+              amount,
+            });
     }
   } else if (draft.method === 'percentage') {
     const sum = percentageProgress(draft, members);
@@ -562,10 +589,13 @@ function SplitProgress({
       const missing = 10_000 - sum;
       text =
         missing === 0
-          ? 'Totale: 100%.'
-          : missing > 0
-            ? `Manca ${formatPercentage(missing)}.`
-            : `${formatPercentage(-missing)} oltre il 100%.`;
+          ? t(K.expense.progress.percentageDone)
+          : t(
+              missing > 0
+                ? K.expense.progress.percentageMissing
+                : K.expense.progress.percentageOver,
+              { percentage: format.percentage(Math.abs(missing)) },
+            );
     }
   }
   return text === null ? null : <p className="text-sm text-muted-foreground">{text}</p>;

@@ -5,15 +5,17 @@ adapter della propria piattaforma e lo passa alla UI:
 
 ```tsx
 import '@expense/ui/styles.css';
+import { detectLanguage } from '@expense/i18n';
 import { App } from '@expense/ui';
 
-root.render(<App engine={engine} />);
+root.render(<App engine={engine} defaultLanguage={detectLanguage(navigator.languages)} />);
 ```
 
 - Importa solo `engine` (e i tipi da `schema`): non sa su quale piattaforma gira.
 - React + Vite ([ADR 0002](../../docs/adr/0002-framework-ui-react.md)), componenti shadcn/ui con Tailwind CSS 4
   ([ADR 0008](../../docs/adr/0008-componenti-ui-shadcn.md)).
-- Testi in italiano, importi e date formattati con `Intl`. Tema chiaro o scuro come il sistema operativo.
+- Testi in italiano e inglese ([ADR 0010](../../docs/adr/0010-localizzazione.md)), importi e date formattati
+  con `Intl` nella lingua scelta. Tema chiaro o scuro come il sistema operativo.
 - Navigazione con l'hash dell'indirizzo (`#/gruppi/…`): funziona da file locali e nelle WebView, senza
   configurare un server.
 
@@ -45,11 +47,30 @@ root.render(<App engine={engine} />);
 | `src/expense-draft.ts`            | Form della spesa: dai testi scritti ai dati del comando, con gli errori per campo      |
 | `src/group-data.ts`               | Dati per le schermate: partecipanti, filtri, ordinamento, stato dei conti              |
 | `src/amounts.ts`, `src/format.ts` | Lettura e formattazione di importi, percentuali, date e ore                            |
-| `src/messages.ts`                 | Errori dell'engine ed esiti dell'importazione, spiegati in italiano                    |
+| `src/messages.ts`                 | Testi dei problemi nei form (gli errori dell'engine sono in `@expense/i18n`)           |
+| `src/i18n/`                       | Dizionari della UI (`it.json`, `en.json`), chiavi `K`, `useI18n()` e provider          |
 | `src/router.ts`                   | Pagine e indirizzi                                                                     |
 | `src/download.ts`                 | Salvataggio dei file esportati (da verificare nelle WebView delle app native, Fase 4)  |
 | `src/components/`                 | Componenti dell'app: pagina, conferma di eliminazione, etichette, valuta, errori       |
 | `src/components/ui/`              | Componenti di shadcn/ui, generati dalla sua CLI                                        |
+
+## Testi e lingue
+
+I testi stanno in `src/i18n/it.json` ed `en.json`; nei componenti si usano solo le chiavi:
+
+```tsx
+const { t, format } = useI18n();
+<h1>{t(K.groups.title)}</h1>
+<p>{t(K.groups.created, { day: format.date(date) })}</p>
+```
+
+- Un testo nuovo si aggiunge in entrambi i dizionari; il test dei dizionari segnala ciò che manca in inglese.
+- Il lint rifiuta testo scritto nel JSX o in `aria-label`, `placeholder`, `title` e `alt`, e `t()`
+  chiamato con una stringa al posto di una chiave di `K`.
+- La logica senza grafica (form, importi, partecipanti) restituisce codici: il testo si sceglie solo al momento
+  di mostrarlo.
+- La lingua è quella delle impostazioni; finché l'utente non la sceglie, quella indicata dalla shell
+  (`defaultLanguage`, di solito la lingua del dispositivo).
 
 ## Componenti di shadcn/ui
 

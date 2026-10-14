@@ -47,8 +47,9 @@ function memoryEngine(prefix = 't'): Promise<Engine> {
   });
 }
 
-async function renderApp(engine?: Engine): Promise<UserEvent> {
-  render(<App engine={engine ?? (await memoryEngine())} />);
+/** L'app su un dispositivo in italiano (o nella lingua indicata), finché l'utente non ne sceglie un'altra. */
+async function renderApp(engine?: Engine, language: 'it' | 'en' = 'it'): Promise<UserEvent> {
+  render(<App engine={engine ?? (await memoryEngine())} defaultLanguage={language} />);
   return userEvent.setup();
 }
 
@@ -408,6 +409,54 @@ describe('app', () => {
     }
     expect(within(await row()).getByText('In pari')).toBeDefined();
   });
+  it('parte nella lingua del dispositivo e cambia lingua dalle impostazioni', async () => {
+    const user = await renderApp(undefined, 'en');
+    expect(await screen.findByRole('heading', { name: 'Groups' })).toBeDefined();
+    expect(document.documentElement.lang).toBe('en');
+
+    await user.click(screen.getByRole('link', { name: 'Settings' }));
+    const language = await screen.findByLabelText('Language');
+    expect(language).toHaveProperty('value', 'en');
+    expect(screen.getByText(/Until you choose one/)).toBeDefined();
+    await user.selectOptions(language, 'it');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    // La scelta è salvata nel profilo: l'interfaccia passa subito all'italiano.
+    expect(await screen.findByRole('heading', { name: 'Impostazioni' })).toBeDefined();
+    expect(screen.getByText('Impostazioni salvate.')).toBeDefined();
+    expect(document.documentElement.lang).toBe('it');
+    expect(screen.queryByText(/Finché non la scegli/)).toBeNull();
+  });
+
+  it('mostra importi, date ed errori nella lingua scelta', async () => {
+    const user = await renderApp(undefined, 'en');
+    await user.click(await screen.findByRole('button', { name: 'New group' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.type(within(dialog).getByLabelText('Group name'), 'Trip');
+    await user.type(within(dialog).getByLabelText('Your name'), 'Anna');
+    await user.click(within(dialog).getByRole('button', { name: 'Create group' }));
+    const name = await screen.findByLabelText('Add a person');
+    await user.type(name, 'Luca{Enter}');
+    await screen.findByText('Luca');
+
+    window.location.hash = window.location.hash.replace(/\/membri$/, '/spese/nuova');
+    await user.type(await screen.findByLabelText('Description'), 'Dinner');
+    await user.type(screen.getByLabelText('Amount (EUR)'), '12.345');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    expect(screen.getByText('EUR uses at most 2 decimals.')).toBeDefined();
+
+    const amount = screen.getByLabelText('Amount (EUR)');
+    await user.clear(amount);
+    await user.type(amount, '30');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+    const row = await screen.findByRole('link', { name: /Dinner/ });
+    expect(within(row).getByText('€30.00')).toBeDefined();
+    expect(within(row).getByText('Anna (you)')).toBeDefined();
+    await user.click(screen.getByRole('tab', { name: 'Balances' }));
+    expect(await screen.findByText('+€15.00')).toBeDefined();
+    expect(screen.getByText('gets back')).toBeDefined();
+  });
+
   it('mostra una pagina di errore per gli indirizzi sconosciuti', async () => {
     window.location.hash = '#/gruppi/inesistente';
     await renderApp();

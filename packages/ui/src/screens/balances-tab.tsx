@@ -10,14 +10,16 @@ import { useState } from 'react';
 import { DeleteOrRestoreButton } from '../components/delete-entry';
 import { ErrorAlert } from '../components/error-alert';
 import { useCommand, useQuery } from '../engine/store';
-import { formatDate, formatMoney, lastChange } from '../format';
+import { lastChange } from '../format';
 import { activeMembers, memberNames, nameOf, newestFirst } from '../group-data';
+import { K, useI18n } from '../i18n';
 import type { Names } from '../messages';
 import { SettlementForm, type SettlementPreset } from './settlement-form';
 
 type TransferMode = 'simplified' | 'pairwise';
 
 export function BalancesTab({ group }: { readonly group: GroupView }) {
+  const { t, format } = useI18n();
   const result = useQuery({ type: 'GetBalances', groupId: group.groupId });
   const [mode, setMode] = useState<TransferMode>('simplified');
   // La finestra resta montata con gli ultimi valori mentre si chiude (animazione).
@@ -40,18 +42,14 @@ export function BalancesTab({ group }: { readonly group: GroupView }) {
       {excluded.length > 0 && (
         <Alert variant="destructive">
           <CircleAlertIcon />
-          <AlertDescription>
-            {excluded.length === 1
-              ? 'Una voce non è valida ed è esclusa dal calcolo.'
-              : `${String(excluded.length)} voci non sono valide e sono escluse dal calcolo.`}
-          </AlertDescription>
+          <AlertDescription>{t(K.balances.excluded, { count: excluded.length })}</AlertDescription>
         </Alert>
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-lg font-semibold">Saldi</h2>
+        <h2 className="font-heading text-lg font-semibold">{t(K.balances.title)}</h2>
         {balances.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Ancora nessuna spesa: tutti in pari.</p>
+          <p className="text-sm text-muted-foreground">{t(K.balances.empty)}</p>
         ) : (
           balances.map(({ currency, balances: members }) => (
             <ul key={currency} className="flex flex-col divide-y rounded-xl border">
@@ -68,14 +66,16 @@ export function BalancesTab({ group }: { readonly group: GroupView }) {
                             : 'font-medium text-muted-foreground tabular-nums'
                       }
                     >
-                      {formatMoney(amount, true)}
+                      {format.money(amount, true)}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {amount.minor > 0
-                        ? 'deve ricevere'
-                        : amount.minor < 0
-                          ? 'deve dare'
-                          : 'in pari'}
+                      {t(
+                        amount.minor > 0
+                          ? K.balances.receives
+                          : amount.minor < 0
+                            ? K.balances.gives
+                            : K.balances.even,
+                      )}
                     </span>
                   </span>
                 </li>
@@ -87,7 +87,7 @@ export function BalancesTab({ group }: { readonly group: GroupView }) {
 
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-heading text-lg font-semibold">Come pareggiare</h2>
+          <h2 className="font-heading text-lg font-semibold">{t(K.balances.transfers.title)}</h2>
           <Tabs
             value={mode}
             onValueChange={(value) => {
@@ -95,15 +95,13 @@ export function BalancesTab({ group }: { readonly group: GroupView }) {
             }}
           >
             <TabsList>
-              <TabsTrigger value="simplified">Meno passaggi</TabsTrigger>
-              <TabsTrigger value="pairwise">Per coppia</TabsTrigger>
+              <TabsTrigger value="simplified">{t(K.balances.transfers.simplified)}</TabsTrigger>
+              <TabsTrigger value="pairwise">{t(K.balances.transfers.pairwise)}</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
         {transfers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Nessun trasferimento: i conti sono in pari.
-          </p>
+          <p className="text-sm text-muted-foreground">{t(K.balances.transfers.empty)}</p>
         ) : (
           <ul className="flex flex-col divide-y rounded-xl border">
             {transfers.map((transfer) => (
@@ -122,7 +120,7 @@ export function BalancesTab({ group }: { readonly group: GroupView }) {
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="font-heading text-lg font-semibold">Rimborsi</h2>
+          <h2 className="font-heading text-lg font-semibold">{t(K.settlements.title)}</h2>
           <Button
             variant="outline"
             disabled={activeMembers(group).length < 2}
@@ -131,7 +129,7 @@ export function BalancesTab({ group }: { readonly group: GroupView }) {
             }}
           >
             <PlusIcon data-icon="inline-start" />
-            Registra
+            {t(K.settlements.add)}
           </Button>
         </div>
         <SettlementList group={group} names={names} />
@@ -166,31 +164,34 @@ function TransferRow({
   readonly names: Names;
   readonly onSettle: () => void;
 }) {
+  const { t, format } = useI18n();
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2">
         <span className="truncate">{nameOf(names, transfer.from)}</span>
-        <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" aria-label="dà a" />
+        <ArrowRightIcon
+          className="size-4 shrink-0 text-muted-foreground"
+          aria-label={t(K.balances.transfers.givesTo)}
+        />
         <span className="truncate">{nameOf(names, transfer.to)}</span>
       </span>
-      <span className="font-medium tabular-nums">{formatMoney(transfer.amount)}</span>
+      <span className="font-medium tabular-nums">{format.money(transfer.amount)}</span>
       <Button variant="secondary" size="sm" onClick={onSettle}>
-        Pagato
+        {t(K.balances.transfers.paid)}
       </Button>
     </li>
   );
 }
 
 function SettlementList({ group, names }: { readonly group: GroupView; readonly names: Names }) {
+  const { t } = useI18n();
   const settlements = newestFirst(group.settlements);
   if (settlements.length === 0) {
     return (
       <Empty className="border py-6">
         <EmptyHeader>
-          <EmptyTitle>Nessun rimborso</EmptyTitle>
-          <EmptyDescription>
-            Quando qualcuno salda un debito, registralo qui: i saldi si aggiornano.
-          </EmptyDescription>
+          <EmptyTitle>{t(K.settlements.empty.title)}</EmptyTitle>
+          <EmptyDescription>{t(K.settlements.empty.description)}</EmptyDescription>
         </EmptyHeader>
       </Empty>
     );
@@ -218,6 +219,8 @@ function SettlementRow({
   readonly settlement: SettlementView;
   readonly names: Names;
 }) {
+  const i18n = useI18n();
+  const { t, format } = i18n;
   const command = useCommand();
   const { from, to, amount } = settlement.transfer;
   const { deleted, settlementId } = settlement;
@@ -235,21 +238,23 @@ function SettlementRow({
         >
           <span className={deleted ? 'line-through' : undefined}>{who}</span>
           <span className="text-sm text-muted-foreground">
-            {formatDate(settlement.date)}
-            {settlement.notes === null ? '' : ` · ${settlement.notes}`}
+            {[
+              format.date(settlement.date),
+              ...(settlement.notes === null ? [] : [settlement.notes]),
+            ].join(t(K.common.separator))}
           </span>
-          <span className="text-xs text-muted-foreground">{lastChange(settlement)}</span>
+          <span className="text-xs text-muted-foreground">{lastChange(i18n, settlement)}</span>
         </div>
-        {deleted && <Badge variant="outline">Eliminato</Badge>}
+        {deleted && <Badge variant="outline">{t(K.settlements.deleted)}</Badge>}
         <span className="pt-0.5 font-medium whitespace-nowrap tabular-nums">
-          {formatMoney(amount)}
+          {format.money(amount)}
         </span>
         <DeleteOrRestoreButton
           deleted={deleted}
-          label={`il rimborso ${who}`}
+          label={t(K.settlements.deleteLabel, { who })}
           texts={{
-            title: 'Eliminare il rimborso?',
-            description: `${who}, ${formatMoney(amount)}. Non conterà più nei saldi, che verranno ricalcolati. Resterà nell'elenco come eliminato, da dove potrai ripristinarlo.`,
+            title: t(K.settlements.deleteTitle),
+            description: t(K.settlements.deleteDescription, { who, amount: format.money(amount) }),
           }}
           disabled={command.pending}
           onDelete={() => {

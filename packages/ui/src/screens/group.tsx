@@ -4,6 +4,7 @@ import { Settings2Icon } from 'lucide-react';
 import { NotFound, PageHeader } from '../components/layout';
 import { useQuery } from '../engine/store';
 import { activeMembers, memberNames } from '../group-data';
+import { K, useI18n } from '../i18n';
 import { type GroupTab, isGroupTab, navigate, routeHref } from '../router';
 import { BalancesTab } from './balances-tab';
 import { ExpensesTab } from './expenses-tab';
@@ -17,8 +18,9 @@ export function GroupScreen({
   readonly groupId: string;
   readonly tab: GroupTab;
 }) {
+  const { t } = useI18n();
   const result = useQuery({ type: 'GetGroup', groupId });
-  if (!result.ok) return <NotFound message="Questo gruppo non esiste su questo dispositivo." />;
+  if (!result.ok) return <NotFound message={t(K.common.groupNotHere)} />;
   const group = result.value;
   const people = activeMembers(group).length;
   const me = group.me === null ? undefined : memberNames(group).get(group.me);
@@ -28,14 +30,14 @@ export function GroupScreen({
       <PageHeader
         back={{
           href: routeHref({ page: group.archived ? 'archivedGroups' : 'groups' }),
-          label: 'Gruppi',
+          label: t(K.common.groups),
         }}
         title={group.name}
         actions={
           <Button variant="outline" size="icon" asChild>
             <a
               href={routeHref({ page: 'groupSettings', groupId })}
-              aria-label="Impostazioni del gruppo"
+              aria-label={t(K.group.settings)}
             >
               <Settings2Icon />
             </a>
@@ -43,10 +45,10 @@ export function GroupScreen({
         }
         description={[
           group.baseCurrency,
-          people === 1 ? '1 persona' : `${String(people)} persone`,
-          ...(me === undefined ? [] : [`tu sei ${me}`]),
-          ...(group.archived ? ['archiviato'] : []),
-        ].join(' · ')}
+          t(K.group.people, { count: people }),
+          ...(me === undefined ? [] : [t(K.group.youAre, { name: me })]),
+          ...(group.archived ? [t(K.group.archived)] : []),
+        ].join(t(K.common.separator))}
       />
       <Tabs
         value={tab}
@@ -56,10 +58,10 @@ export function GroupScreen({
         }}
       >
         <TabsList className="mb-4 w-full">
-          <TabsTrigger value="spese">Spese</TabsTrigger>
-          <TabsTrigger value="saldi">Saldi</TabsTrigger>
-          <TabsTrigger value="storico">Storico</TabsTrigger>
-          <TabsTrigger value="membri">Membri</TabsTrigger>
+          <TabsTrigger value="spese">{t(K.group.tabs.expenses)}</TabsTrigger>
+          <TabsTrigger value="saldi">{t(K.group.tabs.balances)}</TabsTrigger>
+          <TabsTrigger value="storico">{t(K.group.tabs.history)}</TabsTrigger>
+          <TabsTrigger value="membri">{t(K.group.tabs.members)}</TabsTrigger>
         </TabsList>
         <TabsContent value="spese">
           <ExpensesTab group={group} />

@@ -7,8 +7,7 @@ import type {
   SettlementView,
   Split,
 } from '@expense/engine';
-import { formatMoney, formatPercentage } from './format';
-import type { Names } from './messages';
+import type { Names } from '@expense/i18n';
 
 // Dati di un gruppo pronti per le schermate: nomi dei membri, partecipanti, filtri, elenchi ordinati.
 
@@ -16,8 +15,9 @@ export function memberNames(group: GroupView): Names {
   return new Map(group.members.map(({ memberId, name }) => [memberId, name]));
 }
 
+/** Nome del membro; l'id se il membro non c'è più (dati scritti da un'app difettosa). */
 export function nameOf(names: Names, memberId: string): string {
-  return names.get(memberId) ?? 'membro sconosciuto';
+  return names.get(memberId) ?? memberId;
 }
 
 export function activeMembers(group: GroupView): MemberView[] {
@@ -37,31 +37,36 @@ export function newestFirst<T extends ExpenseView | SettlementView>(entries: rea
   });
 }
 
+/** La parte di ciascuno quando non è uguale per tutti: un importo, una percentuale o delle quote. */
+export type ParticipantShare =
+  | { readonly kind: 'amount'; readonly amount: Money }
+  | { readonly kind: 'percentage'; readonly basisPoints: number }
+  | { readonly kind: 'shares'; readonly weight: number };
+
 export interface Participant {
   readonly memberId: string;
-  /** La parte di ciascuno quando non è uguale per tutti (es. "20,00 €", "25%", "2 quote"). */
-  readonly detail: string | null;
+  readonly share: ParticipantShare | null;
 }
 
 /** Le persone tra cui è divisa una spesa, nell'ordine in cui sono state indicate. */
 export function participants(split: Split): Participant[] {
   switch (split.method) {
     case 'equal':
-      return split.memberIds.map((memberId) => ({ memberId, detail: null }));
+      return split.memberIds.map((memberId) => ({ memberId, share: null }));
     case 'exact':
       return split.amounts.map(({ memberId, amount }) => ({
         memberId,
-        detail: formatMoney(amount),
+        share: { kind: 'amount', amount },
       }));
     case 'percentage':
       return split.percentages.map(({ memberId, basisPoints }) => ({
         memberId,
-        detail: formatPercentage(basisPoints),
+        share: { kind: 'percentage', basisPoints },
       }));
     case 'shares':
       return split.weights.map(({ memberId, weight }) => ({
         memberId,
-        detail: weight === 1 ? '1 quota' : `${String(weight)} quote`,
+        share: { kind: 'shares', weight },
       }));
   }
 }

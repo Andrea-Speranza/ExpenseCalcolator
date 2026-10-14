@@ -8,20 +8,22 @@ import {
 } from '@expense/ui/components/ui/empty';
 import { ArrowLeftIcon, SettingsIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { K, useI18n } from '../i18n';
 import { routeHref } from '../router';
 
 // Struttura comune delle pagine: barra in alto, contenuto centrato e stretto, pensato prima per il mobile.
 
 export function AppShell({ children }: { readonly children: ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="min-h-svh bg-background">
       <header className="sticky top-0 z-10 border-b bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
           <a href={routeHref({ page: 'groups' })} className="font-heading text-base font-semibold">
-            Spese di gruppo
+            {t(K.app.name)}
           </a>
           <Button variant="ghost" size="icon" asChild>
-            <a href={routeHref({ page: 'settings' })} aria-label="Impostazioni">
+            <a href={routeHref({ page: 'settings' })} aria-label={t(K.app.settings)}>
               <SettingsIcon />
             </a>
           </Button>
@@ -70,20 +72,17 @@ export function PageHeader({
   );
 }
 
-export function NotFound({
-  message = 'La pagina che cerchi non esiste.',
-}: {
-  readonly message?: string;
-}) {
+export function NotFound({ message }: { readonly message?: string }) {
+  const { t } = useI18n();
   return (
     <Empty className="border">
       <EmptyHeader>
-        <EmptyTitle>Non trovato</EmptyTitle>
-        <EmptyDescription>{message}</EmptyDescription>
+        <EmptyTitle>{t(K.notFound.title)}</EmptyTitle>
+        <EmptyDescription>{message ?? t(K.notFound.page)}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button variant="outline" asChild>
-          <a href={routeHref({ page: 'groups' })}>Torna ai gruppi</a>
+          <a href={routeHref({ page: 'groups' })}>{t(K.notFound.back)}</a>
         </Button>
       </EmptyContent>
     </Empty>

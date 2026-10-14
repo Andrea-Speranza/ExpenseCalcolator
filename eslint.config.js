@@ -21,8 +21,12 @@ const JSONC_FILES = ['**/tsconfig*.json', '.vscode/*.json'];
 
 // Pacchetti che devono dare lo stesso risultato su ogni dispositivo (PLANNING §4.2):
 // l'ora di sistema e la casualità arrivano dall'esterno tramite le porte Clock e IdGenerator.
-const PLATFORM_AGNOSTIC_SOURCES = ['packages/{schema,core,sync,engine}/src/**/*.ts'];
+const PLATFORM_AGNOSTIC_SOURCES = ['packages/{schema,core,sync,engine,i18n}/src/**/*.ts'];
 const CLOCK_MESSAGE = "Usa la porta Clock: questo codice non deve leggere l'ora di sistema.";
+// Codice della UI che mostra testi: devono arrivare dai dizionari (ADR 0010).
+const LOCALIZED_SOURCES = ['packages/ui/src/**/*.tsx'];
+const TEXT_MESSAGE =
+  'Testo per l’utente scritto nel codice: aggiungilo ai dizionari e usa t(K.…) (ADR 0010).';
 
 export default defineConfig(
   globalIgnores([
@@ -96,6 +100,29 @@ export default defineConfig(
       '@typescript-eslint/array-type': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/prefer-nullish-coalescing': 'off',
+    },
+  },
+  {
+    // Nessun testo per l'utente scritto direttamente nei componenti: né nel JSX né negli attributi letti dai
+    // lettori di schermo o mostrati nei campi. E nessuna chiave scritta a mano: t('groups.title') non viene
+    // controllata dal compilatore, t(K.groups.title) sì. La punteggiatura (·, →, …) resta libera.
+    files: LOCALIZED_SOURCES,
+    ignores: ['packages/ui/src/components/ui/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: 'JSXText[value=/[A-Za-zÀ-ÿ]/]', message: TEXT_MESSAGE },
+        {
+          selector:
+            'JSXAttribute[name.name=/^(aria-label|placeholder|title|alt)$/] > Literal[value=/[A-Za-zÀ-ÿ]/]',
+          message: TEXT_MESSAGE,
+        },
+        {
+          selector:
+            "CallExpression[callee.name='t'][arguments.0.type=/^(Literal|TemplateLiteral)$/]",
+          message: 'Usa le chiavi tipizzate: t(K.sezione.testo), non una stringa (ADR 0010).',
+        },
+      ],
     },
   },
   {

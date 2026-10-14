@@ -1,4 +1,5 @@
 import { type GroupSummary, timeOfHlc } from '@expense/engine';
+import { describeError, describeFileError, describeImport } from '@expense/i18n';
 import { Alert, AlertAction, AlertDescription } from '@expense/ui/components/ui/alert';
 import { Badge } from '@expense/ui/components/ui/badge';
 import { Button } from '@expense/ui/components/ui/button';
@@ -35,13 +36,13 @@ import { CurrencySelect } from '../components/currency-select';
 import { ErrorAlert } from '../components/error-alert';
 import { PageHeader } from '../components/layout';
 import { useCommand, useQuery } from '../engine/store';
-import { formatMoment, formatMoney } from '../format';
 import { type AccountsStatus, accountsStatus } from '../group-data';
-import { describeError, describeFileError, describeImport } from '../messages';
+import { K, useI18n } from '../i18n';
 import { navigate, routeHref } from '../router';
 import { ImportGroupButton, type ImportResult } from './import-group';
 
 export function GroupsScreen({ archived }: { readonly archived: boolean }) {
+  const { t } = useI18n();
   const groups = useQuery({ type: 'ListGroups' });
   const [imported, setImported] = useState<ImportResult | null>(null);
   // Dal più recente.
@@ -54,7 +55,7 @@ export function GroupsScreen({ archived }: { readonly archived: boolean }) {
   return (
     <>
       <PageHeader
-        title="Gruppi"
+        title={t(K.groups.title)}
         actions={
           list.length > 0 ? (
             <>
@@ -73,12 +74,8 @@ export function GroupsScreen({ archived }: { readonly archived: boolean }) {
               <EmptyMedia variant="icon">
                 <UsersIcon />
               </EmptyMedia>
-              <EmptyTitle>Nessun gruppo</EmptyTitle>
-              <EmptyDescription>
-                Crea un gruppo per una vacanza, la casa o una cena: aggiungi chi partecipa e
-                registra le spese. I dati restano su questo dispositivo. Se qualcuno ti ha mandato
-                un gruppo esportato, aprilo con «Importa».
-              </EmptyDescription>
+              <EmptyTitle>{t(K.groups.empty.title)}</EmptyTitle>
+              <EmptyDescription>{t(K.groups.empty.description)}</EmptyDescription>
             </EmptyHeader>
             <EmptyContent className="flex-row justify-center">
               {importButton}
@@ -88,17 +85,21 @@ export function GroupsScreen({ archived }: { readonly archived: boolean }) {
         ) : (
           <>
             <Tabs
-              value={archived ? 'archiviati' : 'attivi'}
+              value={archived ? 'archived' : 'active'}
               onValueChange={(value) => {
                 navigate(
-                  { page: value === 'archiviati' ? 'archivedGroups' : 'groups' },
+                  { page: value === 'archived' ? 'archivedGroups' : 'groups' },
                   { replace: true },
                 );
               }}
             >
               <TabsList className="w-full">
-                <TabsTrigger value="attivi">Attivi ({active.length})</TabsTrigger>
-                <TabsTrigger value="archiviati">Archiviati ({archivedGroups.length})</TabsTrigger>
+                <TabsTrigger value="active">
+                  {t(K.groups.tabs.active, { total: active.length })}
+                </TabsTrigger>
+                <TabsTrigger value="archived">
+                  {t(K.groups.tabs.archived, { total: archivedGroups.length })}
+                </TabsTrigger>
               </TabsList>
             </Tabs>
             {shown.length > 0 ? (
@@ -107,12 +108,10 @@ export function GroupsScreen({ archived }: { readonly archived: boolean }) {
               <Empty className="border">
                 <EmptyHeader>
                   <EmptyTitle>
-                    {archived ? 'Nessun gruppo archiviato' : 'Nessun gruppo attivo'}
+                    {t(archived ? K.groups.noArchived.title : K.groups.noActive.title)}
                   </EmptyTitle>
                   <EmptyDescription>
-                    {archived
-                      ? 'Quando un gruppo è concluso puoi archiviarlo dalle sue impostazioni: comparirà qui.'
-                      : 'I gruppi archiviati sono nell’altra scheda. Puoi crearne uno nuovo.'}
+                    {t(archived ? K.groups.noArchived.description : K.groups.noActive.description)}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -126,14 +125,16 @@ export function GroupsScreen({ archived }: { readonly archived: boolean }) {
 
 /** Esito dell'importazione; se il gruppo è nuovo su questo dispositivo, invita a dire chi sei. */
 function ImportOutcome({ result }: { readonly result: ImportResult }) {
+  const i18n = useI18n();
+  const { t } = i18n;
   if (!result.ok) {
     return (
       <Alert variant="destructive">
         <CircleAlertIcon />
         <AlertDescription>
           {result.error.code === 'StorageFailed'
-            ? describeError(result.error)
-            : describeFileError(result.error)}
+            ? describeError(i18n, result.error)
+            : describeFileError(i18n, result.error)}
         </AlertDescription>
       </Alert>
     );
@@ -145,8 +146,8 @@ function ImportOutcome({ result }: { readonly result: ImportResult }) {
     <Alert>
       <CircleCheckIcon />
       <AlertDescription>
-        {describeImport(result.value)}
-        {claim && ' Apri il gruppo e, nella scheda Membri, scegli «Sono io» accanto al tuo nome.'}
+        {describeImport(i18n, result.value)}
+        {claim && ` ${t(K.groups.import.claimHint)}`}
       </AlertDescription>
       {group !== undefined && (
         <AlertAction>
@@ -158,7 +159,7 @@ function ImportOutcome({ result }: { readonly result: ImportResult }) {
                 tab: claim ? 'membri' : 'spese',
               })}
             >
-              Apri
+              {t(K.common.open)}
             </a>
           </Button>
         </AlertAction>
@@ -178,9 +179,14 @@ function GroupList({ groups }: { readonly groups: readonly GroupSummary[] }) {
 }
 
 function GroupRow({ group }: { readonly group: GroupSummary }) {
+  const { t, format } = useI18n();
   const balances = useQuery({ type: 'GetBalances', groupId: group.groupId });
   const status = balances.ok ? accountsStatus(balances.value, group.me) : null;
   const created = timeOfHlc(group.createdAt);
+  const details = [
+    ...(created === null ? [] : [t(K.groups.created, { day: format.moment(created).day })]),
+    group.baseCurrency,
+  ];
   return (
     <li>
       <a
@@ -190,8 +196,7 @@ function GroupRow({ group }: { readonly group: GroupSummary }) {
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate font-medium">{group.name}</span>
           <span className="text-xs text-muted-foreground">
-            {created === null ? '' : `Creato il ${formatMoment(created).day} · `}
-            {group.baseCurrency}
+            {details.join(t(K.common.separator))}
           </span>
         </span>
         {status !== null && <AccountsBadge status={status} />}
@@ -203,31 +208,34 @@ function GroupRow({ group }: { readonly group: GroupSummary }) {
 
 /** Etichetta colorata con lo stato dei conti e, se i conti sono aperti, la posizione di chi usa l'app. */
 function AccountsBadge({ status }: { readonly status: AccountsStatus }) {
+  const { t, format } = useI18n();
   switch (status.kind) {
     case 'empty':
-      return <Badge variant="outline">Nessuna spesa</Badge>;
+      return <Badge variant="outline">{t(K.groups.status.empty)}</Badge>;
     case 'settled':
       return (
         <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
           <CircleCheckIcon data-icon="inline-start" />
-          In pari
+          {t(K.groups.status.settled)}
         </Badge>
       );
     case 'open':
       return (
         <span className="flex flex-col items-end gap-1">
           <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-300">
-            Conti aperti
+            {t(K.groups.status.open)}
           </Badge>
           {status.mine.length > 0 && (
             <span className="text-xs whitespace-nowrap text-muted-foreground">
               {status.mine
                 .map((amount) =>
                   amount.minor > 0
-                    ? `ti devono ${formatMoney(amount)}`
-                    : `devi ${formatMoney({ ...amount, minor: -amount.minor })}`,
+                    ? t(K.groups.status.owed, { amount: format.money(amount) })
+                    : t(K.groups.status.owe, {
+                        amount: format.money({ ...amount, minor: -amount.minor }),
+                      }),
                 )
-                .join(' · ')}
+                .join(t(K.common.separator))}
             </span>
           )}
         </span>
@@ -236,12 +244,13 @@ function AccountsBadge({ status }: { readonly status: AccountsStatus }) {
 }
 
 function CreateGroupDialog() {
+  const { t } = useI18n();
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button>
           <PlusIcon data-icon="inline-start" />
-          Nuovo gruppo
+          {t(K.groups.create.button)}
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -253,6 +262,7 @@ function CreateGroupDialog() {
 
 /** Si monta a ogni apertura della finestra: parte sempre dalle impostazioni attuali. */
 function CreateGroupForm() {
+  const { t } = useI18n();
   const settings = useQuery({ type: 'GetSettings' });
   const defaults = settings.ok ? settings.value : null;
   const [name, setName] = useState('');
@@ -280,26 +290,26 @@ function CreateGroupForm() {
       }}
     >
       <DialogHeader>
-        <DialogTitle>Nuovo gruppo</DialogTitle>
-        <DialogDescription>Dopo potrai aggiungere le altre persone.</DialogDescription>
+        <DialogTitle>{t(K.groups.create.title)}</DialogTitle>
+        <DialogDescription>{t(K.groups.create.description)}</DialogDescription>
       </DialogHeader>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-name`}>Nome del gruppo</FieldLabel>
+          <FieldLabel htmlFor={`${id}-name`}>{t(K.groups.create.name)}</FieldLabel>
           <Input
             id={`${id}-name`}
             value={name}
             onChange={(event) => {
               setName(event.target.value);
             }}
-            placeholder="Es. Vacanza in Sicilia"
+            placeholder={t(K.groups.create.namePlaceholder)}
             maxLength={80}
             required
             autoFocus
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-me`}>Il tuo nome</FieldLabel>
+          <FieldLabel htmlFor={`${id}-me`}>{t(K.groups.create.me)}</FieldLabel>
           <Input
             id={`${id}-me`}
             value={me}
@@ -308,12 +318,10 @@ function CreateGroupForm() {
             }}
             maxLength={60}
           />
-          <FieldDescription>
-            Lascialo vuoto se tieni i conti per altri senza partecipare alle spese.
-          </FieldDescription>
+          <FieldDescription>{t(K.groups.create.meHint)}</FieldDescription>
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-currency`}>Valuta</FieldLabel>
+          <FieldLabel htmlFor={`${id}-currency`}>{t(K.groups.create.currency)}</FieldLabel>
           <CurrencySelect
             id={`${id}-currency`}
             className="w-full"
@@ -328,11 +336,11 @@ function CreateGroupForm() {
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="outline">
-            Annulla
+            {t(K.common.cancel)}
           </Button>
         </DialogClose>
         <Button type="submit" disabled={command.pending}>
-          Crea gruppo
+          {t(K.groups.create.submit)}
         </Button>
       </DialogFooter>
     </form>

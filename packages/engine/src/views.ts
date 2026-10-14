@@ -110,18 +110,19 @@ export interface BalancesView {
 
 export interface SettingsView {
   readonly defaultCurrency: CurrencyCode;
-  readonly language: Language;
+  /** Lingua scelta dall'utente; null finché non la sceglie (l'app segue quella del dispositivo, ADR 0010). */
+  readonly language: Language | null;
   readonly displayName: string | null;
 }
 
 /** Valori usati finché l'utente non sceglie diversamente. */
-export const DEFAULT_SETTINGS = { defaultCurrency: 'EUR', language: 'it' } as const;
+export const DEFAULT_SETTINGS = { defaultCurrency: 'EUR' } as const;
 
 export function settingsView(profile: ProfileState): SettingsView {
   const { defaultCurrency, language, displayName } = profile.settings;
   return {
     defaultCurrency: defaultCurrency?.value ?? DEFAULT_SETTINGS.defaultCurrency,
-    language: language?.value ?? DEFAULT_SETTINGS.language,
+    language: language?.value ?? null,
     displayName: displayName?.value ?? null,
   };
 }

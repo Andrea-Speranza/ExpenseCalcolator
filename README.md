@@ -16,6 +16,7 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 Su un solo dispositivo, senza account né rete, dalla web app (`pnpm web`) o dalla riga di comando
 (`pnpm cli`):
 
+- usare l'app in italiano o in inglese (all'inizio nella lingua del dispositivo);
 - creare gruppi, aggiungere le persone e indicare chi sei;
 - registrare spese con uno o più pagatori, divise in parti uguali, per importi, percentuali o quote, con data e
   ora facoltativa;
@@ -57,6 +58,7 @@ I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm 
 | [packages/core](packages/core/)         | Logica di calcolo pura                                                                                                         |
 | [packages/sync](packages/sync/)         | Log di eventi, orologio logico, merge                                                                                          |
 | [packages/engine](packages/engine/)     | API pubblica usata dalla UI                                                                                                    |
+| [packages/i18n](packages/i18n/)         | Lingue, testi condivisi e formati di importi e date (italiano e inglese)                                                       |
 | [packages/adapters](packages/adapters/) | Porte di piattaforma: salvataggio locale (IndexedDB, file JSON), orologio e id                                                 |
 | [packages/channels](packages/channels/) | Canali di condivisione, ognuno un plugin separato: file, cartella, peer-to-peer, cloud                                         |
 | [packages/ui](packages/ui/)             | Interfaccia (SPA in React con shadcn/ui), uguale in tutte le shell                                                             |

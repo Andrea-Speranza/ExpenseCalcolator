@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@expense/engine": "workspace:*",
+    "@expense/i18n": "workspace:*",
     "@expense/local-indexeddb": "workspace:*",
     "@expense/system": "workspace:*",
     "@expense/ui": "workspace:*",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "zod": "^4.6.6"
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",

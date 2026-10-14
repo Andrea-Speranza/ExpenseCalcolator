@@ -41,5 +41,6 @@ Le opzioni scartate e il motivo.
 | [0007](0007-salvataggio-e-concorrenza.md) | Salvataggio dei dati e modifiche contemporanee     | Accettata |
 | [0008](0008-componenti-ui-shadcn.md)      | Componenti UI: shadcn/ui con Tailwind CSS          | Accettata |
 | [0009](0009-distribuzione-locale.md)      | Distribuzione della web app: solo locale           | Accettata |
+| [0010](0010-localizzazione.md)            | Localizzazione: dizionari JSON e chiavi tipizzate  | Accettata |
 
 Le altre decisioni da registrare sono quelle aperte in [PLANNING.md §12](../PLANNING.md#12-decisioni-aperte).

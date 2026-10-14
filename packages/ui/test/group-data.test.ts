@@ -1,10 +1,8 @@
 import type { ExpenseView } from '@expense/engine';
 import { describe, expect, it } from 'vitest';
-import { entryTimes, formatLongDate, formatMoment } from '../src/format';
+import { expenseTimes, lastChange } from '../src/format';
 import { accountsStatus, matchesFilter, newestFirst, participants } from '../src/group-data';
-
-/** Gli spazi non separabili che Intl mette negli importi diventano spazi normali. */
-const plain = (text: string | null) => text?.replace(/[\u00a0\u202f]/g, ' ') ?? null;
+import { createUiI18n } from '../src/i18n';
 
 const eur = (minor: number) => ({ minor, currency: 'EUR' });
 
@@ -32,26 +30,18 @@ function expense(paidBy: string[], split: string[]): ExpenseView {
 describe('participants', () => {
   it('elenca chi divide la spesa, con la sua parte se non è uguale per tutti', () => {
     expect(participants({ method: 'equal', memberIds: ['a', 'b'] })).toEqual([
-      { memberId: 'a', detail: null },
-      { memberId: 'b', detail: null },
+      { memberId: 'a', share: null },
+      { memberId: 'b', share: null },
     ]);
     expect(
-      participants({ method: 'exact', amounts: [{ memberId: 'a', amount: eur(2050) }] }).map(
-        ({ detail }) => plain(detail),
-      ),
-    ).toEqual(['20,50 €']);
+      participants({ method: 'exact', amounts: [{ memberId: 'a', amount: eur(2050) }] }),
+    ).toEqual([{ memberId: 'a', share: { kind: 'amount', amount: eur(2050) } }]);
     expect(
       participants({ method: 'percentage', percentages: [{ memberId: 'a', basisPoints: 2500 }] }),
-    ).toEqual([{ memberId: 'a', detail: '25%' }]);
-    expect(
-      participants({
-        method: 'shares',
-        weights: [
-          { memberId: 'a', weight: 1 },
-          { memberId: 'b', weight: 2 },
-        ],
-      }).map(({ detail }) => detail),
-    ).toEqual(['1 quota', '2 quote']);
+    ).toEqual([{ memberId: 'a', share: { kind: 'percentage', basisPoints: 2500 } }]);
+    expect(participants({ method: 'shares', weights: [{ memberId: 'b', weight: 2 }] })).toEqual([
+      { memberId: 'b', share: { kind: 'shares', weight: 2 } },
+    ]);
   });
 });
 
@@ -76,26 +66,20 @@ describe('matchesFilter', () => {
 
 describe('giorno e ora', () => {
   // 1760000000000 ms = 9 ottobre 2025, 08:53:20 UTC (10:53 a Roma, ora legale).
-  it('mostra quando un elemento è stato inserito e modificato', () => {
-    expect(formatMoment(1_760_000_000_000, 'Europe/Rome')).toEqual({
-      day: '9 ott 2025',
-      time: '10:53',
-    });
-    expect(
-      entryTimes(
-        { createdAt: '1760000000000:00000:d', version: '1760000000000:00000:d' },
-        'Inserita',
-        'Europe/Rome',
-      ),
-    ).toBe('Inserita il 9 ott 2025 alle 10:53');
-    expect(
-      entryTimes(
-        { createdAt: '1760000000000:00000:d', version: '1760090000000:00000:d' },
-        'Inserito',
-        'Europe/Rome',
-      ),
-    ).toBe('Inserito il 9 ott 2025 alle 10:53 · modificato il 10 ott 2025 alle 11:53');
-    expect(formatLongDate('2026-10-13')).toBe('martedì 13 ottobre 2026');
+  const inserted = { createdAt: '1760000000000:00000:d', version: '1760000000000:00000:d' };
+  const modified = { createdAt: '1760000000000:00000:d', version: '1760090000000:00000:d' };
+
+  it('mostra quando una spesa è stata inserita e modificata, nella lingua attiva', () => {
+    const it_ = createUiI18n('it');
+    const en = createUiI18n('en');
+    expect(expenseTimes(it_, inserted, 'Europe/Rome')).toBe('Inserita il 9 ott 2025 alle 10:53');
+    expect(expenseTimes(it_, modified, 'Europe/Rome')).toBe(
+      'Inserita il 9 ott 2025 alle 10:53 · modificata il 10 ott 2025 alle 11:53',
+    );
+    expect(expenseTimes(en, inserted, 'Europe/Rome')).toBe('Added on 9 Oct 2025 at 10:53');
+    expect(lastChange(it_, modified, 'Europe/Rome')).toBe(
+      'Ultima modifica il 10 ott 2025 alle 11:53',
+    );
   });
 });
 

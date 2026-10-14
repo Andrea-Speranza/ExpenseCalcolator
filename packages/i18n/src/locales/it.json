@@ -1,0 +1,52 @@
+{
+  "errors": {
+    "invalidInput": "Alcuni dati non sono validi ({{fields}}).",
+    "wholeInput": "tutti i campi",
+    "notFound": {
+      "group": "Il gruppo non esiste più (forse è stato rimosso su un altro dispositivo).",
+      "member": "Il membro non esiste più (forse è stato rimosso su un altro dispositivo).",
+      "expense": "La spesa non esiste più (forse è stata rimossa su un altro dispositivo).",
+      "settlement": "Il rimborso non esiste più (forse è stato rimosso su un altro dispositivo)."
+    },
+    "noChanges": "Non hai cambiato nulla.",
+    "storageFailed": "Salvataggio non riuscito: {{message}}",
+    "invalidEntry": {
+      "expense": "Una spesa non è valida e non è stata contata: {{reason}}.",
+      "settlement": "Un rimborso non è valido e non è stato contato: {{reason}}."
+    },
+    "unbalanced": "Errore interno: i saldi in {{currency}} non sommano a zero.",
+    "sentence": "{{reason}}.",
+    "member": "{{reason}} ({{name}})",
+    "reason": {
+      "payments": "i pagamenti sommano {{actual}} invece di {{expected}}",
+      "amounts": "gli importi sommano {{actual}} invece di {{expected}}",
+      "percentages": "le percentuali sommano {{actual}} invece di {{expected}}",
+      "currency": "c’è un importo in {{actual}} invece che in {{expected}}",
+      "outOfRange": "un importo supera il valore massimo gestibile",
+      "sameMember": "chi dà e chi riceve sono la stessa persona",
+      "nonPositiveSettlement": "l’importo deve essere maggiore di zero",
+      "nonPositiveTotal": "il totale deve essere maggiore di zero",
+      "noPayers": "manca chi ha pagato",
+      "nonPositivePayment": "un pagamento è zero o negativo",
+      "noParticipants": "scegli almeno una persona tra cui dividere",
+      "duplicateMember": "un membro compare due volte",
+      "negativeAmount": "un importo è negativo",
+      "negativeWeight": "una quota o una percentuale è negativa",
+      "nonIntegerWeight": "una quota o una percentuale non è un numero intero",
+      "zeroTotalWeight": "tutte le quote sono zero",
+      "invalidRotation": "errore interno nella ripartizione"
+    }
+  },
+  "exchange": {
+    "imported_one": "Importata 1 modifica.",
+    "imported_other": "Importate {{count}} modifiche.",
+    "importedIn_one": "Importata 1 modifica in {{groups}}.",
+    "importedIn_other": "Importate {{count}} modifiche in {{groups}}.",
+    "nothingNew": "Nessuna novità: queste modifiche erano già presenti.",
+    "discarded_one": "Scartata 1 voce non valida.",
+    "discarded_other": "Scartate {{count}} voci non valide.",
+    "groupName": "«{{name}}»",
+    "notExchangeFile": "Questo file non è un gruppo esportato da questa app.",
+    "newerVersion": "Il file è stato esportato da una versione più recente dell’app: aggiornala per importarlo."
+  }
+}

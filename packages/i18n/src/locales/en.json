@@ -1,0 +1,52 @@
+{
+  "errors": {
+    "invalidInput": "Some data is not valid ({{fields}}).",
+    "wholeInput": "all fields",
+    "notFound": {
+      "group": "The group no longer exists (it may have been removed on another device).",
+      "member": "The member no longer exists (they may have been removed on another device).",
+      "expense": "The expense no longer exists (it may have been removed on another device).",
+      "settlement": "The payment no longer exists (it may have been removed on another device)."
+    },
+    "noChanges": "You didn’t change anything.",
+    "storageFailed": "Could not save: {{message}}",
+    "invalidEntry": {
+      "expense": "An expense is not valid and was not counted: {{reason}}.",
+      "settlement": "A payment is not valid and was not counted: {{reason}}."
+    },
+    "unbalanced": "Internal error: the balances in {{currency}} do not add up to zero.",
+    "sentence": "{{reason}}.",
+    "member": "{{reason}} ({{name}})",
+    "reason": {
+      "payments": "the payments add up to {{actual}} instead of {{expected}}",
+      "amounts": "the amounts add up to {{actual}} instead of {{expected}}",
+      "percentages": "the percentages add up to {{actual}} instead of {{expected}}",
+      "currency": "there is an amount in {{actual}} instead of {{expected}}",
+      "outOfRange": "an amount is larger than the maximum supported",
+      "sameMember": "the payer and the recipient are the same person",
+      "nonPositiveSettlement": "the amount must be greater than zero",
+      "nonPositiveTotal": "the total must be greater than zero",
+      "noPayers": "nobody paid",
+      "nonPositivePayment": "a payment is zero or negative",
+      "noParticipants": "choose at least one person to split with",
+      "duplicateMember": "a member appears twice",
+      "negativeAmount": "an amount is negative",
+      "negativeWeight": "a share or a percentage is negative",
+      "nonIntegerWeight": "a share or a percentage is not a whole number",
+      "zeroTotalWeight": "all shares are zero",
+      "invalidRotation": "internal error while splitting"
+    }
+  },
+  "exchange": {
+    "imported_one": "Imported 1 change.",
+    "imported_other": "Imported {{count}} changes.",
+    "importedIn_one": "Imported 1 change into {{groups}}.",
+    "importedIn_other": "Imported {{count}} changes into {{groups}}.",
+    "nothingNew": "Nothing new: these changes were already here.",
+    "discarded_one": "Discarded 1 invalid entry.",
+    "discarded_other": "Discarded {{count}} invalid entries.",
+    "groupName": "“{{name}}”",
+    "notExchangeFile": "This file is not a group exported from this app.",
+    "newerVersion": "This file was exported by a newer version of the app: update it to import the file."
+  }
+}

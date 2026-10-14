@@ -351,7 +351,7 @@ un server ([ADR 0009](adr/0009-distribuzione-locale.md)).
 Requisiti per la UI:
 
 - layout responsive, pensato prima per il mobile;
-- traduzioni (prima italiano, poi inglese);
+- traduzioni: italiano e inglese, con dizionari JSON e chiavi tipizzate ([ADR 0010](adr/0010-localizzazione.md));
 - importi e date formattati con `Intl`;
 - accessibilità di base.
 
@@ -640,6 +640,7 @@ ExpenseCalcolator/
 │  │  ├─ local-indexeddb/        # LocalStore su IndexedDB (web e app native)
 │  │  ├─ local-file/             # LocalStore su file JSON (Node, CLI)
 │  │  └─ system/                 # orologio di sistema e id ULID
+│  ├─ i18n/                      # lingue, testi condivisi e formati (ADR 0010)
 │  ├─ testing/                   # suite di contratto delle porte, usate dai test
 │  ├─ channels/                  # plugin di condivisione (ADR 0006)
 │  │  ├─ folder/                 # cartella sincronizzata
@@ -772,6 +773,8 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
   - nelle spese chi ha pagato è in evidenza e le persone tra cui è divisa sono etichette (con la parte di
     ciascuno se non è uguale);
   - filtri «Pagate da me» e «Pagate per me» (pagate da altri anche per me).
+- [x] Localizzazione della UI in italiano e inglese ([ADR 0010](adr/0010-localizzazione.md)): pacchetto
+      `@expense/i18n`, lingua dalle impostazioni o dal dispositivo. La CLI resta in italiano per ora.
 - [x] Pubblicare il repository su GitHub (fatto dopo la Fase 2).
 - [x] Decidere dove pubblicare la web app: per ora da nessuna parte, solo in locale
       ([ADR 0009](adr/0009-distribuzione-locale.md)).
@@ -914,6 +917,7 @@ senza alcun server nostro.
   | JavaScript e TypeScript    | `@eslint/js` e typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, più `switch-exhaustiveness-check`                           |
   | React                      | `eslint-plugin-react-hooks` (regole ufficiali, comprese quelle del React Compiler) e `eslint-plugin-react-refresh` (modello React di Vite) |
   | Test                       | `@vitest/eslint-plugin`                                                                                                                    |
+  | Testi della UI             | `no-restricted-syntax`: niente testo scritto nel JSX o negli attributi accessibili, niente chiavi stringa in `t()`                         |
   | JSON e JSONC               | `@eslint/json`                                                                                                                             |
   | Markdown (dialetto GitHub) | `@eslint/markdown`, che verifica anche i link interni ai documenti                                                                         |
 

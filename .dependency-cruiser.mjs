@@ -20,9 +20,10 @@ export default {
     },
     {
       name: 'shared-no-node-builtins',
-      comment: 'schema, core, sync ed engine girano su ogni piattaforma: niente moduli di Node.',
+      comment:
+        'schema, core, sync, engine e i18n girano su ogni piattaforma: niente moduli di Node.',
       severity: 'error',
-      from: { path: '^packages/(schema|core|sync|engine)/src/' },
+      from: { path: '^packages/(schema|core|sync|engine|i18n)/src/' },
       to: { dependencyTypes: ['core'] },
     },
     {
@@ -85,11 +86,20 @@ export default {
       to: { path: '^(packages|apps)/', pathNot: '^packages/(engine|schema|channels/$1)/' },
     },
     {
+      name: 'i18n-only-engine',
+      comment:
+        'i18n (testi, lingue e formati, ADR 0010) conosce solo engine e schema: lo usano sia la UI sia la CLI.',
+      severity: 'error',
+      from: { path: '^packages/i18n/src/' },
+      to: { path: '^(packages|apps)/', pathNot: '^packages/(i18n|engine|schema)/' },
+    },
+    {
       name: 'ui-only-engine',
-      comment: 'La UI parla solo con engine (e usa schema per tipi e validazione dei form).',
+      comment:
+        'La UI parla solo con engine (e usa schema per tipi e validazione dei form, i18n per i testi).',
       severity: 'error',
       from: { path: '^packages/ui/src/' },
-      to: { path: '^(packages|apps)/', pathNot: '^packages/(ui|engine|schema)/' },
+      to: { path: '^(packages|apps)/', pathNot: '^packages/(ui|engine|schema|i18n)/' },
     },
     {
       name: 'apps-no-internals',

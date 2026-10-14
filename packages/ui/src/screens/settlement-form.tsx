@@ -12,11 +12,13 @@ import { Input } from '@expense/ui/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@expense/ui/components/ui/native-select';
 import { Textarea } from '@expense/ui/components/ui/textarea';
 import { type SubmitEvent, useId, useState } from 'react';
-import { parseAmount } from '../amounts';
+import { type InputProblem, parseAmount } from '../amounts';
 import { ErrorAlert } from '../components/error-alert';
 import { useCommand } from '../engine/store';
-import { amountInputValue, today } from '../format';
+import { today } from '../format';
 import { memberNames } from '../group-data';
+import { K, useI18n } from '../i18n';
+import { describeProblem } from '../messages';
 
 /** Valori iniziali: un trasferimento suggerito, oppure niente per un rimborso scritto a mano. */
 export interface SettlementPreset {
@@ -35,6 +37,8 @@ export function SettlementForm({
   readonly preset: SettlementPreset;
   readonly onDone: () => void;
 }) {
+  const i18n = useI18n();
+  const { t, format } = i18n;
   const currency = preset.amount?.currency ?? group.baseCurrency;
   const members = group.members.filter(
     ({ memberId, archived }) => !archived || memberId === preset.from || memberId === preset.to,
@@ -42,11 +46,11 @@ export function SettlementForm({
   const [from, setFrom] = useState(preset.from);
   const [to, setTo] = useState(preset.to);
   const [amount, setAmount] = useState(
-    preset.amount === null ? '' : amountInputValue(preset.amount),
+    preset.amount === null ? '' : format.amountInput(preset.amount),
   );
   const [date, setDate] = useState(() => today());
   const [notes, setNotes] = useState('');
-  const [amountError, setAmountError] = useState<string | null>(null);
+  const [amountError, setAmountError] = useState<InputProblem | null>(null);
   const command = useCommand();
   const id = useId();
 
@@ -79,15 +83,13 @@ export function SettlementForm({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Registra un rimborso</DialogTitle>
-        <DialogDescription>
-          Soldi dati da una persona all’altra per pareggiare i conti.
-        </DialogDescription>
+        <DialogTitle>{t(K.settlements.form.title)}</DialogTitle>
+        <DialogDescription>{t(K.settlements.form.description)}</DialogDescription>
       </DialogHeader>
       <FieldGroup>
         <div className="grid grid-cols-2 gap-4">
           <Field>
-            <FieldLabel htmlFor={`${id}-from`}>Chi dà</FieldLabel>
+            <FieldLabel htmlFor={`${id}-from`}>{t(K.settlements.form.from)}</FieldLabel>
             <NativeSelect
               id={`${id}-from`}
               className="w-full"
@@ -97,12 +99,12 @@ export function SettlementForm({
               }}
               required
             >
-              <NativeSelectOption value="">Scegli…</NativeSelectOption>
+              <NativeSelectOption value="">{t(K.common.choose)}</NativeSelectOption>
               {memberOptions}
             </NativeSelect>
           </Field>
           <Field>
-            <FieldLabel htmlFor={`${id}-to`}>Chi riceve</FieldLabel>
+            <FieldLabel htmlFor={`${id}-to`}>{t(K.settlements.form.to)}</FieldLabel>
             <NativeSelect
               id={`${id}-to`}
               className="w-full"
@@ -112,14 +114,14 @@ export function SettlementForm({
               }}
               required
             >
-              <NativeSelectOption value="">Scegli…</NativeSelectOption>
+              <NativeSelectOption value="">{t(K.common.choose)}</NativeSelectOption>
               {memberOptions}
             </NativeSelect>
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Field data-invalid={amountError !== null}>
-            <FieldLabel htmlFor={`${id}-amount`}>Importo ({currency})</FieldLabel>
+            <FieldLabel htmlFor={`${id}-amount`}>{t(K.common.amountIn, { currency })}</FieldLabel>
             <Input
               id={`${id}-amount`}
               inputMode="decimal"
@@ -130,10 +132,10 @@ export function SettlementForm({
               aria-invalid={amountError !== null}
               required
             />
-            {amountError !== null && <FieldError>{amountError}</FieldError>}
+            {amountError !== null && <FieldError>{describeProblem(i18n, amountError)}</FieldError>}
           </Field>
           <Field>
-            <FieldLabel htmlFor={`${id}-date`}>Data</FieldLabel>
+            <FieldLabel htmlFor={`${id}-date`}>{t(K.common.date)}</FieldLabel>
             <Input
               id={`${id}-date`}
               type="date"
@@ -146,7 +148,7 @@ export function SettlementForm({
           </Field>
         </div>
         <Field>
-          <FieldLabel htmlFor={`${id}-notes`}>Note</FieldLabel>
+          <FieldLabel htmlFor={`${id}-notes`}>{t(K.settlements.form.notes)}</FieldLabel>
           <Textarea
             id={`${id}-notes`}
             value={notes}
@@ -161,11 +163,11 @@ export function SettlementForm({
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="outline">
-            Annulla
+            {t(K.common.cancel)}
           </Button>
         </DialogClose>
         <Button type="submit" disabled={command.pending}>
-          Registra
+          {t(K.settlements.form.submit)}
         </Button>
       </DialogFooter>
     </form>

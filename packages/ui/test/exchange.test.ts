@@ -1,44 +1,30 @@
+import { dictionaryDifferences, SHARED_DICTIONARIES } from '@expense/i18n';
 import { describe, expect, it } from 'vitest';
-import { exportFileName } from '../src/download';
-import { describeFileError, describeImport } from '../src/messages';
-
-const group = {
-  groupId: 'g1',
-  name: 'Vacanza',
-  baseCurrency: 'EUR',
-  archived: false,
-  mode: 'local',
-  me: null,
-  createdAt: '1760000000000:00000:d',
-} as const;
+import { safeFileName } from '../src/download';
+import { K, UI_ONLY_DICTIONARIES } from '../src/i18n';
 
 describe('nome del file esportato', () => {
   it('parte dal nome del gruppo, senza caratteri vietati nei nomi di file', () => {
-    expect(exportFileName('Vacanza in Sicilia')).toBe('Vacanza in Sicilia.spese.json');
-    expect(exportFileName('Casa 1/2: "bollette"?')).toBe('Casa 1-2- -bollette--.spese.json');
-    expect(exportFileName('  ')).toBe('gruppo.spese.json');
+    expect(safeFileName('Vacanza in Sicilia')).toBe('Vacanza in Sicilia');
+    expect(safeFileName('Casa 1/2: "bollette"?')).toBe('Casa 1-2- -bollette--');
+    expect(safeFileName('  ')).toBe('');
   });
 });
 
-describe('esito dell’importazione', () => {
-  it('dice quante modifiche sono arrivate e in quale gruppo', () => {
-    expect(describeImport({ added: 12, invalid: 0, groups: [group] })).toBe(
-      'Importate 12 modifiche in «Vacanza».',
-    );
-    expect(describeImport({ added: 1, invalid: 1, groups: [] })).toBe(
-      'Importata 1 modifica. Scartata 1 voce non valida.',
-    );
-    expect(describeImport({ added: 0, invalid: 3, groups: [group] })).toBe(
-      'Nessuna novità: queste modifiche erano già presenti. Scartate 3 voci non valide.',
-    );
+describe('dizionari della UI', () => {
+  it('l’inglese ha gli stessi testi e gli stessi segnaposto dell’italiano', () => {
+    expect(
+      dictionaryDifferences(UI_ONLY_DICTIONARIES.it, UI_ONLY_DICTIONARIES.en, 'en-GB'),
+    ).toEqual([]);
   });
 
-  it('spiega perché un file non si può importare', () => {
-    expect(describeFileError({ code: 'InvalidExchangeFile', reason: 'notJson' })).toBe(
-      'Questo file non è un gruppo esportato da questa app.',
-    );
-    expect(describeFileError({ code: 'InvalidExchangeFile', reason: 'newerVersion' })).toContain(
-      'versione più recente',
-    );
+  it('le sezioni della UI non si sovrappongono a quelle condivise', () => {
+    const shared = Object.keys(SHARED_DICTIONARIES.it);
+    expect(Object.keys(UI_ONLY_DICTIONARIES.it).filter((key) => shared.includes(key))).toEqual([]);
+  });
+
+  it('le chiavi sono i percorsi dei testi', () => {
+    expect(K.groups.title).toBe('groups.title');
+    expect(K.group.people).toBe('group.people');
   });
 });

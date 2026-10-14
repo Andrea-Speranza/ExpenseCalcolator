@@ -39,6 +39,7 @@ piattaforme e controlli automatici. Il perché delle scelte e il piano dei lavor
 | `core`                     | Calcolo puro: importi interi, ripartizione col resto maggiore, saldi, trasferimenti               | ovunque           |
 | `sync`                     | Orologio logico (HLC), ordine degli eventi, proiezione eventi → stato, ultima modifica per campo  | ovunque           |
 | `engine`                   | API pubblica: comandi, query, notifiche, scambio di eventi e file; definisce le porte             | ovunque           |
+| `i18n`                     | Lingue, chiavi tipizzate, traduzione (i18next), formati con `Intl`, testi comuni a UI e CLI       | ovunque           |
 | `adapters/local-indexeddb` | Salvataggio su IndexedDB                                                                          | browser e WebView |
 | `adapters/local-file`      | Salvataggio su un file JSON, con scrittura atomica                                                | Node (CLI)        |
 | `adapters/system`          | Orologio di sistema e id ULID                                                                     | ovunque           |
@@ -70,28 +71,33 @@ subgraph 4["adapters"]
 end
 8["core"]
 9["engine"]
-A["schema"]
-B["sync"]
-C["testing"]
-D["ui"]
+A["i18n"]
+B["schema"]
+C["sync"]
+D["testing"]
+E["ui"]
 end
 1-->9
 1-->5
 1-->7
 2-->9
+2-->A
 2-->6
 2-->7
-2-->D
+2-->E
 5-->9
 6-->9
 7-->9
-8-->A
+8-->B
 9-->8
-9-->A
 9-->B
-B-->A
-C-->9
+9-->C
+A-->9
+A-->B
+C-->B
 D-->9
+E-->9
+E-->A
 ```
 
 <!-- grafico-dipendenze:fine -->
@@ -103,7 +109,8 @@ controllo. Le principali:
   dipendenze a runtime; `sync` usa solo `schema`;
 - `engine` non conosce adapter, canali, UI e app;
 - un adapter o un canale conosce solo le porte (`engine`) e i tipi (`schema`), mai un altro adapter o canale;
-- la UI usa solo `engine` (e `schema`); le app non usano direttamente `core` e `sync`;
+- `i18n` usa solo `engine` e `schema`; la UI usa solo `engine`, `schema` e `i18n`; le app non usano
+  direttamente `core` e `sync`;
 - niente moduli di Node in `schema`, `core`, `sync` ed `engine`; niente cicli; il codice non importa i test.
 
 ## Il flusso di un comando
@@ -190,6 +197,10 @@ gruppo), uguale per web app e CLI. Importarlo più volte non crea doppioni.
   l'engine non notifica un cambiamento (`ui/src/engine/store.ts`).
 - **Navigazione con l'hash** (`#/gruppi/…`): funziona da file locali e nelle WebView senza configurare un
   server ([ADR 0009](adr/0009-distribuzione-locale.md)).
+- **Testi in italiano e inglese** ([ADR 0010](adr/0010-localizzazione.md)): dizionari JSON, chiavi ricavate
+  dal dizionario italiano (`t(K.groups.title)`), traduzione con i18next. La logica restituisce codici, mai
+  frasi; il lint vieta testi scritti nei componenti. Lingua dalle impostazioni o, finché non c'è, dal
+  dispositivo.
 - **Nessuna logica di dominio nella UI:** prepara i dati dei form, filtra e ordina gli elenchi, formatta
   importi e date; calcoli e regole restano nell'engine.
 
@@ -226,6 +237,7 @@ pacchetti condivisi (passano dalle porte), tipi espliciti nelle loro API, `switc
 | [0007](adr/0007-salvataggio-e-concorrenza.md) | Eventi, HLC, ultima modifica per campo, conflitti       |
 | [0008](adr/0008-componenti-ui-shadcn.md)      | shadcn/ui con Tailwind CSS                              |
 | [0009](adr/0009-distribuzione-locale.md)      | Web app solo in locale, dentro le app native            |
+| [0010](adr/0010-localizzazione.md)            | Localizzazione: dizionari JSON e chiavi tipizzate       |
 
 ## Prossime evoluzioni
 

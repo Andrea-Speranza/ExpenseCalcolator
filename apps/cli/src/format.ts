@@ -174,7 +174,7 @@ export function formatGroup(group: GroupView): string {
 export function formatSettings(settings: SettingsView): string {
   return [
     `Valuta predefinita: ${settings.defaultCurrency}`,
-    `Lingua: ${settings.language === 'it' ? 'italiano' : 'inglese'}`,
+    `Lingua: ${settings.language === null ? 'non scelta (italiano)' : settings.language === 'it' ? 'italiano' : 'inglese'}`,
     `Nome: ${settings.displayName ?? '(non indicato)'}`,
     '',
   ].join('\n');

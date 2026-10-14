@@ -370,10 +370,10 @@ describe('impostazioni', () => {
   it('mostra e cambia le impostazioni; la valuta vale per i nuovi gruppi', async () => {
     const cli = await testCli();
     expect((await cli('impostazioni')).stdout).toBe(
-      'Valuta predefinita: EUR\nLingua: italiano\nNome: (non indicato)\n',
+      'Valuta predefinita: EUR\nLingua: non scelta (italiano)\nNome: (non indicato)\n',
     );
     expect((await cli('impostazioni', '--valuta', 'chf', '--nome', 'Anna')).stdout).toBe(
-      'Valuta predefinita: CHF\nLingua: italiano\nNome: Anna\n',
+      'Valuta predefinita: CHF\nLingua: non scelta (italiano)\nNome: Anna\n',
     );
     expect((await cli('gruppo', 'crea', 'Svizzera', '--io', 'Anna')).stdout).toBe(
       'Gruppo «Svizzera» creato (CHF, io: Anna).\n',

@@ -11,20 +11,21 @@ import { ArchiveIcon, ArchiveRestoreIcon, DownloadIcon } from 'lucide-react';
 import { type ReactNode, type SubmitEvent, useId, useState } from 'react';
 import { ErrorAlert } from '../components/error-alert';
 import { NotFound as NotFoundPage, PageHeader } from '../components/layout';
-import { downloadTextFile, exportFileName } from '../download';
+import { downloadTextFile, safeFileName } from '../download';
 import { useCommand, useEngine, useQuery } from '../engine/store';
-import { currencyLabel } from '../format';
+import { K, useI18n } from '../i18n';
 import { routeHref } from '../router';
 
 export function GroupSettingsScreen({ groupId }: { readonly groupId: string }) {
+  const { t } = useI18n();
   const result = useQuery({ type: 'GetGroup', groupId });
-  if (!result.ok) return <NotFoundPage message="Questo gruppo non esiste su questo dispositivo." />;
+  if (!result.ok) return <NotFoundPage message={t(K.common.groupNotHere)} />;
   const group = result.value;
   return (
     <>
       <PageHeader
         back={{ href: routeHref({ page: 'group', groupId, tab: 'spese' }), label: group.name }}
-        title="Impostazioni del gruppo"
+        title={t(K.groupSettings.title)}
       />
       <div className="flex flex-col gap-10">
         <RenameGroupForm group={group} />
@@ -56,6 +57,7 @@ function Section({
 }
 
 function RenameGroupForm({ group }: { readonly group: GroupView }) {
+  const { t, format } = useI18n();
   const [name, setName] = useState(group.name);
   const [saved, setSaved] = useState(false);
   const command = useCommand();
@@ -84,7 +86,7 @@ function RenameGroupForm({ group }: { readonly group: GroupView }) {
       }}
     >
       <Field>
-        <FieldLabel htmlFor={`${id}-name`}>Nome del gruppo</FieldLabel>
+        <FieldLabel htmlFor={`${id}-name`}>{t(K.groupSettings.name)}</FieldLabel>
         <div className="flex gap-2">
           <Input
             id={`${id}-name`}
@@ -97,17 +99,16 @@ function RenameGroupForm({ group }: { readonly group: GroupView }) {
             required
           />
           <Button type="submit" disabled={command.pending}>
-            Salva
+            {t(K.common.save)}
           </Button>
         </div>
         <FieldDescription>
-          Valuta: {currencyLabel(group.baseCurrency)}. Non si può cambiare: le spese registrate sono
-          in questa valuta.
+          {t(K.groupSettings.currency, { currency: format.currency(group.baseCurrency) })}
         </FieldDescription>
       </Field>
       {saved && (
         <p role="status" className="text-sm text-muted-foreground">
-          Nome salvato.
+          {t(K.groupSettings.saved)}
         </p>
       )}
       <ErrorAlert error={command.error} />
@@ -116,12 +117,13 @@ function RenameGroupForm({ group }: { readonly group: GroupView }) {
 }
 
 function ExportGroup({ group }: { readonly group: GroupView }) {
+  const { t } = useI18n();
   const engine = useEngine();
   const [error, setError] = useState<NotFound | null>(null);
   return (
     <Section
-      title="Esporta"
-      description="Salva un file con tutto il gruppo: spese, rimborsi, membri e modifiche. Serve come copia di sicurezza, o per passare il gruppo a un altro dispositivo o a un’altra persona, che lo apre con «Importa» nell’elenco dei gruppi. Importarlo più volte non crea doppioni: arrivano solo le novità."
+      title={t(K.groupSettings.export.title)}
+      description={t(K.groupSettings.export.description)}
     >
       <Button
         variant="outline"
@@ -129,12 +131,16 @@ function ExportGroup({ group }: { readonly group: GroupView }) {
         onClick={() => {
           const file = exportGroupFile(engine, group.groupId);
           setError(file.ok ? null : file.error);
-          if (file.ok)
-            downloadTextFile(exportFileName(group.name), serializeExchangeFile(file.value));
+          if (!file.ok) return;
+          const safe = safeFileName(group.name);
+          const name = t(K.groupSettings.export.fileName, {
+            name: safe === '' ? t(K.groupSettings.export.fallbackName) : safe,
+          });
+          downloadTextFile(name, serializeExchangeFile(file.value));
         }}
       >
         <DownloadIcon data-icon="inline-start" />
-        Esporta il gruppo
+        {t(K.groupSettings.export.button)}
       </Button>
       <ErrorAlert error={error} />
     </Section>
@@ -142,15 +148,14 @@ function ExportGroup({ group }: { readonly group: GroupView }) {
 }
 
 function ArchiveGroup({ group }: { readonly group: GroupView }) {
+  const { t } = useI18n();
   const command = useCommand();
   return (
     <Section
-      title="Archivio"
-      description={
-        group.archived
-          ? 'Il gruppo è archiviato: resta consultabile e modificabile, in fondo all’elenco dei gruppi.'
-          : 'Quando il gruppo è concluso puoi archiviarlo: resta consultabile, in fondo all’elenco dei gruppi.'
-      }
+      title={t(K.groupSettings.archive.title)}
+      description={t(
+        group.archived ? K.groupSettings.archive.isArchived : K.groupSettings.archive.canArchive,
+      )}
     >
       <Button
         variant="outline"
@@ -170,7 +175,7 @@ function ArchiveGroup({ group }: { readonly group: GroupView }) {
         ) : (
           <ArchiveIcon data-icon="inline-start" />
         )}
-        {group.archived ? 'Togli dall’archivio' : 'Archivia il gruppo'}
+        {t(group.archived ? K.groupSettings.archive.unarchive : K.groupSettings.archive.archive)}
       </Button>
       <ErrorAlert error={command.error} />
     </Section>

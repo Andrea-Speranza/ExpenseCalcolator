@@ -7,16 +7,29 @@ import type {
   Result,
   Split,
 } from '@expense/engine';
-import { parseAmount, parsePercentage, parseWeight } from './amounts';
-import { amountInputValue, percentageInputValue } from './format';
+import type { Formatter } from '@expense/i18n';
+import { type InputProblem, parseAmount, parsePercentage, parseWeight } from './amounts';
 
 // Stato del form di una spesa: i valori sono i testi scritti dall'utente. Da qui si ottengono i dati del
 // comando (AddExpense o UpdateExpense), oppure gli errori da mostrare accanto ai campi. Le regole di
-// dominio (somme, totali) le verifica comunque l'engine.
+// dominio (somme, totali) le verifica comunque l'engine. Gli errori sono codici: il testo lo sceglie la UI.
 
 export type SplitMethod = Split['method'];
 export type PayerMode = 'single' | 'multiple';
 type MemberTexts = Readonly<Record<string, string>>;
+
+/** Un problema in un campo del form: un valore non valido o un dato che manca. */
+export type FormProblem =
+  | InputProblem
+  | { readonly code: 'descriptionRequired' }
+  | { readonly code: 'dateRequired' }
+  | { readonly code: 'payerRequired' }
+  | { readonly code: 'paymentsRequired' }
+  | { readonly code: 'participantsRequired' }
+  | { readonly code: 'amountsRequired' }
+  | { readonly code: 'percentagesRequired' }
+  | { readonly code: 'sharesRequired' };
+type MemberProblems = Readonly<Record<string, InputProblem>>;
 
 export interface ExpenseDraft {
   readonly description: string;
@@ -39,15 +52,15 @@ export interface ExpenseDraft {
 }
 
 export interface DraftErrors {
-  readonly description?: string;
-  readonly amount?: string;
-  readonly date?: string;
-  readonly payer?: string;
-  readonly split?: string;
+  readonly description?: FormProblem;
+  readonly amount?: FormProblem;
+  readonly date?: FormProblem;
+  readonly payer?: FormProblem;
+  readonly split?: FormProblem;
   /** Errori sugli importi dei singoli pagatori. */
-  readonly payments?: MemberTexts;
+  readonly payments?: MemberProblems;
   /** Errori sui valori dei singoli membri nella divisione. */
-  readonly members?: MemberTexts;
+  readonly members?: MemberProblems;
 }
 
 export interface ExpenseFields {
@@ -85,14 +98,14 @@ export function newDraft(
 }
 
 /** Form compilato con una spesa esistente, da modificare. */
-export function draftFromExpense(expense: ExpenseView): ExpenseDraft {
+export function draftFromExpense(expense: ExpenseView, format: Formatter): ExpenseDraft {
   const { total, paidBy, split } = expense.amounts;
   const [single] = paidBy;
   const singlePayer = paidBy.length === 1 && single?.amount.minor === total.minor;
   const participants = splitMembers(split);
   return {
     description: expense.description,
-    amount: amountInputValue(total),
+    amount: format.amountInput(total),
     date: expense.date,
     time: expense.time ?? '',
     category: expense.category ?? '',
@@ -102,14 +115,14 @@ export function draftFromExpense(expense: ExpenseView): ExpenseDraft {
     payments: singlePayer
       ? {}
       : Object.fromEntries(
-          paidBy.map(({ memberId, amount }) => [memberId, amountInputValue(amount)]),
+          paidBy.map(({ memberId, amount }) => [memberId, format.amountInput(amount)]),
         ),
     method: split.method,
     included: Object.fromEntries(participants.map((id) => [id, true])),
     exact:
       split.method === 'exact'
         ? Object.fromEntries(
-            split.amounts.map(({ memberId, amount }) => [memberId, amountInputValue(amount)]),
+            split.amounts.map(({ memberId, amount }) => [memberId, format.amountInput(amount)]),
           )
         : {},
     percentages:
@@ -117,7 +130,7 @@ export function draftFromExpense(expense: ExpenseView): ExpenseDraft {
         ? Object.fromEntries(
             split.percentages.map(({ memberId, basisPoints }) => [
               memberId,
-              percentageInputValue(basisPoints),
+              format.percentageInput(basisPoints),
             ]),
           )
         : {},
@@ -138,8 +151,8 @@ export function readDraft(
 ): Result<ExpenseFields, DraftErrors> {
   const errors: { -readonly [K in keyof DraftErrors]: DraftErrors[K] } = {};
   const description = draft.description.trim();
-  if (description === '') errors.description = 'Scrivi una descrizione.';
-  if (draft.date === '') errors.date = 'Indica la data.';
+  if (description === '') errors.description = { code: 'descriptionRequired' };
+  if (draft.date === '') errors.date = { code: 'dateRequired' };
 
   const total = parseAmount(draft.amount, currency);
   if (!total.ok) errors.amount = total.error;
@@ -221,13 +234,13 @@ function readPayers(
   total: Money | null,
 ): Result<MemberAmount[], DraftErrors> {
   if (draft.payerMode === 'single') {
-    if (draft.payer === '') return { ok: false, error: { payer: 'Indica chi ha pagato.' } };
+    if (draft.payer === '') return { ok: false, error: { payer: { code: 'payerRequired' } } };
     return { ok: true, value: total === null ? [] : [{ memberId: draft.payer, amount: total }] };
   }
   const values = readMemberValues(draft.payments, members, (text) => parseAmount(text, currency));
   if (!values.ok) return { ok: false, error: { payments: values.error } };
   if (values.value.length === 0) {
-    return { ok: false, error: { payer: 'Indica quanto ha pagato ciascuno.' } };
+    return { ok: false, error: { payer: { code: 'paymentsRequired' } } };
   }
   return { ok: true, value: values.value.map(([memberId, amount]) => ({ memberId, amount })) };
 }
@@ -243,7 +256,7 @@ function readSplit(
         .map(({ memberId }) => memberId)
         .filter((memberId) => draft.included[memberId] === true);
       if (memberIds.length === 0) {
-        return { ok: false, error: { split: 'Scegli almeno una persona.' } };
+        return { ok: false, error: { split: { code: 'participantsRequired' } } };
       }
       return { ok: true, value: { method: 'equal', memberIds } };
     }
@@ -251,7 +264,7 @@ function readSplit(
       const values = readMemberValues(draft.exact, members, (text) => parseAmount(text, currency));
       if (!values.ok) return { ok: false, error: { members: values.error } };
       if (values.value.length === 0) {
-        return { ok: false, error: { split: 'Indica almeno un importo.' } };
+        return { ok: false, error: { split: { code: 'amountsRequired' } } };
       }
       return {
         ok: true,
@@ -265,7 +278,7 @@ function readSplit(
       const values = readMemberValues(draft.percentages, members, parsePercentage);
       if (!values.ok) return { ok: false, error: { members: values.error } };
       if (values.value.length === 0) {
-        return { ok: false, error: { split: 'Indica almeno una percentuale.' } };
+        return { ok: false, error: { split: { code: 'percentagesRequired' } } };
       }
       return {
         ok: true,
@@ -279,7 +292,7 @@ function readSplit(
       const values = readMemberValues(draft.shares, members, parseWeight);
       if (!values.ok) return { ok: false, error: { members: values.error } };
       const weights = values.value.filter(([, weight]) => weight > 0);
-      if (weights.length === 0) return { ok: false, error: { split: 'Indica almeno una quota.' } };
+      if (weights.length === 0) return { ok: false, error: { split: { code: 'sharesRequired' } } };
       return {
         ok: true,
         value: {
@@ -295,10 +308,10 @@ function readSplit(
 function readMemberValues<T>(
   texts: MemberTexts,
   members: readonly MemberView[],
-  parse: (text: string) => Result<T, string>,
-): Result<[string, T][], MemberTexts> {
+  parse: (text: string) => Result<T, InputProblem>,
+): Result<[string, T][], MemberProblems> {
   const values: [string, T][] = [];
-  const errors: Record<string, string> = {};
+  const errors: Record<string, InputProblem> = {};
   for (const { memberId } of members) {
     const text = texts[memberId]?.trim() ?? '';
     if (text === '') continue;

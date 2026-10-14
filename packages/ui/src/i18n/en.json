@@ -1,0 +1,296 @@
+{
+  "app": {
+    "name": "Group expenses",
+    "settings": "Settings"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "restore": "Restore",
+    "open": "Open",
+    "choose": "Choose…",
+    "date": "Date",
+    "amountIn": "Amount ({{currency}})",
+    "amountPlaceholder": "0.00",
+    "groups": "Groups",
+    "you": "(you)",
+    "groupNotHere": "This group does not exist on this device.",
+    "separator": " · "
+  },
+  "notFound": {
+    "title": "Not found",
+    "page": "The page you are looking for does not exist.",
+    "back": "Back to groups"
+  },
+  "startup": {
+    "title": "Cannot open the saved data",
+    "hint": "Make sure the browser allows websites to store data (not in private browsing) and reload the page."
+  },
+  "entry": {
+    "restore": "Restore {{what}}",
+    "delete": "Delete {{what}}",
+    "lastChange": "Last changed on {{day}} at {{time}}"
+  },
+  "groups": {
+    "title": "Groups",
+    "empty": {
+      "title": "No groups",
+      "description": "Create a group for a holiday, your home or a dinner: add the people taking part and record the expenses. The data stays on this device. If someone sent you an exported group, open it with “Import”."
+    },
+    "tabs": {
+      "active": "Active ({{total}})",
+      "archived": "Archived ({{total}})"
+    },
+    "noActive": {
+      "title": "No active groups",
+      "description": "Archived groups are in the other tab. You can create a new one."
+    },
+    "noArchived": {
+      "title": "No archived groups",
+      "description": "When a group is over you can archive it from its settings: it will show up here."
+    },
+    "created": "Created on {{day}}",
+    "status": {
+      "empty": "No expenses",
+      "settled": "Settled up",
+      "open": "Open balances",
+      "owed": "you are owed {{amount}}",
+      "owe": "you owe {{amount}}"
+    },
+    "import": {
+      "button": "Import",
+      "file": "File to import",
+      "claimHint": "Open the group and, in the Members tab, choose “It’s me” next to your name."
+    },
+    "create": {
+      "button": "New group",
+      "title": "New group",
+      "description": "You can add the other people afterwards.",
+      "name": "Group name",
+      "namePlaceholder": "e.g. Holiday in Sicily",
+      "me": "Your name",
+      "meHint": "Leave it empty if you keep the accounts for others without sharing the expenses.",
+      "currency": "Currency",
+      "submit": "Create group"
+    }
+  },
+  "group": {
+    "settings": "Group settings",
+    "people_one": "1 person",
+    "people_other": "{{count}} people",
+    "youAre": "you are {{name}}",
+    "archived": "archived",
+    "tabs": {
+      "expenses": "Expenses",
+      "balances": "Balances",
+      "history": "History",
+      "members": "Members"
+    }
+  },
+  "groupSettings": {
+    "title": "Group settings",
+    "name": "Group name",
+    "currency": "Currency: {{currency}}. It cannot be changed: the recorded expenses are in this currency.",
+    "saved": "Name saved.",
+    "export": {
+      "title": "Export",
+      "description": "Save a file with the whole group: expenses, payments, members and changes. Use it as a backup, or to move the group to another device or person, who opens it with “Import” in the list of groups. Importing it several times creates no duplicates: only what is new is added.",
+      "button": "Export the group",
+      "fileName": "{{name}}.expenses.json",
+      "fallbackName": "group"
+    },
+    "archive": {
+      "title": "Archive",
+      "isArchived": "The group is archived: you can still view and edit it, at the bottom of the list of groups.",
+      "canArchive": "When the group is over you can archive it: you can still view it, at the bottom of the list of groups.",
+      "archive": "Archive the group",
+      "unarchive": "Remove from the archive"
+    }
+  },
+  "expenses": {
+    "noMembers": {
+      "title": "First add the people taking part",
+      "description": "Expenses are split between the members of the group.",
+      "action": "Add members"
+    },
+    "new": "New expense",
+    "filters": {
+      "label": "Filter the expenses",
+      "all": "All",
+      "paidByMe": "Paid by me",
+      "paidForMe": "Paid for me"
+    },
+    "totals": {
+      "all": "Total spent",
+      "paidByMe": "You paid",
+      "filtered": "Total of these expenses"
+    },
+    "empty": {
+      "title": "No expenses",
+      "filtered": "No expenses with this filter",
+      "description": "Record the group’s first expense."
+    },
+    "deleted": "Deleted",
+    "conflict": "Changed on several devices: please check",
+    "paidBy": "paid by",
+    "splitBetween": "Split between",
+    "shares_one": "1 share",
+    "shares_other": "{{count}} shares",
+    "deleteLabel": "the expense “{{name}}”",
+    "deleteTitle": "Delete “{{name}}”?",
+    "deleteDescription": "It will no longer count in the balances, which will be recalculated. It stays among the deleted expenses, where you can restore it."
+  },
+  "expense": {
+    "notFound": "This expense does not exist.",
+    "newTitle": "New expense",
+    "editTitle": "Edit expense",
+    "created": "Added on {{day}} at {{time}}",
+    "createdAndModified": "Added on {{day}} at {{time}} · changed on {{lastDay}} at {{lastTime}}",
+    "deletedNotice": "This expense is deleted: it does not count in the balances.",
+    "conflict": "This expense was changed on several devices at the same time: check that the data is right and save.",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g. Dinner at the restaurant",
+    "time": "Time (optional)",
+    "category": "Category (optional)",
+    "categoryPlaceholder": "e.g. Food, Transport",
+    "notes": "Notes (optional)",
+    "payer": "Paid by",
+    "multiplePayers": "Several people…",
+    "split": "How to split",
+    "methods": {
+      "equal": "Equally",
+      "equalHint": "Everyone pays the same part.",
+      "exact": "Amounts",
+      "exactHint": "Write how much each person owes.",
+      "percentage": "%",
+      "percentageHint": "Write each person’s percentage.",
+      "shares": "Shares",
+      "sharesHint": "Someone with 2 shares pays twice as much as someone with 1."
+    },
+    "all": "Everyone",
+    "selected": "{{selected}} of {{total}}",
+    "perHead": "About {{amount}} each.",
+    "sharesUnit": "shares",
+    "progress": {
+      "exactDone": "Total reached.",
+      "exactMissing": "{{amount}} left.",
+      "exactOver": "{{amount}} over the total.",
+      "percentageDone": "Total: 100%.",
+      "percentageMissing": "{{percentage}} left.",
+      "percentageOver": "{{percentage}} over 100%."
+    }
+  },
+  "form": {
+    "descriptionRequired": "Write a description.",
+    "dateRequired": "Enter the date.",
+    "amountRequired": "Enter an amount.",
+    "invalidAmount": "This is not a valid amount (for example 12 or 12.50).",
+    "noDecimals": "{{currency}} has no decimals.",
+    "tooManyDecimals_one": "{{currency}} uses at most 1 decimal.",
+    "tooManyDecimals_other": "{{currency}} uses at most {{count}} decimals.",
+    "tooLarge": "The amount is too large.",
+    "unknownCurrency": "Unknown currency: {{currency}}.",
+    "invalidPercentage": "This is not a valid percentage (for example 50 or 33.33).",
+    "percentageOver100": "The percentage is over 100%.",
+    "invalidWeight": "Use a whole number (e.g. 1 or 2).",
+    "payerRequired": "Choose who paid.",
+    "paymentsRequired": "Enter how much each person paid.",
+    "participantsRequired": "Choose at least one person.",
+    "amountsRequired": "Enter at least one amount.",
+    "percentagesRequired": "Enter at least one percentage.",
+    "sharesRequired": "Enter at least one share."
+  },
+  "balances": {
+    "excluded_one": "One entry is not valid and is left out of the calculation.",
+    "excluded_other": "{{count}} entries are not valid and are left out of the calculation.",
+    "title": "Balances",
+    "empty": "No expenses yet: everyone is settled up.",
+    "receives": "gets back",
+    "gives": "owes",
+    "even": "settled up",
+    "transfers": {
+      "title": "How to settle up",
+      "simplified": "Fewest payments",
+      "pairwise": "Per pair",
+      "empty": "No payments needed: everyone is settled up.",
+      "paid": "Paid",
+      "givesTo": "pays"
+    }
+  },
+  "settlements": {
+    "title": "Payments",
+    "add": "Record",
+    "empty": {
+      "title": "No payments",
+      "description": "When someone pays back a debt, record it here: the balances update."
+    },
+    "deleted": "Deleted",
+    "deleteLabel": "the payment {{who}}",
+    "deleteTitle": "Delete the payment?",
+    "deleteDescription": "{{who}}, {{amount}}. It will no longer count in the balances, which will be recalculated. It stays in the list as deleted, where you can restore it.",
+    "form": {
+      "title": "Record a payment",
+      "description": "Money given from one person to another to settle up.",
+      "from": "From",
+      "to": "To",
+      "notes": "Notes",
+      "submit": "Record"
+    }
+  },
+  "history": {
+    "filters": {
+      "label": "What to show",
+      "all": "Everything",
+      "expenses": "Expenses",
+      "settlements": "Payments"
+    },
+    "empty": {
+      "title": "Nothing yet",
+      "description": "Expenses and payments will appear here, newest first."
+    },
+    "unknownDay": "Unknown date added",
+    "expense": "Expense",
+    "settlement": "Payment",
+    "expenseOf": "Expense of {{date}}",
+    "settlementOf": "Payment of {{date}}",
+    "expenseDeleted": "Deleted",
+    "settlementDeleted": "Deleted",
+    "expenseModified": "Changed on {{day}} at {{time}}",
+    "settlementModified": "Changed on {{day}} at {{time}}"
+  },
+  "members": {
+    "claimHint": "If you share the expenses too, choose “It’s me” next to your name: the expenses you record will start from you.",
+    "archived": "Archived",
+    "archivedHint": "They stay in past expenses, but are no longer offered for new ones.",
+    "add": "Add a person",
+    "addPlaceholder": "Name",
+    "addButton": "Add",
+    "you": "You",
+    "claim": "It’s me",
+    "archive": "Archive {{name}}",
+    "unarchive": "Reactivate {{name}}",
+    "rename": "Rename {{name}}",
+    "renameTitle": "Rename",
+    "name": "Name"
+  },
+  "settings": {
+    "title": "Settings",
+    "name": "Your name",
+    "nameHint": "Suggested when you create a new group.",
+    "currency": "Default currency",
+    "currencyHint": "Suggested for new groups.",
+    "language": "Language",
+    "languageHint": "Until you choose one, the app uses the language of the device.",
+    "languages": {
+      "it": "Italiano",
+      "en": "English"
+    },
+    "saved": "Settings saved.",
+    "data": {
+      "title": "Data",
+      "local": "Groups are saved only on this device, in the browser. They are not sent to any server.",
+      "device": "Device code:"
+    }
+  }
+}

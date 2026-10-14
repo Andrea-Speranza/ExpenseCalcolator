@@ -5,10 +5,12 @@
 /** Caratteri che Windows, Android e gli altri sistemi non accettano nei nomi di file (più quelli di controllo). */
 const FORBIDDEN = /[\\/:*?"<>|\p{Cc}]/gu;
 
-/** Nome del file di esportazione, dal nome del gruppo (es. "Vacanza in Sicilia.spese.json"). */
-export function exportFileName(groupName: string): string {
-  const safe = groupName.replace(FORBIDDEN, '-').trim();
-  return `${safe === '' ? 'gruppo' : safe}.spese.json`;
+/**
+ * Nome del gruppo adatto a un nome di file (es. "Casa 1/2" → "Casa 1-2"); vuoto se non resta nulla. Il nome
+ * completo del file (es. "Vacanza.spese.json") lo compone la UI nella lingua attiva.
+ */
+export function safeFileName(groupName: string): string {
+  return groupName.replace(FORBIDDEN, '-').trim();
 }
 
 export function downloadTextFile(name: string, content: string): void {

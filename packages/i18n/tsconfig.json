@@ -1,0 +1,8 @@
+{
+  // Codice condiviso da UI e CLI: niente tipi DOM né Node, ES2023 per Intl con importi da testo decimale.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"]
+  },
+  "include": ["src"]
+}

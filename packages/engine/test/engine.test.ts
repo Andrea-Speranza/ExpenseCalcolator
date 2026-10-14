@@ -15,7 +15,7 @@ describe('apertura', () => {
     expect(engine.profileId).toBe('a_00002');
     expect(unwrap(engine.query({ type: 'GetSettings' }))).toEqual({
       defaultCurrency: 'EUR',
-      language: 'it',
+      language: null,
       displayName: null,
     });
     expect(unwrap(engine.query({ type: 'ListGroups' }))).toEqual([]);

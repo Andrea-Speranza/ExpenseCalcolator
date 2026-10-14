@@ -17,8 +17,10 @@ import { ArchiveIcon, ArchiveRestoreIcon, InfoIcon, PencilIcon, PlusIcon } from 
 import { type SubmitEvent, useId, useState } from 'react';
 import { ErrorAlert } from '../components/error-alert';
 import { useCommand } from '../engine/store';
+import { K, useI18n } from '../i18n';
 
 export function MembersTab({ group }: { readonly group: GroupView }) {
+  const { t } = useI18n();
   const active = group.members.filter(({ archived }) => !archived);
   const archived = group.members.filter((member) => member.archived);
 
@@ -28,19 +30,14 @@ export function MembersTab({ group }: { readonly group: GroupView }) {
       {group.me === null && group.members.length > 0 && (
         <Alert>
           <InfoIcon />
-          <AlertDescription>
-            Se partecipi anche tu alle spese, scegli «Sono io» accanto al tuo nome: le spese che
-            registri partiranno da te.
-          </AlertDescription>
+          <AlertDescription>{t(K.members.claimHint)}</AlertDescription>
         </Alert>
       )}
       {active.length > 0 && <MemberList group={group} members={active} />}
       {archived.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-medium text-muted-foreground">Archiviati</h2>
-          <p className="text-sm text-muted-foreground">
-            Restano nelle spese passate, ma non compaiono più tra chi partecipa alle nuove.
-          </p>
+          <h2 className="text-sm font-medium text-muted-foreground">{t(K.members.archived)}</h2>
+          <p className="text-sm text-muted-foreground">{t(K.members.archivedHint)}</p>
           <MemberList group={group} members={archived} />
         </section>
       )}
@@ -49,6 +46,7 @@ export function MembersTab({ group }: { readonly group: GroupView }) {
 }
 
 function AddMemberForm({ group }: { readonly group: GroupView }) {
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const command = useCommand();
   const id = useId();
@@ -67,7 +65,7 @@ function AddMemberForm({ group }: { readonly group: GroupView }) {
       }}
     >
       <Field>
-        <FieldLabel htmlFor={`${id}-name`}>Aggiungi una persona</FieldLabel>
+        <FieldLabel htmlFor={`${id}-name`}>{t(K.members.add)}</FieldLabel>
         <div className="flex gap-2">
           <Input
             id={`${id}-name`}
@@ -75,13 +73,13 @@ function AddMemberForm({ group }: { readonly group: GroupView }) {
             onChange={(event) => {
               setName(event.target.value);
             }}
-            placeholder="Nome"
+            placeholder={t(K.members.addPlaceholder)}
             maxLength={60}
             required
           />
           <Button type="submit" disabled={command.pending}>
             <PlusIcon data-icon="inline-start" />
-            Aggiungi
+            {t(K.members.addButton)}
           </Button>
         </div>
       </Field>
@@ -107,6 +105,7 @@ function MemberList({
 }
 
 function MemberRow({ group, member }: { readonly group: GroupView; readonly member: MemberView }) {
+  const { t } = useI18n();
   const command = useCommand();
   const isMe = group.me === member.memberId;
   const { groupId } = group;
@@ -116,7 +115,7 @@ function MemberRow({ group, member }: { readonly group: GroupView; readonly memb
     <li className="flex flex-col gap-2 px-4 py-3">
       <div className="flex items-center gap-2">
         <span className="min-w-0 flex-1 truncate font-medium">{member.name}</span>
-        {isMe && <Badge>Tu</Badge>}
+        {isMe && <Badge>{t(K.members.you)}</Badge>}
         {!isMe && !member.archived && (
           <Button
             variant="ghost"
@@ -126,7 +125,7 @@ function MemberRow({ group, member }: { readonly group: GroupView; readonly memb
               void command.run({ type: 'ClaimMember', groupId, memberId });
             }}
           >
-            Sono io
+            {t(K.members.claim)}
           </Button>
         )}
         <RenameMemberDialog group={group} member={member} />
@@ -134,7 +133,9 @@ function MemberRow({ group, member }: { readonly group: GroupView; readonly memb
           variant="ghost"
           size="icon-sm"
           disabled={command.pending}
-          aria-label={member.archived ? `Riattiva ${member.name}` : `Archivia ${member.name}`}
+          aria-label={t(member.archived ? K.members.unarchive : K.members.archive, {
+            name: member.name,
+          })}
           onClick={() => {
             void command.run({
               type: 'UpdateMember',
@@ -160,11 +161,16 @@ function RenameMemberDialog({
   readonly group: GroupView;
   readonly member: MemberView;
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={`Rinomina ${member.name}`}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={t(K.members.rename, { name: member.name })}
+        >
           <PencilIcon />
         </Button>
       </DialogTrigger>
@@ -190,6 +196,7 @@ function RenameMemberForm({
   readonly member: MemberView;
   readonly onDone: () => void;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState(member.name);
   const command = useCommand();
   const id = useId();
@@ -218,10 +225,10 @@ function RenameMemberForm({
       }}
     >
       <DialogHeader>
-        <DialogTitle>Rinomina</DialogTitle>
+        <DialogTitle>{t(K.members.renameTitle)}</DialogTitle>
       </DialogHeader>
       <Field>
-        <FieldLabel htmlFor={`${id}-name`}>Nome</FieldLabel>
+        <FieldLabel htmlFor={`${id}-name`}>{t(K.members.name)}</FieldLabel>
         <Input
           id={`${id}-name`}
           value={name}
@@ -237,11 +244,11 @@ function RenameMemberForm({
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="outline">
-            Annulla
+            {t(K.common.cancel)}
           </Button>
         </DialogClose>
         <Button type="submit" disabled={command.pending}>
-          Salva
+          {t(K.common.save)}
         </Button>
       </DialogFooter>
     </form>

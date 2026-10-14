@@ -1,0 +1,296 @@
+{
+  "app": {
+    "name": "Spese di gruppo",
+    "settings": "Impostazioni"
+  },
+  "common": {
+    "cancel": "Annulla",
+    "save": "Salva",
+    "delete": "Elimina",
+    "restore": "Ripristina",
+    "open": "Apri",
+    "choose": "Scegli…",
+    "date": "Data",
+    "amountIn": "Importo ({{currency}})",
+    "amountPlaceholder": "0,00",
+    "groups": "Gruppi",
+    "you": "(tu)",
+    "groupNotHere": "Questo gruppo non esiste su questo dispositivo.",
+    "separator": " · "
+  },
+  "notFound": {
+    "title": "Non trovato",
+    "page": "La pagina che cerchi non esiste.",
+    "back": "Torna ai gruppi"
+  },
+  "startup": {
+    "title": "Impossibile aprire i dati salvati",
+    "hint": "Controlla che il browser permetta ai siti di salvare dati (non in navigazione privata) e ricarica la pagina."
+  },
+  "entry": {
+    "restore": "Ripristina {{what}}",
+    "delete": "Elimina {{what}}",
+    "lastChange": "Ultima modifica il {{day}} alle {{time}}"
+  },
+  "groups": {
+    "title": "Gruppi",
+    "empty": {
+      "title": "Nessun gruppo",
+      "description": "Crea un gruppo per una vacanza, la casa o una cena: aggiungi chi partecipa e registra le spese. I dati restano su questo dispositivo. Se qualcuno ti ha mandato un gruppo esportato, aprilo con «Importa»."
+    },
+    "tabs": {
+      "active": "Attivi ({{total}})",
+      "archived": "Archiviati ({{total}})"
+    },
+    "noActive": {
+      "title": "Nessun gruppo attivo",
+      "description": "I gruppi archiviati sono nell’altra scheda. Puoi crearne uno nuovo."
+    },
+    "noArchived": {
+      "title": "Nessun gruppo archiviato",
+      "description": "Quando un gruppo è concluso puoi archiviarlo dalle sue impostazioni: comparirà qui."
+    },
+    "created": "Creato il {{day}}",
+    "status": {
+      "empty": "Nessuna spesa",
+      "settled": "In pari",
+      "open": "Conti aperti",
+      "owed": "ti devono {{amount}}",
+      "owe": "devi {{amount}}"
+    },
+    "import": {
+      "button": "Importa",
+      "file": "File da importare",
+      "claimHint": "Apri il gruppo e, nella scheda Membri, scegli «Sono io» accanto al tuo nome."
+    },
+    "create": {
+      "button": "Nuovo gruppo",
+      "title": "Nuovo gruppo",
+      "description": "Dopo potrai aggiungere le altre persone.",
+      "name": "Nome del gruppo",
+      "namePlaceholder": "Es. Vacanza in Sicilia",
+      "me": "Il tuo nome",
+      "meHint": "Lascialo vuoto se tieni i conti per altri senza partecipare alle spese.",
+      "currency": "Valuta",
+      "submit": "Crea gruppo"
+    }
+  },
+  "group": {
+    "settings": "Impostazioni del gruppo",
+    "people_one": "1 persona",
+    "people_other": "{{count}} persone",
+    "youAre": "tu sei {{name}}",
+    "archived": "archiviato",
+    "tabs": {
+      "expenses": "Spese",
+      "balances": "Saldi",
+      "history": "Storico",
+      "members": "Membri"
+    }
+  },
+  "groupSettings": {
+    "title": "Impostazioni del gruppo",
+    "name": "Nome del gruppo",
+    "currency": "Valuta: {{currency}}. Non si può cambiare: le spese registrate sono in questa valuta.",
+    "saved": "Nome salvato.",
+    "export": {
+      "title": "Esporta",
+      "description": "Salva un file con tutto il gruppo: spese, rimborsi, membri e modifiche. Serve come copia di sicurezza, o per passare il gruppo a un altro dispositivo o a un’altra persona, che lo apre con «Importa» nell’elenco dei gruppi. Importarlo più volte non crea doppioni: arrivano solo le novità.",
+      "button": "Esporta il gruppo",
+      "fileName": "{{name}}.spese.json",
+      "fallbackName": "gruppo"
+    },
+    "archive": {
+      "title": "Archivio",
+      "isArchived": "Il gruppo è archiviato: resta consultabile e modificabile, in fondo all’elenco dei gruppi.",
+      "canArchive": "Quando il gruppo è concluso puoi archiviarlo: resta consultabile, in fondo all’elenco dei gruppi.",
+      "archive": "Archivia il gruppo",
+      "unarchive": "Togli dall’archivio"
+    }
+  },
+  "expenses": {
+    "noMembers": {
+      "title": "Prima aggiungi chi partecipa",
+      "description": "Le spese si dividono tra i membri del gruppo.",
+      "action": "Aggiungi membri"
+    },
+    "new": "Nuova spesa",
+    "filters": {
+      "label": "Filtra le spese",
+      "all": "Tutte",
+      "paidByMe": "Pagate da me",
+      "paidForMe": "Pagate per me"
+    },
+    "totals": {
+      "all": "Totale spese",
+      "paidByMe": "Hai pagato",
+      "filtered": "Totale di queste spese"
+    },
+    "empty": {
+      "title": "Nessuna spesa",
+      "filtered": "Nessuna spesa con questo filtro",
+      "description": "Registra la prima spesa del gruppo."
+    },
+    "deleted": "Eliminate",
+    "conflict": "Modificata da più dispositivi: da controllare",
+    "paidBy": "pagato da",
+    "splitBetween": "Divisa tra",
+    "shares_one": "1 quota",
+    "shares_other": "{{count}} quote",
+    "deleteLabel": "la spesa «{{name}}»",
+    "deleteTitle": "Eliminare «{{name}}»?",
+    "deleteDescription": "Non conterà più nei saldi, che verranno ricalcolati. Resterà tra le spese eliminate, da dove potrai ripristinarla."
+  },
+  "expense": {
+    "notFound": "Questa spesa non esiste.",
+    "newTitle": "Nuova spesa",
+    "editTitle": "Modifica spesa",
+    "created": "Inserita il {{day}} alle {{time}}",
+    "createdAndModified": "Inserita il {{day}} alle {{time}} · modificata il {{lastDay}} alle {{lastTime}}",
+    "deletedNotice": "Questa spesa è eliminata: non conta nei saldi.",
+    "conflict": "Questa spesa è stata modificata da più dispositivi nello stesso momento: controlla che i dati siano giusti e salva.",
+    "description": "Descrizione",
+    "descriptionPlaceholder": "Es. Cena al ristorante",
+    "time": "Ora (facoltativa)",
+    "category": "Categoria (facoltativa)",
+    "categoryPlaceholder": "Es. Cibo, Trasporti",
+    "notes": "Note (facoltative)",
+    "payer": "Chi ha pagato",
+    "multiplePayers": "Più persone…",
+    "split": "Come dividere",
+    "methods": {
+      "equal": "Uguale",
+      "equalHint": "Ognuno paga la stessa parte.",
+      "exact": "Importi",
+      "exactHint": "Scrivi quanto spetta a ciascuno.",
+      "percentage": "%",
+      "percentageHint": "Scrivi la percentuale di ciascuno.",
+      "shares": "Quote",
+      "sharesHint": "Chi ha 2 quote paga il doppio di chi ne ha 1."
+    },
+    "all": "Tutti",
+    "selected": "{{selected}} di {{total}}",
+    "perHead": "Circa {{amount}} a testa.",
+    "sharesUnit": "quote",
+    "progress": {
+      "exactDone": "Totale raggiunto.",
+      "exactMissing": "Mancano {{amount}}.",
+      "exactOver": "{{amount}} in più del totale.",
+      "percentageDone": "Totale: 100%.",
+      "percentageMissing": "Manca {{percentage}}.",
+      "percentageOver": "{{percentage}} oltre il 100%."
+    }
+  },
+  "form": {
+    "descriptionRequired": "Scrivi una descrizione.",
+    "dateRequired": "Indica la data.",
+    "amountRequired": "Indica un importo.",
+    "invalidAmount": "Non è un importo valido (esempi: 12 oppure 12,50).",
+    "noDecimals": "In {{currency}} non si usano decimali.",
+    "tooManyDecimals_one": "In {{currency}} si usa al massimo 1 decimale.",
+    "tooManyDecimals_other": "In {{currency}} si usano al massimo {{count}} decimali.",
+    "tooLarge": "L’importo è troppo grande.",
+    "unknownCurrency": "Valuta sconosciuta: {{currency}}.",
+    "invalidPercentage": "Non è una percentuale valida (esempi: 50 oppure 33,33).",
+    "percentageOver100": "La percentuale supera il 100%.",
+    "invalidWeight": "Usa un numero intero (es. 1 o 2).",
+    "payerRequired": "Indica chi ha pagato.",
+    "paymentsRequired": "Indica quanto ha pagato ciascuno.",
+    "participantsRequired": "Scegli almeno una persona.",
+    "amountsRequired": "Indica almeno un importo.",
+    "percentagesRequired": "Indica almeno una percentuale.",
+    "sharesRequired": "Indica almeno una quota."
+  },
+  "balances": {
+    "excluded_one": "Una voce non è valida ed è esclusa dal calcolo.",
+    "excluded_other": "{{count}} voci non sono valide e sono escluse dal calcolo.",
+    "title": "Saldi",
+    "empty": "Ancora nessuna spesa: tutti in pari.",
+    "receives": "deve ricevere",
+    "gives": "deve dare",
+    "even": "in pari",
+    "transfers": {
+      "title": "Come pareggiare",
+      "simplified": "Meno passaggi",
+      "pairwise": "Per coppia",
+      "empty": "Nessun trasferimento: i conti sono in pari.",
+      "paid": "Pagato",
+      "givesTo": "dà a"
+    }
+  },
+  "settlements": {
+    "title": "Rimborsi",
+    "add": "Registra",
+    "empty": {
+      "title": "Nessun rimborso",
+      "description": "Quando qualcuno salda un debito, registralo qui: i saldi si aggiornano."
+    },
+    "deleted": "Eliminato",
+    "deleteLabel": "il rimborso {{who}}",
+    "deleteTitle": "Eliminare il rimborso?",
+    "deleteDescription": "{{who}}, {{amount}}. Non conterà più nei saldi, che verranno ricalcolati. Resterà nell’elenco come eliminato, da dove potrai ripristinarlo.",
+    "form": {
+      "title": "Registra un rimborso",
+      "description": "Soldi dati da una persona all’altra per pareggiare i conti.",
+      "from": "Chi dà",
+      "to": "Chi riceve",
+      "notes": "Note",
+      "submit": "Registra"
+    }
+  },
+  "history": {
+    "filters": {
+      "label": "Cosa mostrare",
+      "all": "Tutto",
+      "expenses": "Spese",
+      "settlements": "Rimborsi"
+    },
+    "empty": {
+      "title": "Ancora niente",
+      "description": "Qui compariranno spese e rimborsi, dal più recente."
+    },
+    "unknownDay": "Data di inserimento sconosciuta",
+    "expense": "Spesa",
+    "settlement": "Rimborso",
+    "expenseOf": "Spesa del {{date}}",
+    "settlementOf": "Rimborso del {{date}}",
+    "expenseDeleted": "Eliminata",
+    "settlementDeleted": "Eliminato",
+    "expenseModified": "Modificata il {{day}} alle {{time}}",
+    "settlementModified": "Modificato il {{day}} alle {{time}}"
+  },
+  "members": {
+    "claimHint": "Se partecipi anche tu alle spese, scegli «Sono io» accanto al tuo nome: le spese che registri partiranno da te.",
+    "archived": "Archiviati",
+    "archivedHint": "Restano nelle spese passate, ma non compaiono più tra chi partecipa alle nuove.",
+    "add": "Aggiungi una persona",
+    "addPlaceholder": "Nome",
+    "addButton": "Aggiungi",
+    "you": "Tu",
+    "claim": "Sono io",
+    "archive": "Archivia {{name}}",
+    "unarchive": "Riattiva {{name}}",
+    "rename": "Rinomina {{name}}",
+    "renameTitle": "Rinomina",
+    "name": "Nome"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "name": "Il tuo nome",
+    "nameHint": "Proposto quando crei un nuovo gruppo.",
+    "currency": "Valuta predefinita",
+    "currencyHint": "Proposta per i nuovi gruppi.",
+    "language": "Lingua",
+    "languageHint": "Finché non la scegli, l’app usa la lingua del dispositivo.",
+    "languages": {
+      "it": "Italiano",
+      "en": "English"
+    },
+    "saved": "Impostazioni salvate.",
+    "data": {
+      "title": "Dati",
+      "local": "I gruppi sono salvati solo su questo dispositivo, nel browser. Non vengono inviati a nessun server.",
+      "device": "Codice del dispositivo:"
+    }
+  }
+}

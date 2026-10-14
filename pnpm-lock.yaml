@@ -84,6 +84,9 @@ importers:
       '@expense/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@expense/i18n':
+        specifier: workspace:*
+        version: link:../../packages/i18n
       '@expense/local-indexeddb':
         specifier: workspace:*
         version: link:../../packages/adapters/local-indexeddb
@@ -99,9 +102,6 @@ importers:
       react-dom:
         specifier: ^19.3.0
         version: 19.3.0(react@19.3.0)
-      zod:
-        specifier: ^4.6.6
-        version: 4.6.6
     devDependencies:
       '@playwright/test':
         specifier: ^1.64.0
@@ -186,6 +186,18 @@ importers:
         specifier: workspace:*
         version: link:../sync
 
+  packages/i18n:
+    dependencies:
+      '@expense/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@expense/schema':
+        specifier: workspace:*
+        version: link:../schema
+      i18next:
+        specifier: ^26.4.4
+        version: 26.4.4(typescript@6.0.3)
+
   packages/schema:
     dependencies:
       zod:
@@ -209,6 +221,9 @@ importers:
       '@expense/engine':
         specifier: workspace:*
         version: link:../engine
+      '@expense/i18n':
+        specifier: workspace:*
+        version: link:../i18n
       '@fontsource-variable/geist':
         specifier: ^5.3.0
         version: 5.3.0
@@ -2578,6 +2593,14 @@ packages:
   human-signals@8.0.1:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
+
+  i18next@26.4.4:
+    resolution: {integrity: sha512-O+rqmQUi54OwAgnZ4SAwO6aRrbXZt36VZXWt6zvq0FpC3vJbH46oQRs6u4Uwm1vf8ZI7UqOXQiJhQVTor7vRiQ==}
+    peerDependencies:
+      typescript: ^5 || ^6 || ^7
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   iconv-lite@0.7.3:
     resolution: {integrity: sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ==}
@@ -6341,6 +6364,10 @@ snapshots:
   human-signals@2.1.0: {}
 
   human-signals@8.0.1: {}
+
+  i18next@26.4.4(typescript@6.0.3):
+    optionalDependencies:
+      typescript: 6.0.3
 
   iconv-lite@0.7.3:
     dependencies:

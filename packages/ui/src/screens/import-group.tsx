@@ -10,6 +10,7 @@ import { Button } from '@expense/ui/components/ui/button';
 import { UploadIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { useEngine } from '../engine/store';
+import { K, useI18n } from '../i18n';
 
 export type ImportResult = Result<ImportSummary, InvalidExchangeFile | StorageFailed>;
 
@@ -19,6 +20,7 @@ export function ImportGroupButton({
 }: {
   readonly onResult: (result: ImportResult) => void;
 }) {
+  const { t } = useI18n();
   const engine = useEngine();
   const input = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState(false);
@@ -47,7 +49,7 @@ export function ImportGroupButton({
         type="file"
         accept=".json,application/json"
         className="hidden"
-        aria-label="File da importare"
+        aria-label={t(K.groups.import.file)}
         onChange={(event) => {
           const file = event.target.files?.[0];
           // Svuotato subito, così si può importare di nuovo lo stesso file (es. con le novità).
@@ -63,7 +65,7 @@ export function ImportGroupButton({
         }}
       >
         <UploadIcon data-icon="inline-start" />
-        Importa
+        {t(K.groups.import.button)}
       </Button>
     </>
   );
