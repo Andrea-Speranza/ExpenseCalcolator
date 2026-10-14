@@ -9,10 +9,10 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # Usa la versione di pnpm indicata in "packageManager" nel package.json.
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -22,7 +22,7 @@ jobs:
       - run: pnpm --filter @expense/web exec playwright install --with-deps chromium
       - run: pnpm e2e
       # Se falliscono, il rapporto con le tracce si scarica dalla pagina dell'esecuzione.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
