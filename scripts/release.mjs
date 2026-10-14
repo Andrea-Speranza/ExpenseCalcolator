@@ -2,7 +2,8 @@
 // Cargo.toml e Cargo.lock ne tengono una copia, che questo script aggiorna e controlla.
 //   node scripts/release.mjs 0.1.0-alpha.2 [--dry-run]  prepara il rilascio: numero, CHANGELOG, commit e tag
 //   node scripts/release.mjs --check [--tag v0.1.0-alpha.2]  verifica le copie del numero (e il tag)
-//   node scripts/release.mjs --notes 0.1.0-alpha.2  scrive le note del rilascio, prese dal CHANGELOG
+//   node scripts/release.mjs --notes 0.1.0-alpha.2 [file]  note del rilascio, prese dal CHANGELOG; con un file
+//     le scrive lì in UTF-8, senza passare dalla console e dalla sua codifica
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import process from 'node:process';
@@ -198,13 +199,15 @@ if (args[0] === '--check') {
   if (problems.length > 0) fail(`Le versioni non coincidono:\n- ${problems.join('\n- ')}`);
   process.stdout.write(`Versione ${currentVersion()}: tutte le copie coincidono.\n`);
 } else if (args[0] === '--notes' && args[1] !== undefined) {
-  process.stdout.write(`${releaseNotes(args[1])}\n`);
+  const notes = `${releaseNotes(args[1])}\n`;
+  if (args[2] === undefined) process.stdout.write(notes);
+  else writeFileSync(args[2], notes);
 } else if (args[0] !== undefined && !args[0].startsWith('--')) {
   prepare(args[0], args.includes('--dry-run'));
 } else {
   fail(
     'Uso: pnpm release <versione> [--dry-run]  (es. pnpm release 0.1.0-alpha.2)\n' +
       '     node scripts/release.mjs --check [--tag v<versione>]\n' +
-      '     node scripts/release.mjs --notes <versione>',
+      '     node scripts/release.mjs --notes <versione> [file]',
   );
 }

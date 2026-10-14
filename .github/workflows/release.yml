@@ -40,7 +40,7 @@ jobs:
           Copy-Item "apps/native/src-tauri/target/release/bundle/nsis/*_${version}_x64-setup.exe" $installer
           $hash = (Get-FileHash $installer -Algorithm SHA256).Hash.ToLower()
           "$hash  $(Split-Path $installer -Leaf)" | Out-File release/SHA256SUMS.txt -Encoding ascii
-          node scripts/release.mjs --notes $version | Out-File release/notes.md -Encoding utf8
+          node scripts/release.mjs --notes $version release/notes.md
       - name: Crea la release
         env:
           GH_TOKEN: ${{ github.token }}
