@@ -7,7 +7,8 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 - **senza backend:** la condivisione passa dallo storage cloud degli utenti (es. Google Drive).
 
 > **Stato:** Fasi 1 (logica di calcolo), 2 (eventi, salvataggio, engine) e 3 (UI) completate: la web app
-> funziona in locale nel browser (`pnpm web`). Prossima la Fase 4: app native per Windows e Android.
+> funziona in locale nel browser (`pnpm web`). Fase 4 in corso: l'app per Windows (Tauri) funziona
+> (`pnpm native`); Android verrà dopo, in un ambiente di sviluppo dedicato.
 > Tutto parte da [docs/PLANNING.md](docs/PLANNING.md); com'è costruito il sistema oggi è in
 > [docs/ARCHITETTURA.md](docs/ARCHITETTURA.md).
 
@@ -41,6 +42,7 @@ pnpm coverage         # test con copertura
 pnpm format           # formatta tutti i file
 pnpm web              # la web app su http://localhost:5173, con i dati nel browser (vedi apps/web/README.md)
 pnpm web:preview      # build e anteprima della versione finale
+pnpm native           # l'app per Windows (Tauri) in sviluppo; native:build crea l'installer (vedi apps/native/README.md)
 pnpm cli --help       # la riga di comando: gruppi e spese salvati in locale (vedi apps/cli/README.md)
 pnpm schemas          # rigenera i JSON Schema in spec/schemas dopo aver cambiato packages/schema
 pnpm deps:graph       # rigenera il grafico delle dipendenze in docs/ARCHITETTURA.md

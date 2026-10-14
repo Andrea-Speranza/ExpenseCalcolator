@@ -119,7 +119,7 @@ export default {
   ],
   options: {
     doNotFollow: { path: 'node_modules' },
-    exclude: { path: '(^|/)(dist|coverage)/' },
+    exclude: { path: '(^|/)(dist|coverage|target)/' },
     // Rileva anche gli `import type`, necessari per la regola core-schema-type-only.
     tsPreCompilationDeps: true,
     tsConfig: { fileName: 'tsconfig.base.json' },

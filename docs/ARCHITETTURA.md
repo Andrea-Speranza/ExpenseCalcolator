@@ -9,7 +9,7 @@ piattaforme e controlli automatici. Il perché delle scelte e il piano dei lavor
 - **Local-first.** Ogni dispositivo ha la copia completa dei propri gruppi e funziona offline. Non c'è un
   server né un database centrale: la condivisione passerà dai file dei canali (Fasi 5 e 6).
 - **Un solo linguaggio, TypeScript, su ogni piattaforma** ([ADR 0001](adr/0001-linguaggio-typescript.md)): la
-  stessa logica gira nella web app, nella CLI e, dalla Fase 4, nelle app native.
+  stessa logica gira nella web app, nella CLI e nell'app per Windows (Tauri); Android arriverà nella Fase 4.
 - **Architettura esagonale (porte e adapter).** Il cuore (`schema`, `core`, `sync`, `engine`) non sa su quale
   piattaforma gira. Salvataggio, orologio e id arrivano dall'esterno attraverso le porte.
 - **Event sourcing.** Ogni modifica è un evento immutabile; lo stato si ricostruisce applicando gli eventi
@@ -19,7 +19,7 @@ piattaforme e controlli automatici. Il perché delle scelte e il piano dei lavor
 ## Strati e pacchetti
 
 ```text
- Shell            apps/web (browser)      apps/cli (Node)      apps/native (Tauri, Fase 4)
+ Shell            apps/web (browser)      apps/cli (Node)      apps/native (Tauri: Windows)
                       │                       │
  Presentazione    packages/ui (React)         │ (testo nel terminale)
                       └───────────┬───────────┘
@@ -185,7 +185,9 @@ Ogni shell apre l'engine con gli adapter della propria piattaforma:
 - **web** (`apps/web/src/main.tsx`): IndexedDB, orologio e ULID di sistema, richiesta di storage persistente,
   poi `<App engine={engine} />`;
 - **CLI** (`apps/cli/src/main.ts`): file JSON nella cartella dell'utente;
-- **app native** (Fase 4): la stessa build della web app dentro Tauri, caricata dai file locali.
+- **app native** (`apps/native`): la stessa build della web app dentro Tauri, letta dai file inclusi
+  nell'app (`http://tauri.localhost`), con IndexedDB nel profilo WebView2. Funziona su Windows; Android è
+  il prossimo passo della Fase 4. Il codice Rust è solo l'avvio.
 
 Il passaggio manuale di un gruppo tra dispositivi usa il **file di scambio** (`ExchangeFile`: gli eventi del
 gruppo), uguale per web app e CLI. Importarlo più volte non crea doppioni.
@@ -241,7 +243,7 @@ pacchetti condivisi (passano dalle porte), tipi espliciti nelle loro API, `switc
 
 ## Prossime evoluzioni
 
-- **Fase 4:** app per Windows e Android con Tauri, che caricano la stessa build della UI dai file locali.
+- **Fase 4:** completare l'app nativa: icone e firma su Windows, poi Android con Tauri.
 - **Fasi 5 e 6:** porta `SyncChannel` e primi canali (file condiviso, cartella sincronizzata, poi cloud),
   storico delle singole modifiche, condivisione tra persone.
 - **Fase 7:** più valute e conversione, grafici, permessi e firme dei dispositivi.

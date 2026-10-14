@@ -1,3 +1,6 @@
 pnpm-lock.yaml
 # Generati da packages/schema: si rigenerano, non si formattano a mano.
 spec/schemas/
+# Generati da Cargo e da Tauri (apps/native).
+apps/native/src-tauri/target/
+apps/native/src-tauri/gen/

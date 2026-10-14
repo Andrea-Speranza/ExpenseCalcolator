@@ -23,6 +23,9 @@
     "web:build": "pnpm --filter @expense/web build",
     "web:preview": "pnpm --filter @expense/web build && pnpm --filter @expense/web preview",
     "e2e": "pnpm --filter @expense/web e2e",
+    "native": "pnpm --filter @expense/native dev",
+    "native:build": "pnpm --filter @expense/native build",
+    "native:check": "pnpm --filter @expense/native check",
     "schemas": "node scripts/update-json-schemas.mjs"
   },
   "devDependencies": {

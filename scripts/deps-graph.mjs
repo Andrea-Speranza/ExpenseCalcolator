@@ -19,11 +19,12 @@ const result = spawnSync(
     'apps',
     '--config',
     '.dependency-cruiser.mjs',
-    // Solo i pacchetti del progetto (niente librerie npm), senza test e file di configurazione.
+    // Solo i pacchetti del progetto (niente librerie npm), senza test, file di configurazione e cartelle
+    // generate (questa opzione sostituisce l'exclude della configurazione, quindi le ripete).
     '--include-only',
     '^(packages|apps)/',
     '--exclude',
-    '(^|/)(test|e2e)/|\\.config\\.ts$',
+    '(^|/)(test|e2e|dist|coverage|target)/|\\.config\\.ts$',
     // Un nodo per pacchetto invece che per file.
     '--collapse',
     '^(packages/(adapters|channels)/[^/]+|packages/[^/]+|apps/[^/]+)',

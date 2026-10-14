@@ -1,0 +1,18 @@
+[package]
+name = "expense-calcolator"
+version = "0.1.0"
+description = "Spese di gruppo: la web app dentro un'app nativa (Tauri 2)"
+authors = ["Andrea Speranza"]
+license = ""
+edition = "2024"
+rust-version = "1.90"
+
+[lib]
+name = "expense_calcolator_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.7.2", features = [] }
+
+[dependencies]
+tauri = { version = "2.12.3", features = [] }

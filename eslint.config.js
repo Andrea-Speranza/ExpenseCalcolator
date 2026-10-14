@@ -35,6 +35,9 @@ export default defineConfig(
     '**/coverage/',
     '**/test-results/',
     '**/playwright-report/',
+    // Generati da Cargo e da Tauri (apps/native).
+    '**/target/',
+    'apps/native/src-tauri/gen/',
     'spec/schemas/',
   ]),
 

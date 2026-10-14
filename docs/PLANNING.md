@@ -791,12 +791,16 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
 **Fatto quando:** l'app si usa davvero per un gruppo su un solo dispositivo, anche in modalità aereo.
 Verificato dai test E2E: una volta aperta funziona senza rete e ritrova i dati dopo la riapertura.
 
-### 11.6 Fase 4 — Shell native (`apps/native`)
+### 11.6 Fase 4 — Shell native (`apps/native`) (in corso)
 
-- [ ] Prima di iniziare: spike S2 (ed eventualmente S3, §13.2), poi decisione D3.
-- [ ] Build Windows con Tauri 2: un installer che carica la UI dai file locali.
+- [ ] Prima di iniziare: spike S2 (ed eventualmente S3, §13.2), poi decisione D3. Parte Windows fatta
+      (2026-10-14, risultati in §13.2); manca Android, in un ambiente di sviluppo dedicato.
+- [x] Build Windows con Tauri 2: un installer NSIS di 2,1 MB che carica la UI dai file locali. Comandi
+      `pnpm native`, `pnpm native:build`, `pnpm native:check` (rustfmt e Clippy).
 - [ ] Build Android: APK per i test, AAB per un eventuale store. Gestire tasto indietro, aree sicure dello schermo e tastiera.
-- [ ] Verificare che IndexedDB resti persistente in WebView2 e nella WebView di Android.
+- [ ] Verificare che IndexedDB resti persistente in WebView2 (fatto) e nella WebView di Android.
+- [ ] Esporta e importa su Android: la WebView di Android di solito non gestisce i download da un link; se è
+      così, il salvataggio passerà dalla shell (plugin dialog o condivisione). Da verificare.
 - [ ] Icone, splash, nome dell'app, firma.
 
 **Fatto quando:** la stessa build della UI gira su web, Windows e Android, senza modifiche al codice di `core`, `engine` o `ui`.
@@ -903,6 +907,10 @@ senza alcun server nostro.
   - il login OAuth Google su Android funziona tramite redirect o deep link;
   - quanto pesano gli installer.
 - **Risultato atteso:** decisione D3.
+- **Esito su Windows (2026-10-14):** positivo. La UI si carica da `http://tauri.localhost/` senza richieste di
+  rete; i dati in IndexedDB restano dopo il riavvio; esportazione (cartella Download) e importazione
+  funzionano; installer NSIS di 2,1 MB, eseguibile di 8,6 MB; prima build in circa 5 minuti. Il codice Rust è
+  solo l'avvio. La parte Android (WebView, login Google, peso dell'APK) resta da fare.
 
 **S3 — Capacitor su Android** (massimo 1 giorno, solo se S2 fallisce)
 
@@ -921,14 +929,15 @@ senza alcun server nostro.
 - **Zod 4** per modelli dati, validazione e generazione del JSON Schema (ADR 0003).
 - **ESLint** con il set raccomandato del plugin ufficiale di ogni linguaggio in uso:
 
-  | Linguaggio                 | Regole                                                                                                                                     |
-  | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-  | JavaScript e TypeScript    | `@eslint/js` e typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, più `switch-exhaustiveness-check`                           |
-  | React                      | `eslint-plugin-react-hooks` (regole ufficiali, comprese quelle del React Compiler) e `eslint-plugin-react-refresh` (modello React di Vite) |
-  | Test                       | `@vitest/eslint-plugin`                                                                                                                    |
-  | Testi della UI             | `no-restricted-syntax`: niente testo scritto nel JSX o negli attributi accessibili, niente chiavi stringa in `t()`                         |
-  | JSON e JSONC               | `@eslint/json`                                                                                                                             |
-  | Markdown (dialetto GitHub) | `@eslint/markdown`, che verifica anche i link interni ai documenti                                                                         |
+  | Linguaggio                 | Regole                                                                                                                                           |
+  | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | JavaScript e TypeScript    | `@eslint/js` e typescript-eslint `strictTypeChecked` + `stylisticTypeChecked`, più `switch-exhaustiveness-check`                                 |
+  | React                      | `eslint-plugin-react-hooks` (regole ufficiali, comprese quelle del React Compiler) e `eslint-plugin-react-refresh` (modello React di Vite)       |
+  | Test                       | `@vitest/eslint-plugin`                                                                                                                          |
+  | Rust (`apps/native`)       | rustfmt e Clippy con gli avvisi trattati come errori (`pnpm native:check`; non ancora nella CI, che richiederebbe le librerie di Tauri su Linux) |
+  | Testi della UI             | `no-restricted-syntax`: niente testo scritto nel JSX o negli attributi accessibili, niente chiavi stringa in `t()`                               |
+  | JSON e JSONC               | `@eslint/json`                                                                                                                                   |
+  | Markdown (dialetto GitHub) | `@eslint/markdown`, che verifica anche i link interni ai documenti                                                                               |
 
   YAML (configurazione della CI e del workspace) è solo formattato e validato sintatticamente da Prettier.
 
