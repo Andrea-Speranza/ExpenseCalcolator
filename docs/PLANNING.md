@@ -324,7 +324,7 @@ Gli stessi file vengono impacchettati in ogni "shell":
   nelle app native e nel browser del PC si usa in locale (`pnpm web`). In futuro potrà essere ospitata sul
   proprio NAS o su un hosting statico, senza cambiare codice.
 
-### 7.3 Perché Tauri e non Electron
+### 7.3 Perché Tauri e non Electron o .NET MAUI
 
 - **Electron** è il più vicino a Spotify e Steam, perché incorpora un proprio Chromium. Però l'installer pesa
   oltre 100 MB e non supporta Android.
@@ -332,6 +332,15 @@ Gli stessi file vengono impacchettati in ogni "shell":
   mobile. Il lato nativo è in Rust, ma per noi si limita a configurazione e plugin (accesso al file system, deep link).
 - **Capacitor** è più maturo su mobile e ha molti plugin, ad esempio per il login Google nativo, ma non copre
   il desktop. La scelta per Android si fa dopo lo spike S2 **(D3)**.
+- **.NET MAUI con `HybridWebView`** (valutato il 2026-10-14) carica la stessa build della UI e ha il lato
+  nativo in C#. Vantaggi: un linguaggio già conosciuto, il login nel browser di sistema già pronto
+  (`WebAuthenticator`), SDK Android e JDK gestiti da Visual Studio. Scartato perché:
+  - ogni funzione nativa (file, condivisione, QR, deep link) richiede un ponte scritto a mano tra C# e
+    JavaScript. Con Tauri i plugin ufficiali hanno già un'API TypeScript, quindi i canali di condivisione
+    restano in TypeScript, come il resto dell'app ([ADR 0001](adr/0001-linguaggio-typescript.md));
+  - non supporta Linux (previsto in Fase 7) e include il runtime .NET, quindi l'app pesa decine di MB.
+
+  Resta il ripiego se Tauri si rivelasse inadatto su Windows; su Android il ripiego previsto è Capacitor.
 
 ### 7.4 Framework UI: React + Vite — **deciso** ([ADR 0002](adr/0002-framework-ui-react.md))
 
@@ -847,7 +856,7 @@ senza alcun server nostro.
 | --- | ----------------------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------- |
 | D1  | Linguaggio del core e dell'intera app                                   | **Decisa**      | TypeScript ([ADR 0001](adr/0001-linguaggio-typescript.md))                                                                                                                                                                                 | —                                      |
 | D2  | Framework UI                                                            | **Decisa**      | React + Vite ([ADR 0002](adr/0002-framework-ui-react.md))                                                                                                                                                                                  | —                                      |
-| D3  | Shell per Android                                                       | Aperta          | Tauri 2; Capacitor se lo spike S2 trova problemi, soprattutto con il login Google                                                                                                                                                          | Dopo S2                                |
+| D3  | Shell per Android                                                       | Aperta          | Tauri 2 (confermato dopo il confronto con .NET MAUI, §7.3); Capacitor se lo spike S2 trova problemi su Android, soprattutto con il login Google. Spike: prima Windows, Android in un ambiente dedicato                                     | Dopo S2                                |
 | D4  | Primo provider cloud e relativo scope OAuth                             | Aperta          | Google Drive; scope scelto in base a S1                                                                                                                                                                                                    | Dopo S1                                |
 | D5  | Libreria per schema e validazione                                       | **Decisa**      | Zod 4 ([ADR 0003](adr/0003-schema-validazione-zod.md))                                                                                                                                                                                     | —                                      |
 | D6  | Regole di conflitto                                                     | **Decisa**      | Ultima modifica per campo o blocco, eliminazione che vince, modifiche contemporanee segnalate ([ADR 0007](adr/0007-salvataggio-e-concorrenza.md))                                                                                          | Inizio Fase 2                          |
