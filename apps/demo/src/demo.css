@@ -1,0 +1,6 @@
+/*
+ * Il tema dell'app, più le classi usate dalla cornice della demo (@source fa cercare a Tailwind anche qui).
+ */
+@import '@expense/ui/styles.css';
+
+@source "./";

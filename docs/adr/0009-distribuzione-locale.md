@@ -33,6 +33,26 @@ online non serve. Le app native funzionano offline comunque.
   Fino ad allora possono ricevere i dati tramite esporta/importa (CLI e web app) e, più avanti, tramite i canali di
   condivisione.
 
+## Aggiornamento (2026-10-14): una demo da provare
+
+La decisione resta: nessun servizio online per usare l'app. Si aggiunge solo una **demo** per farla provare,
+con il link nel README:
+
+- è una shell a parte, `apps/demo`, accanto a `apps/web` e `apps/native`: la stessa app, con i dati
+  nel browser, dentro una cornice con un avviso e, finché non ci sono gruppi, il pulsante «Prova con un gruppo
+  di esempio»;
+- **l'app non sa di essere in una demo:** `packages/ui` e `apps/web` non cambiano. La cornice usa solo l'API
+  pubblica dell'engine (crea il gruppo con i normali comandi, controlla con query e notifiche se ci sono gruppi)
+  e l'indirizzo delle pagine. Testi e codice della demo stanno tutti in `apps/demo`;
+- è pubblicata su **GitHub Pages** dal workflow `.github/workflows/demo.yml` a ogni push su `main`, solo quando
+  il repository è pubblico; finché è privato il lavoro viene saltato;
+- sono solo file statici, senza server e senza account: ogni visitatore ha i propri dati nel suo browser e
+  nessuno vede quelli degli altri.
+
+GitHub Pages è stato preferito a Cloudflare Pages, Netlify e Vercel perché sta nello stesso posto del codice,
+non richiede altri account e si aggiorna da solo. Su CodeSandbox o StackBlitz la demo avvierebbe un server di
+sviluppo per ogni visitatore: servono a provare il codice, non l'app.
+
 ## Possibilità future
 
 - **Self-hosting sul proprio NAS**, raggiungibile con il tunnel Cloudflare già in uso. La web app resta sotto

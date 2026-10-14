@@ -8,7 +8,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm deps && pnpm coverage && pnpm web:build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm deps && pnpm coverage && pnpm web:build && pnpm demo:build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -23,6 +23,9 @@
     "web:build": "pnpm --filter @expense/web build",
     "web:preview": "pnpm --filter @expense/web build && pnpm --filter @expense/web preview",
     "e2e": "pnpm --filter @expense/web e2e",
+    "demo": "pnpm --filter @expense/demo dev",
+    "demo:build": "pnpm --filter @expense/demo build",
+    "demo:preview": "pnpm --filter @expense/demo build && pnpm --filter @expense/demo preview",
     "native": "pnpm --filter @expense/native dev",
     "native:build": "pnpm --filter @expense/native build",
     "native:check": "pnpm --filter @expense/native check",

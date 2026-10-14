@@ -19,7 +19,7 @@ piattaforme e controlli automatici. Il perché delle scelte e il piano dei lavor
 ## Strati e pacchetti
 
 ```text
- Shell            apps/web (browser)      apps/cli (Node)      apps/native (Tauri: Windows)
+ Shell            apps/web, apps/demo     apps/cli (Node)      apps/native (Tauri: Windows)
                       │                       │
  Presentazione    packages/ui (React)         │ (testo nel terminale)
                       └───────────┬───────────┘
@@ -47,6 +47,7 @@ piattaforme e controlli automatici. Il perché delle scelte e il piano dei lavor
 | `channels/*`               | Canali di condivisione come plugin ([ADR 0006](adr/0006-canali-plugin.md)); per ora solo i README | dalla Fase 5      |
 | `ui`                       | L'app in React con shadcn/ui ([ADR 0008](adr/0008-componenti-ui-shadcn.md))                       | browser e WebView |
 | `apps/web`                 | Shell web: collega UI, engine e adapter del browser; build Vite, solo in locale                   | browser           |
+| `apps/demo`                | La web app dentro la cornice della demo (avviso e gruppo di esempio), pubblicata su GitHub Pages  | browser           |
 | `apps/cli`                 | Riga di comando: l'app completa in modalità locale, senza grafica                                 | Node 22           |
 
 ### Dipendenze tra i pacchetti
@@ -61,43 +62,49 @@ flowchart LR
 
 subgraph 0["apps"]
 1["cli"]
-2["web"]
+2["demo"]
+3["web"]
 end
-subgraph 3["packages"]
-subgraph 4["adapters"]
-5["local-file"]
-6["local-indexeddb"]
-7["system"]
+subgraph 4["packages"]
+subgraph 5["adapters"]
+6["local-file"]
+7["local-indexeddb"]
+8["system"]
 end
-8["core"]
-9["engine"]
-A["i18n"]
-B["schema"]
-C["sync"]
-D["testing"]
-E["ui"]
+9["core"]
+A["engine"]
+B["i18n"]
+C["schema"]
+D["sync"]
+E["testing"]
+F["ui"]
 end
-1-->9
-1-->5
-1-->7
-2-->9
+1-->A
+1-->6
+1-->8
 2-->A
-2-->6
+2-->B
+2-->F
 2-->7
-2-->E
-5-->9
-6-->9
-7-->9
-8-->B
-9-->8
-9-->B
+2-->8
+3-->A
+3-->B
+3-->7
+3-->8
+3-->F
+6-->A
+7-->A
+8-->A
 9-->C
 A-->9
-A-->B
-C-->B
-D-->9
-E-->9
+A-->C
+A-->D
+B-->A
+B-->C
+D-->C
 E-->A
+F-->A
+F-->B
 ```
 
 <!-- grafico-dipendenze:fine -->
@@ -184,6 +191,9 @@ Ogni shell apre l'engine con gli adapter della propria piattaforma:
 
 - **web** (`apps/web/src/main.tsx`): IndexedDB, orologio e ULID di sistema, richiesta di storage persistente,
   poi `<App engine={engine} />`;
+- **demo** (`apps/demo/src/main.tsx`): come la web app, ma mette `<App>` dentro `<DemoFrame>`: un avviso e il
+  pulsante che crea un gruppo di esempio con i normali comandi dell'engine. L'app non sa di essere in una demo
+  ([ADR 0009](adr/0009-distribuzione-locale.md));
 - **CLI** (`apps/cli/src/main.ts`): file JSON nella cartella dell'utente;
 - **app native** (`apps/native`): la stessa build della web app dentro Tauri, letta dai file inclusi
   nell'app (`http://tauri.localhost`), con IndexedDB nel profilo WebView2. Funziona su Windows; Android è

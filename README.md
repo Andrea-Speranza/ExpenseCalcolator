@@ -12,6 +12,14 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 > Tutto parte da [docs/PLANNING.md](docs/PLANNING.md); com'è costruito il sistema oggi è in
 > [docs/ARCHITETTURA.md](docs/ARCHITETTURA.md).
 
+## Demo
+
+**[Prova la demo](https://andrea-speranza.github.io/ExpenseCalcolator/)**: la web app nel browser, con un gruppo
+di esempio da aprire con un clic. I dati restano solo nel tuo browser: nessun account, nessun server. La demo
+si aggiorna a ogni push su `main` ed è una shell a parte, [apps/demo](apps/demo/README.md): l'app non cambia
+([ADR 0009](docs/adr/0009-distribuzione-locale.md)); il link funziona da
+quando il repository è pubblico e GitHub Pages è attivo.
+
 ## Cosa si può fare oggi
 
 Su un solo dispositivo, senza account né rete, dalla web app (`pnpm web`) o dalla riga di comando
@@ -80,6 +88,7 @@ pnpm check          # facoltativo: verifica che tutto funzioni (formattazione, l
 ```powershell
 pnpm web            # sviluppo: apri http://localhost:5173 (si aggiorna da sola quando cambi il codice)
 pnpm web:preview    # versione finale: apri http://localhost:4173
+pnpm demo           # facoltativo: la demo (avviso e gruppo di esempio) su http://localhost:5174
 pnpm e2e            # facoltativo: test E2E in Edge
 ```
 
@@ -167,5 +176,6 @@ I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm 
 | [apps/cli](apps/cli/)                   | Riga di comando: l'app in modalità locale, senza grafica                                                                       |
 | [apps/web](apps/web/)                   | Shell web: la UI con i dati nel browser (per ora solo in locale)                                                               |
 | [apps/native](apps/native/)             | Shell nativa (Tauri 2: Windows, Android)                                                                                       |
+| [apps/demo](apps/demo/)                 | Shell della demo: la web app con un avviso e un gruppo di esempio, pubblicata su GitHub Pages                                  |
 
 Regola d'oro: le dipendenze vanno solo verso il basso, `ui → engine → core/sync → schema`.

@@ -14,8 +14,8 @@ import tseslint from 'typescript-eslint';
 const CODE_FILES = ['**/*.{js,mjs,cjs,ts,mts,cts,tsx}'];
 const JS_FILES = ['**/*.{js,mjs,cjs}'];
 const TEST_FILES = ['{packages,apps}/**/test/**/*.{ts,tsx}'];
-// Codice React: la UI condivisa e la shell web.
-const REACT_FILES = ['{packages/ui,apps/web}/src/**/*.{ts,tsx}'];
+// Codice React: la UI condivisa, la shell web e quella della demo.
+const REACT_FILES = ['{packages/ui,apps/web,apps/demo}/src/**/*.{ts,tsx}'];
 // JSON con commenti: i tsconfig e le impostazioni di VS Code.
 const JSONC_FILES = ['**/tsconfig*.json', '.vscode/*.json'];
 
@@ -23,8 +23,8 @@ const JSONC_FILES = ['**/tsconfig*.json', '.vscode/*.json'];
 // l'ora di sistema e la casualità arrivano dall'esterno tramite le porte Clock e IdGenerator.
 const PLATFORM_AGNOSTIC_SOURCES = ['packages/{schema,core,sync,engine,i18n}/src/**/*.ts'];
 const CLOCK_MESSAGE = "Usa la porta Clock: questo codice non deve leggere l'ora di sistema.";
-// Codice della UI che mostra testi: devono arrivare dai dizionari (ADR 0010).
-const LOCALIZED_SOURCES = ['packages/ui/src/**/*.tsx'];
+// Codice che mostra testi all'utente: devono arrivare dai dizionari (ADR 0010).
+const LOCALIZED_SOURCES = ['{packages/ui,apps/demo}/src/**/*.tsx'];
 const TEXT_MESSAGE =
   'Testo per l’utente scritto nel codice: aggiungilo ai dizionari e usa t(K.…) (ADR 0010).';
 

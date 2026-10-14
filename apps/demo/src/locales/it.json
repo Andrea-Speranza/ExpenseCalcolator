@@ -1,0 +1,13 @@
+{
+  "notice": "Demo: i dati restano solo in questo browser. Nessun account, nessun server.",
+  "sampleButton": "Prova con un gruppo di esempio",
+  "sample": {
+    "group": "Weekend al lago",
+    "me": "Anna",
+    "dinner": "Cena in trattoria",
+    "fuel": "Benzina",
+    "groceries": "Spesa al supermercato",
+    "boat": "Biglietti del battello",
+    "paidBack": "Restituiti in contanti"
+  }
+}
