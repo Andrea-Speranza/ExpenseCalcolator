@@ -8,7 +8,7 @@
     "node": ">=22.13"
   },
   "scripts": {
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm deps && pnpm coverage && pnpm web:build && pnpm demo:build",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm release:check && pnpm deps && pnpm coverage && pnpm web:build && pnpm demo:build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -29,7 +29,9 @@
     "native": "pnpm --filter @expense/native dev",
     "native:build": "pnpm --filter @expense/native build",
     "native:check": "pnpm --filter @expense/native check",
-    "schemas": "node scripts/update-json-schemas.mjs"
+    "schemas": "node scripts/update-json-schemas.mjs",
+    "release": "node scripts/release.mjs",
+    "release:check": "node scripts/release.mjs --check"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

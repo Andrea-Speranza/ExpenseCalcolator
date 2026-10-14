@@ -1,0 +1,51 @@
+name: Rilascio
+
+# Pubblica una versione (ADR 0011). Parte quando arriva un tag v* creato da `pnpm release`: su una macchina
+# Windows controlla il progetto, compila l'app con Tauri e crea la GitHub Release con l'installer, la sua
+# impronta SHA-256 e le note prese dal CHANGELOG. Le versioni con un suffisso (es. 0.1.0-alpha.1) sono
+# segnate come pre-release.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Il tag deve corrispondere al numero di versione, e le sue copie (Cargo) devono coincidere.
+      - run: node scripts/release.mjs --check --tag "$env:TAG"
+      - run: pnpm check
+      # Rust e i suoi strumenti (rustfmt, Clippy) sono già installati sulle macchine Windows di GitHub.
+      - run: pnpm native:check
+      - run: pnpm native:build
+      - name: Prepara i file
+        run: |
+          $version = $env:TAG.Substring(1)
+          New-Item -ItemType Directory release | Out-Null
+          # Un nome senza spazi: GitHub li sostituirebbe con dei punti.
+          $installer = "release/spese-di-gruppo-$version-windows-x64-setup.exe"
+          Copy-Item "apps/native/src-tauri/target/release/bundle/nsis/*_${version}_x64-setup.exe" $installer
+          $hash = (Get-FileHash $installer -Algorithm SHA256).Hash.ToLower()
+          "$hash  $(Split-Path $installer -Leaf)" | Out-File release/SHA256SUMS.txt -Encoding ascii
+          node scripts/release.mjs --notes $version | Out-File release/notes.md -Encoding utf8
+      - name: Crea la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = $env:TAG.Substring(1)
+          $kind = if ($version.Contains('-')) { '--prerelease' } else { '--latest' }
+          $files = (Get-ChildItem release/*.exe, release/SHA256SUMS.txt).FullName
+          gh release create $env:TAG --verify-tag $kind --title "Spese di gruppo $version" --notes-file release/notes.md @files

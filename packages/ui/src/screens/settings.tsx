@@ -12,7 +12,7 @@ import { useCommand, useEngine, useQuery } from '../engine/store';
 import { K, useI18n } from '../i18n';
 import { routeHref } from '../router';
 
-export function SettingsScreen() {
+export function SettingsScreen({ version }: { readonly version: string }) {
   const { t } = useI18n();
   const settings = useQuery({ type: 'GetSettings' });
   return (
@@ -26,7 +26,7 @@ export function SettingsScreen() {
       ) : (
         <ErrorAlert error={settings.error} />
       )}
-      <DeviceInfo />
+      <DeviceInfo version={version} />
     </>
   );
 }
@@ -130,7 +130,7 @@ function SettingsForm({ settings }: { readonly settings: SettingsView }) {
   );
 }
 
-function DeviceInfo() {
+function DeviceInfo({ version }: { readonly version: string }) {
   const { t } = useI18n();
   const engine = useEngine();
   return (
@@ -139,6 +139,9 @@ function DeviceInfo() {
       <p>{t(K.settings.data.local)}</p>
       <p>
         {t(K.settings.data.device)} <code className="font-mono text-xs">{engine.deviceId}</code>
+      </p>
+      <p>
+        {t(K.settings.data.version)} <code className="font-mono text-xs">{version}</code>
       </p>
     </section>
   );

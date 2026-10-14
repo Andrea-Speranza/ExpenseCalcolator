@@ -6,6 +6,7 @@ import { createSystemClock, createUlidGenerator } from '@expense/system';
 import { App, StartupError } from '@expense/ui';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { version } from '../../../package.json';
 
 // Shell web: collega la UI all'engine, con i dati salvati nel browser (IndexedDB) e orologio e id del
 // sistema. Le app native (Fase 4) useranno la stessa build.
@@ -31,7 +32,7 @@ async function start(): Promise<void> {
   });
   root.render(
     <StrictMode>
-      <App engine={engine} defaultLanguage={deviceLanguage} />
+      <App engine={engine} defaultLanguage={deviceLanguage} version={version} />
     </StrictMode>,
   );
 }

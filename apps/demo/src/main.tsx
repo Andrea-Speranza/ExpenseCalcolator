@@ -6,6 +6,7 @@ import { createSystemClock, createUlidGenerator } from '@expense/system';
 import { App, StartupError } from '@expense/ui';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { version } from '../../../package.json';
 import { DemoFrame } from './demo-frame';
 
 // Shell della demo pubblicata su GitHub Pages (ADR 0009): la stessa app di apps/web, con i dati nel browser di
@@ -29,7 +30,7 @@ async function start(): Promise<void> {
   root.render(
     <StrictMode>
       <DemoFrame engine={engine} defaultLanguage={deviceLanguage}>
-        <App engine={engine} defaultLanguage={deviceLanguage} />
+        <App engine={engine} defaultLanguage={deviceLanguage} version={version} />
       </DemoFrame>
     </StrictMode>,
   );

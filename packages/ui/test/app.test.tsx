@@ -49,7 +49,13 @@ function memoryEngine(prefix = 't'): Promise<Engine> {
 
 /** L'app su un dispositivo in italiano (o nella lingua indicata), finché l'utente non ne sceglie un'altra. */
 async function renderApp(engine?: Engine, language: 'it' | 'en' = 'it'): Promise<UserEvent> {
-  render(<App engine={engine ?? (await memoryEngine())} defaultLanguage={language} />);
+  render(
+    <App
+      engine={engine ?? (await memoryEngine())}
+      defaultLanguage={language}
+      version="1.2.3-test"
+    />,
+  );
   return userEvent.setup();
 }
 
@@ -417,6 +423,7 @@ describe('app', () => {
     await user.click(screen.getByRole('link', { name: 'Settings' }));
     const language = await screen.findByLabelText('Language');
     expect(language).toHaveProperty('value', 'en');
+    expect(screen.getByText('1.2.3-test')).toBeDefined();
     expect(screen.getByText(/Until you choose one/)).toBeDefined();
     await user.selectOptions(language, 'it');
     await user.click(screen.getByRole('button', { name: 'Save' }));

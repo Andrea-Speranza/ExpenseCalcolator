@@ -17,8 +17,16 @@ Gestione delle spese di gruppo, stile Splitwise. L'app è:
 **[Prova la demo](https://andrea-speranza.github.io/ExpenseCalcolator/)**: la web app nel browser, con un gruppo
 di esempio da aprire con un clic. I dati restano solo nel tuo browser: nessun account, nessun server. La demo
 si aggiorna a ogni push su `main` ed è una shell a parte, [apps/demo](apps/demo/README.md): l'app non cambia
-([ADR 0009](docs/adr/0009-distribuzione-locale.md)); il link funziona da
-quando il repository è pubblico e GitHub Pages è attivo.
+([ADR 0009](docs/adr/0009-distribuzione-locale.md)).
+
+## Scarica per Windows
+
+**[Scarica l'app per Windows](https://github.com/Andrea-Speranza/ExpenseCalcolator/releases)**: nella pagina
+delle Releases apri la versione più recente e scarica `spese-di-gruppo-<versione>-windows-x64-setup.exe`
+(Windows 10 e 11). Le versioni sono ancora **alfa**, cioè di prova; le novità di ognuna sono in
+[CHANGELOG.md](CHANGELOG.md). L'installer non è ancora firmato, quindi Windows può mostrare «Windows ha protetto
+il PC»: scegli **Ulteriori informazioni → Esegui comunque**. Una nuova versione si installa sopra la precedente
+e mantiene i dati.
 
 ## Cosa si può fare oggi
 
@@ -108,7 +116,7 @@ veloci.
 
 Al termine di `pnpm native:build` trovi:
 
-- **l'installer:** `apps\native\src-tauri\target\release\bundle\nsis\Spese di gruppo_0.1.0_x64-setup.exe`;
+- **l'installer:** `apps\native\src-tauri\target\release\bundle\nsis\Spese di gruppo_<versione>_x64-setup.exe`;
 - **l'eseguibile**, avviabile anche senza installare:
   `apps\native\src-tauri\target\release\expense-calcolator.exe`.
 
@@ -152,12 +160,24 @@ pnpm format           # formatta tutti i file
 pnpm web              # la web app su http://localhost:5173, con i dati nel browser (vedi apps/web/README.md)
 pnpm web:preview      # build e anteprima della versione finale
 pnpm native           # l'app per Windows (Tauri) in sviluppo; native:build crea l'installer (vedi apps/native/README.md)
+pnpm demo             # la demo (avviso e gruppo di esempio) su http://localhost:5174 (vedi apps/demo/README.md)
 pnpm cli --help       # la riga di comando: gruppi e spese salvati in locale (vedi apps/cli/README.md)
 pnpm schemas          # rigenera i JSON Schema in spec/schemas dopo aver cambiato packages/schema
 pnpm deps:graph       # rigenera il grafico delle dipendenze in docs/ARCHITETTURA.md
 ```
 
 I singoli controlli si possono lanciare anche separatamente: `pnpm lint`, `pnpm typecheck`, `pnpm deps`, `pnpm test`.
+
+### Rilasciare una versione
+
+Le novità si scrivono man mano in [CHANGELOG.md](CHANGELOG.md), sotto «Non rilasciato». Poi, da `main` senza
+modifiche in sospeso ([ADR 0011](docs/adr/0011-versioni-e-rilasci.md)):
+
+```sh
+pnpm release 0.1.0-alpha.2 --dry-run   # facoltativo: mostra cosa farebbe
+pnpm release 0.1.0-alpha.2             # aggiorna numero e CHANGELOG, fa commit e tag (in locale)
+git push --follow-tags                 # GitHub compila l'app per Windows e crea la release
+```
 
 ## Struttura
 

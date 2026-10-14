@@ -41,4 +41,20 @@ Verificati pilotando l'app vera (porta di debug di WebView2 e Playwright):
 - «Esporta il gruppo» salva il file nella cartella Download, come nel browser; «Importa» legge il file scelto;
 - installer NSIS di 2,1 MB (eseguibile di 8,6 MB).
 
-Da fare: icone dell'app (oggi quelle predefinite di Tauri), firma dell'installer, aggiornamenti.
+Da fare: icone dell'app (oggi quelle predefinite di Tauri), firma dell'installer, aggiornamenti automatici.
+
+## Versioni e rilasci
+
+Il numero di versione è quello del `package.json` principale: `tauri.conf.json` lo legge da lì, e lo script di
+rilascio tiene allineata la copia in `Cargo.toml` e `Cargo.lock`
+([ADR 0011](../../docs/adr/0011-versioni-e-rilasci.md)).
+
+```sh
+pnpm release 0.1.0-alpha.2 --dry-run   # mostra cosa farebbe
+pnpm release 0.1.0-alpha.2             # numero, CHANGELOG, commit e tag (in locale)
+git push --follow-tags                 # il workflow "Rilascio" compila e pubblica la GitHub Release
+```
+
+Il workflow [release.yml](../../.github/workflows/release.yml) gira su una macchina Windows di GitHub: controlli,
+build, poi la release con l'installer `spese-di-gruppo-<versione>-windows-x64-setup.exe` e `SHA256SUMS.txt`.
+Le versioni alfa sono pubblicate come pre-release.

@@ -1,6 +1,6 @@
 # ExpenseCalcolator — Documento di pianificazione
 
-> **Stato:** v0.10 (D1, D2, D5–D9 e D11 decise, D12 in parte; Fasi 0, 1, 2 e 3 completate) · **Ultimo aggiornamento:** 2026-10-13
+> **Stato:** v0.11 (D1, D2, D5–D9 e D11 decise, D12 in parte; Fasi 0, 1, 2 e 3 completate) · **Ultimo aggiornamento:** 2026-10-14
 >
 > Scopo: fissare architettura, decisioni tecniche e piano di lavoro **prima** di scrivere codice.
 > Le voci marcate **(DA CONFERMARE — Dn)** sono raccomandazioni: si chiudono in §12 (dopo gli spike di §13)
@@ -797,11 +797,17 @@ Verificato dai test E2E: una volta aperta funziona senza rete e ritrova i dati d
       (2026-10-14, risultati in §13.2); manca Android, in un ambiente di sviluppo dedicato.
 - [x] Build Windows con Tauri 2: un installer NSIS di 2,1 MB che carica la UI dai file locali. Comandi
       `pnpm native`, `pnpm native:build`, `pnpm native:check` (rustfmt e Clippy).
+- [x] Versioni e rilasci ([ADR 0011](adr/0011-versioni-e-rilasci.md)): SemVer con suffisso alfa (`0.1.0-alpha.N`),
+      numero solo nel `package.json` principale, novità in `CHANGELOG.md`. `pnpm release <versione>` prepara commit
+      e tag; al push del tag il workflow `release.yml` compila su Windows e pubblica l'installer nelle GitHub
+      Releases come pre-release. La versione si vede nelle impostazioni.
 - [ ] Build Android: APK per i test, AAB per un eventuale store. Gestire tasto indietro, aree sicure dello schermo e tastiera.
+      Il `versionCode` va reso crescente anche tra versioni alfa con lo stesso numero (ADR 0011).
 - [ ] Verificare che IndexedDB resti persistente in WebView2 (fatto) e nella WebView di Android.
 - [ ] Esporta e importa su Android: la WebView di Android di solito non gestisce i download da un link; se è
       così, il salvataggio passerà dalla shell (plugin dialog o condivisione). Da verificare.
-- [ ] Icone, splash, nome dell'app, firma.
+- [ ] Icone, splash, nome dell'app, firma dell'installer (SignPath Foundation o Azure Artifact Signing, ADR 0011),
+      aggiornamento automatico (plugin updater di Tauri).
 
 **Fatto quando:** la stessa build della UI gira su web, Windows e Android, senza modifiche al codice di `core`, `engine` o `ui`.
 

@@ -51,7 +51,7 @@ async function renderDemo(engine?: Engine) {
   const opened = engine ?? (await memoryEngine());
   render(
     <DemoFrame engine={opened} defaultLanguage="it">
-      <App engine={opened} defaultLanguage="it" />
+      <App engine={opened} defaultLanguage="it" version="1.2.3-test" />
     </DemoFrame>,
   );
   return userEvent.setup();

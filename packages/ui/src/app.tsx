@@ -18,21 +18,23 @@ export interface AppProps {
    * (es. `detectLanguage(navigator.languages)`, ADR 0010).
    */
   readonly defaultLanguage: Language;
+  /** Versione dell'app (es. "0.1.0-alpha.1"), mostrata nelle impostazioni: la shell la legge dal package.json. */
+  readonly version: string;
 }
 
-export function App({ engine, defaultLanguage }: AppProps) {
+export function App({ engine, defaultLanguage, version }: AppProps) {
   return (
     <EngineProvider engine={engine}>
       <I18nProvider fallback={defaultLanguage}>
         <AppShell>
-          <CurrentPage />
+          <CurrentPage version={version} />
         </AppShell>
       </I18nProvider>
     </EngineProvider>
   );
 }
 
-function CurrentPage() {
+function CurrentPage({ version }: { readonly version: string }) {
   const route = useRoute();
   switch (route.page) {
     case 'groups':
@@ -40,7 +42,7 @@ function CurrentPage() {
     case 'archivedGroups':
       return <GroupsScreen key="archiviati" archived />;
     case 'settings':
-      return <SettingsScreen />;
+      return <SettingsScreen version={version} />;
     case 'group':
       return <GroupScreen key={route.groupId} groupId={route.groupId} tab={route.tab} />;
     case 'expense':

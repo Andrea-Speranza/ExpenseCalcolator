@@ -199,6 +199,9 @@ Ogni shell apre l'engine con gli adapter della propria piattaforma:
   nell'app (`http://tauri.localhost`), con IndexedDB nel profilo WebView2. Funziona su Windows; Android è
   il prossimo passo della Fase 4. Il codice Rust è solo l'avvio.
 
+Ogni shell passa all'app anche la versione (`<App version={…} />`), letta durante la build dal `package.json`
+principale, l'unico posto in cui sta il numero ([ADR 0011](adr/0011-versioni-e-rilasci.md)).
+
 Il passaggio manuale di un gruppo tra dispositivi usa il **file di scambio** (`ExchangeFile`: gli eventi del
 gruppo), uguale per web app e CLI. Importarlo più volte non crea doppioni.
 
@@ -250,10 +253,12 @@ pacchetti condivisi (passano dalle porte), tipi espliciti nelle loro API, `switc
 | [0008](adr/0008-componenti-ui-shadcn.md)      | shadcn/ui con Tailwind CSS                              |
 | [0009](adr/0009-distribuzione-locale.md)      | Web app solo in locale, dentro le app native            |
 | [0010](adr/0010-localizzazione.md)            | Localizzazione: dizionari JSON e chiavi tipizzate       |
+| [0011](adr/0011-versioni-e-rilasci.md)        | Versioni SemVer in alfa, rilasci con GitHub Releases    |
 
 ## Prossime evoluzioni
 
-- **Fase 4:** completare l'app nativa: icone e firma su Windows, poi Android con Tauri.
+- **Fase 4:** completare l'app nativa: icone e firma su Windows, poi Android con Tauri. Le versioni per Windows
+  si pubblicano già nelle GitHub Releases ([ADR 0011](adr/0011-versioni-e-rilasci.md)).
 - **Fasi 5 e 6:** porta `SyncChannel` e primi canali (file condiviso, cartella sincronizzata, poi cloud),
   storico delle singole modifiche, condivisione tra persone.
 - **Fase 7:** più valute e conversione, grafici, permessi e firme dei dispositivi.

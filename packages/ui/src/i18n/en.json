@@ -290,7 +290,8 @@
     "data": {
       "title": "Data",
       "local": "Groups are saved only on this device, in the browser. They are not sent to any server.",
-      "device": "Device code:"
+      "device": "Device code:",
+      "version": "App version:"
     }
   }
 }
