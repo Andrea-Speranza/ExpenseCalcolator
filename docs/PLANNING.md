@@ -746,7 +746,7 @@ la pubblicazione del repository su GitHub, dopo la Fase 2.
   - [x] nuova o modifica spesa, con tutte le modalità di divisione e più pagatori; elimina e ripristina;
   - [x] membri: aggiungi, rinomina, archivia, «sono io»;
   - [x] registra rimborso, anche partendo da un trasferimento suggerito; elimina e ripristina;
-  - [x] impostazioni (valuta predefinita, nome). La lingua arriverà con le traduzioni;
+  - [x] impostazioni (valuta predefinita, nome e, con la localizzazione, lingua);
   - [x] impostazioni del gruppo: nome e archiviazione. La valuta non si cambia, come nella CLI;
   - [x] esporta e importa un gruppo come file, nello stesso formato della CLI (`ExchangeFile`, JSON Schema in
         `spec/schemas`): copia di sicurezza e passaggio a un altro dispositivo o a un'altra persona;
