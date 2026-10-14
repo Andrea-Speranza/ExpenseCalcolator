@@ -946,6 +946,7 @@ senza alcun server nostro.
 | Niente `Date.now()`, `new Date()` o `Math.random()` negli stessi pacchetti                                 | `eslint.config.js`                                | ESLint             |
 | Tipi espliciti in ingresso e in uscita per le funzioni esportate dagli stessi pacchetti                    | `eslint.config.js`                                | ESLint             |
 | Dipendenze solo verso il basso; dal core verso schema solo `import type`; niente moduli Node; niente cicli | `.dependency-cruiser.mjs`                         | dependency-cruiser |
+| Il grafico delle dipendenze in [ARCHITETTURA.md](ARCHITETTURA.md) corrisponde agli import reali            | `scripts/deps-graph.mjs` (`pnpm deps:graph`)      | dependency-cruiser |
 
 **Livelli di test:**
 
